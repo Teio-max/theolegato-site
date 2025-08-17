@@ -1,5 +1,5 @@
-// Données de base
-const films = [
+// Données de base avec sauvegarde locale
+let films = JSON.parse(localStorage.getItem('films')) || [
   {
     id: 1,
     titre: 'Film 1',
@@ -60,6 +60,64 @@ const films = [
     liens: []
   }
 ];
+
+// Configuration des icônes du bureau avec sauvegarde
+let desktopIcons = JSON.parse(localStorage.getItem('desktopIcons')) || [
+  {
+    id: 'icon-films',
+    name: 'Films',
+    icon: 'icons/film.png',
+    action: 'createFilmsWindow',
+    position: { x: 50, y: 50 }
+  },
+  {
+    id: 'icon-manga',
+    name: 'Manga',
+    icon: 'icons/key.png',
+    action: 'createMangaWindow',
+    position: { x: 50, y: 150 }
+  }
+];
+
+// Fonction de sauvegarde
+function saveData() {
+  localStorage.setItem('films', JSON.stringify(films));
+  localStorage.setItem('desktopIcons', JSON.stringify(desktopIcons));
+}
+
+// Fonction de rendu des icônes du bureau
+function renderDesktopIcons() {
+  const desktopContainer = document.querySelector('.desktop-icons');
+  if (!desktopContainer) return;
+  
+  desktopContainer.innerHTML = '';
+  desktopIcons.forEach(icon => {
+    const iconElement = document.createElement('div');
+    iconElement.className = 'desktop-icon';
+    iconElement.id = icon.id;
+    iconElement.tabIndex = 0;
+    iconElement.style.left = icon.position.x + 'px';
+    iconElement.style.top = icon.position.y + 'px';
+    
+    iconElement.innerHTML = `
+      <img src="${icon.icon}" alt="${icon.name}">
+      <span>${icon.name}</span>
+    `;
+    
+    iconElement.onclick = () => {
+      if (window[icon.action]) {
+        window[icon.action]();
+      } else if (icon.action.startsWith('http')) {
+        // Lien personnalisé
+        window.open(icon.action, '_blank');
+      } else {
+        console.warn(`Action ${icon.action} non trouvée`);
+      }
+    };
+    
+    desktopContainer.appendChild(iconElement);
+  });
+}
 
 const pageIcons = {
   'accueil': '🏠',
@@ -322,6 +380,49 @@ function createAboutWindow() {
   makeDraggable(win, winId);
 }
 
+function createMangaWindow() {
+  playOpenSound();
+  const winId = 'mangawin_' + Date.now();
+  const win = document.createElement('div');
+  win.className = 'xp-film-window window-opening';
+  win.id = winId;
+  win.style.position = 'absolute';
+  win.style.left = (140 + Math.random()*200) + 'px';
+  win.style.top = (100 + Math.random()*100) + 'px';
+  win.style.zIndex = getNextZIndex();
+  win.innerHTML = `
+    <div class="xp-titlebar xp-titlebar-film" onmousedown="startDrag(event, '${winId}')">
+      <span class="xp-title-content"><img src="icons/key.png" class="xp-icon" alt=""><span>Manga</span></span>
+      <span class="xp-buttons">
+        <span class="xp-btn min" data-tooltip="Réduire" onclick="minimizeWindow('${winId}', 'Manga', 'icons/key.png')"><img src="icons/minimize.png" alt="Min"></span>
+        <span class="xp-btn max" data-tooltip="Agrandir" onclick="maxFilmWindow('${winId}')"><img src="icons/maximize.png" alt="Max"></span>
+        <span class="xp-btn close" data-tooltip="Fermer" onclick="closeFilmWindow('${winId}')"><img src="icons/close.png" alt="Close"></span>
+      </span>
+    </div>
+    <div class="film-detail" style="text-align:center;max-width:480px;margin:0 auto;">
+      <h2 style="margin:0 0 18px 0;">Ma Collection Manga</h2>
+      <a href="https://www.mangacollec.com/user/theolegato/collection" target="_blank" class="big-link" style="margin-bottom:18px; padding:0;">
+        <img src="mangacollec.png" alt="Mangacollec" style="height:54px; width:auto; display:block; margin:auto;">
+      </a>
+      <p>Découvre ma collection manga sur Mangacollec !</p>
+      <div style="margin-top:18px;">
+        <h3>Mes séries préférées :</h3>
+        <ul style="text-align:left; margin-left:18px;">
+          <li>One Piece</li>
+          <li>Dragon Ball</li>
+          <li>Naruto</li>
+          <li>Bleach</li>
+          <li>Et bien d'autres...</li>
+        </ul>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(win);
+  win.onmousedown = () => win.style.zIndex = getNextZIndex();
+  addResizeHandle(win);
+  makeDraggable(win, winId);
+}
+
 function createAdminLoginWindow() {
   playOpenSound();
   const winId = 'adminwin_' + Date.now();
@@ -405,6 +506,47 @@ function createAdminPanelWindow(editFilmId = null) {
   });
   tableHtml += '</table>';
 
+  // Onglets pour Films et Icônes
+  let tabsHtml = `
+    <div style="display:flex;margin-bottom:18px;border-bottom:2px solid var(--border-main);">
+      <button id="tab-films" class="admin-tab active" onclick="switchAdminTab('films', '${winId}')" style="padding:8px 16px;border:none;background:var(--accent);color:#fff;cursor:pointer;">Films</button>
+      <button id="tab-icons" class="admin-tab" onclick="switchAdminTab('icons', '${winId}')" style="padding:8px 16px;border:none;background:transparent;color:var(--text);cursor:pointer;">Icônes Bureau</button>
+    </div>
+  `;
+
+  // Contenu des icônes
+  let iconsHtml = `
+    <div id="icons-content" style="display:none;">
+      <form id="admin-icon-form" style="margin-bottom:18px;">
+        <h3 style="margin-top:0;">Ajouter une icône</h3>
+        <label>Nom : <input type="text" name="iconName" required style="width:70%"></label><br><br>
+        <label>Icône (URL) : <input type="text" name="iconUrl" required style="width:70%"></label><br><br>
+        <label>Action : <select name="iconAction" style="width:70%">
+          <option value="createFilmsWindow">Films</option>
+          <option value="createMangaWindow">Manga</option>
+          <option value="createAboutWindow">À propos</option>
+          <option value="custom">Lien personnalisé</option>
+        </select></label><br><br>
+        <label id="customUrlLabel" style="display:none;">URL personnalisée : <input type="text" name="customUrl" style="width:70%"></label><br><br>
+        <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:var(--accent);color:#fff;border:none;">Ajouter</button>
+      </form>
+      <hr style="margin:18px 0;">
+      <h3 style="margin-bottom:8px;">Icônes du bureau</h3>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
+        <tr style="background:var(--accent-light);color:var(--accent);font-weight:bold;"><td>Nom</td><td>Action</td><td>Actions</td></tr>
+  `;
+  
+  desktopIcons.forEach(icon => {
+    iconsHtml += `<tr style="border-bottom:1px solid var(--border-main);">
+      <td>${icon.name}</td>
+      <td>${icon.action}</td>
+      <td>
+        <button onclick="deleteIconAdmin('${icon.id}')" style="padding:2px 10px;color:#fff;background:#e74c3c;border:none;border-radius:4px;">Supprimer</button>
+      </td>
+    </tr>`;
+  });
+  iconsHtml += '</table></div>';
+
   win.innerHTML = `
     <div class="xp-titlebar xp-titlebar-film" onmousedown="startDrag(event, '${winId}')">
       <span class="xp-title-content"><img src="icons/key.png" class="xp-icon" alt=""><span>Administration</span></span>
@@ -414,11 +556,15 @@ function createAdminPanelWindow(editFilmId = null) {
         <span class="xp-btn close" data-tooltip="Fermer" onclick="closeFilmWindow('${winId}')"><img src="icons/close.png" alt="Close"></span>
       </span>
     </div>
-    <div class="film-detail" style="text-align:left;max-width:520px;margin:0 auto;">
-      ${formHtml}
-      <hr style="margin:18px 0;">
-      <h3 style="margin-bottom:8px;">Liste des films</h3>
-      ${tableHtml}
+    <div class="film-detail" style="text-align:left;max-width:600px;margin:0 auto;">
+      ${tabsHtml}
+      <div id="films-content">
+        ${formHtml}
+        <hr style="margin:18px 0;">
+        <h3 style="margin-bottom:8px;">Liste des films</h3>
+        ${tableHtml}
+      </div>
+      ${iconsHtml}
     </div>
   `;
   document.body.appendChild(win);
@@ -426,7 +572,7 @@ function createAdminPanelWindow(editFilmId = null) {
   addResizeHandle(win);
   makeDraggable(win, winId);
 
-  // Gestion du formulaire
+  // Gestion du formulaire films
   win.querySelector('#admin-film-form').onsubmit = function(e) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(this).entries());
@@ -458,9 +604,42 @@ function createAdminPanelWindow(editFilmId = null) {
         liens
       });
     }
+    saveData(); // Sauvegarder les données
     win.remove();
     createAdminPanelWindow();
   };
+
+  // Gestion du formulaire icônes
+  win.querySelector('#admin-icon-form').onsubmit = function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this).entries());
+    const newId = 'icon-' + Date.now();
+    const action = data.iconAction === 'custom' ? data.customUrl : data.iconAction;
+    
+    desktopIcons.push({
+      id: newId,
+      name: data.iconName,
+      icon: data.iconUrl,
+      action: action,
+      position: { x: 50 + (desktopIcons.length * 100), y: 50 + (desktopIcons.length * 100) }
+    });
+    
+    saveData();
+    renderDesktopIcons();
+    win.remove();
+    createAdminPanelWindow();
+  };
+
+  // Gestion du select pour URL personnalisée
+  win.querySelector('select[name="iconAction"]').onchange = function() {
+    const customLabel = win.querySelector('#customUrlLabel');
+    if (this.value === 'custom') {
+      customLabel.style.display = 'block';
+    } else {
+      customLabel.style.display = 'none';
+    }
+  };
+
   if (win.querySelector('#cancel-edit')) {
     win.querySelector('#cancel-edit').onclick = function() {
       win.remove();
@@ -479,12 +658,44 @@ window.deleteFilmAdmin = function(id) {
   if (confirm('Supprimer ce film ?')) {
     const idx = films.findIndex(f => f.id === id);
     if (idx !== -1) films.splice(idx, 1);
+    saveData(); // Sauvegarder les données
     // Ferme toutes les fenêtres admin panel avant d'ouvrir la nouvelle
     document.querySelectorAll('.xp-film-window').forEach(w => {
       if (w.innerHTML.includes('Administration')) w.remove();
     });
     createAdminPanelWindow();
   }
+}
+
+window.deleteIconAdmin = function(id) {
+  if (confirm('Supprimer cette icône ?')) {
+    const idx = desktopIcons.findIndex(i => i.id === id);
+    if (idx !== -1) desktopIcons.splice(idx, 1);
+    saveData();
+    renderDesktopIcons();
+    // Ferme toutes les fenêtres admin panel avant d'ouvrir la nouvelle
+    document.querySelectorAll('.xp-film-window').forEach(w => {
+      if (w.innerHTML.includes('Administration')) w.remove();
+    });
+    createAdminPanelWindow();
+  }
+}
+
+window.switchAdminTab = function(tab, winId) {
+  const win = document.getElementById(winId);
+  if (!win) return;
+  
+  // Mise à jour des onglets
+  win.querySelectorAll('.admin-tab').forEach(t => {
+    t.style.background = 'transparent';
+    t.style.color = 'var(--text)';
+  });
+  win.querySelector('#tab-' + tab).style.background = 'var(--accent)';
+  win.querySelector('#tab-' + tab).style.color = '#fff';
+  
+  // Affichage du contenu
+  win.querySelector('#films-content').style.display = tab === 'films' ? 'block' : 'none';
+  win.querySelector('#icons-content').style.display = tab === 'icons' ? 'block' : 'none';
 }
 
 let zIndexCounter = 1000;
@@ -751,14 +962,8 @@ window.onload = () => {
     createMainWindow();
     console.log('createMainWindow exécutée');
 
-    // -- CORRECTIF : Rattacher les événements aux icônes du bureau --
-    document.getElementById('icon-films').onclick = () => createFilmsWindow();
-    document.getElementById('icon-manga').onclick = () => {
-        // Pour l'instant, ouvre une fenêtre "À propos" comme placeholder
-        createAboutWindow(); 
-        // ou un simple alert: alert('Section Manga en construction !');
-    };
-    // -----------------------------------------------------------------
+    // Rendu des icônes du bureau avec le nouveau système
+    renderDesktopIcons();
 
   } catch (e) {
     alert('Erreur lors de la création de la fenêtre Mes Liens : ' + e.message);
