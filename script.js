@@ -1000,26 +1000,58 @@ function updateMainWindow() {
 }
 
 function attachMainWindowEvents() {
+  console.log('Attaching main window events...');
+  
   const adminBtn = document.getElementById('admin-btn');
   const toggleDark = document.getElementById('toggle-dark');
   const btnMin = document.getElementById('btn-min');
   const btnMax = document.getElementById('btn-max');
   const btnClose = document.getElementById('btn-close');
   
-  if (adminBtn) adminBtn.onclick = () => createAdminLoginWindow();
-  if (toggleDark) toggleDark.onclick = () => {
-    document.body.classList.toggle('dark-mode');
-    if (document.body.classList.contains('dark-mode')) {
-      localStorage.setItem('dark-mode', '1');
-      toggleDark.textContent = '☀️';
-    } else {
-      localStorage.setItem('dark-mode', '0');
-      toggleDark.textContent = '🌙';
-    }
-  };
-  if (btnMin) btnMin.onclick = () => minimizeWindow('container', 'Mes Liens', 'avatar.jpg');
-  if (btnMax) btnMax.onclick = () => maxFilmWindow('container');
-  if (btnClose) btnClose.onclick = () => { playErrorSound(); showBSOD(); };
+  console.log('Found elements:', { adminBtn: !!adminBtn, toggleDark: !!toggleDark, btnMin: !!btnMin, btnMax: !!btnMax, btnClose: !!btnClose });
+  
+  if (adminBtn) {
+    adminBtn.onclick = () => {
+      console.log('Admin button clicked');
+      createAdminLoginWindow();
+    };
+  }
+  
+  if (toggleDark) {
+    toggleDark.onclick = () => {
+      console.log('Toggle dark clicked');
+      document.body.classList.toggle('dark-mode');
+      if (document.body.classList.contains('dark-mode')) {
+        localStorage.setItem('dark-mode', '1');
+        toggleDark.textContent = '☀️';
+      } else {
+        localStorage.setItem('dark-mode', '0');
+        toggleDark.textContent = '🌙';
+      }
+    };
+  }
+  
+  if (btnMin) {
+    btnMin.onclick = () => {
+      console.log('Minimize clicked');
+      minimizeWindow('container', 'Mes Liens', 'avatar.jpg');
+    };
+  }
+  
+  if (btnMax) {
+    btnMax.onclick = () => {
+      console.log('Maximize clicked');
+      maxFilmWindow('container');
+    };
+  }
+  
+  if (btnClose) {
+    btnClose.onclick = () => {
+      console.log('Close clicked');
+      playErrorSound();
+      showBSOD();
+    };
+  }
 }
 
 function createMainWindow() {
@@ -1101,6 +1133,12 @@ window.onload = () => {
 
     // Rendu des icônes du bureau avec le nouveau système
     renderDesktopIcons();
+    
+    // Attendre un peu que le DOM soit prêt
+    setTimeout(() => {
+      attachMainWindowEvents();
+      console.log('Events attached after delay');
+    }, 100);
 
   } catch (e) {
     alert('Erreur lors de la création de la fenêtre Mes Liens : ' + e.message);
