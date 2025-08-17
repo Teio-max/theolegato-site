@@ -79,10 +79,27 @@ let desktopIcons = JSON.parse(localStorage.getItem('desktopIcons')) || [
   }
 ];
 
+// Configuration de la page d'accueil avec sauvegarde
+let homePageConfig = JSON.parse(localStorage.getItem('homePageConfig')) || {
+  name: 'Théo Van Waas',
+  welcomeMessage: 'Bienvenue sur mon site personnel !',
+  description: 'Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j\'aime partager.',
+  sitePurpose: 'Centraliser mes passions, mes avis et mes liens favoris dans une interface rétro Windows XP.',
+  footerText: 'Site réalisé avec amour et nostalgie 💾',
+  socialLinks: [
+    { name: 'Instagram', url: 'https://www.instagram.com/theolegato_o?igsh=Z2w5eTVqemNrZHpl' },
+    { name: 'Twitter', url: '#' },
+    { name: 'Tumblr', url: '#' },
+    { name: 'Mangacollec', url: 'https://www.mangacollec.com/user/theolegato/collection' },
+    { name: 'Letterboxd', url: 'https://letterboxd.com/tei/' }
+  ]
+};
+
 // Fonction de sauvegarde
 function saveData() {
   localStorage.setItem('films', JSON.stringify(films));
   localStorage.setItem('desktopIcons', JSON.stringify(desktopIcons));
+  localStorage.setItem('homePageConfig', JSON.stringify(homePageConfig));
 }
 
 // Fonction de rendu des icônes du bureau
@@ -506,11 +523,12 @@ function createAdminPanelWindow(editFilmId = null) {
   });
   tableHtml += '</table>';
 
-  // Onglets pour Films et Icônes
+  // Onglets pour Films, Icônes et Page d'accueil
   let tabsHtml = `
     <div style="display:flex;margin-bottom:18px;border-bottom:2px solid var(--border-main);background:var(--accent-light);border-radius:8px 8px 0 0;padding:4px 4px 0 4px;">
       <button id="tab-films" class="admin-tab active" onclick="switchAdminTab('films', '${winId}')" style="padding:10px 20px;border:none;background:var(--accent);color:#fff;cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.1);">🎬 Films</button>
       <button id="tab-icons" class="admin-tab" onclick="switchAdminTab('icons', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">🖥️ Icônes Bureau</button>
+      <button id="tab-home" class="admin-tab" onclick="switchAdminTab('home', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">🏠 Page d'accueil</button>
     </div>
   `;
 
@@ -547,6 +565,24 @@ function createAdminPanelWindow(editFilmId = null) {
   });
   iconsHtml += '</table></div>';
 
+  // Contenu de la page d'accueil
+  let homeHtml = `
+    <div id="home-content" style="display:none;">
+      <form id="admin-home-form" style="margin-bottom:18px;">
+        <h3 style="margin-top:0;">Modifier la page d'accueil</h3>
+        <label>Nom : <input type="text" name="homeName" value="${homePageConfig.name}" required style="width:70%"></label><br><br>
+        <label>Message de bienvenue : <input type="text" name="welcomeMessage" value="${homePageConfig.welcomeMessage}" required style="width:70%"></label><br><br>
+        <label>Description :<br><textarea name="description" rows="2" style="width:90%">${homePageConfig.description}</textarea></label><br><br>
+        <label>But du site :<br><textarea name="sitePurpose" rows="2" style="width:90%">${homePageConfig.sitePurpose}</textarea></label><br><br>
+        <label>Texte de fin : <input type="text" name="footerText" value="${homePageConfig.footerText}" style="width:70%"></label><br><br>
+        <hr style="margin:18px 0;">
+        <h4>Liens sociaux (nom|url, un par ligne) :</h4>
+        <textarea name="socialLinks" rows="5" style="width:90%">${homePageConfig.socialLinks.map(l => l.name + '|' + l.url).join('\n')}</textarea><br><br>
+        <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:var(--accent);color:#fff;border:none;">Enregistrer</button>
+      </form>
+    </div>
+  `;
+
   win.innerHTML = `
     <div class="xp-titlebar xp-titlebar-film" onmousedown="startDrag(event, '${winId}')">
       <span class="xp-title-content"><img src="icons/key.png" class="xp-icon" alt=""><span>Administration</span></span>
@@ -565,6 +601,7 @@ function createAdminPanelWindow(editFilmId = null) {
         ${tableHtml}
       </div>
       ${iconsHtml}
+      ${homeHtml}
     </div>
   `;
   document.body.appendChild(win);
@@ -626,6 +663,28 @@ function createAdminPanelWindow(editFilmId = null) {
     
     saveData();
     renderDesktopIcons();
+    win.remove();
+    createAdminPanelWindow();
+  };
+
+  // Gestion du formulaire page d'accueil
+  win.querySelector('#admin-home-form').onsubmit = function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this).entries());
+    const socialLinks = data.socialLinks ? data.socialLinks.split('\n').map(l => {
+      const [name, url] = l.split('|');
+      return { name: (name||'').trim(), url: (url||'').trim() };
+    }).filter(l => l.name && l.url) : [];
+    
+    homePageConfig.name = data.homeName;
+    homePageConfig.welcomeMessage = data.welcomeMessage;
+    homePageConfig.description = data.description;
+    homePageConfig.sitePurpose = data.sitePurpose;
+    homePageConfig.footerText = data.footerText;
+    homePageConfig.socialLinks = socialLinks;
+    
+    saveData();
+    updateMainWindow();
     win.remove();
     createAdminPanelWindow();
   };
@@ -698,15 +757,23 @@ window.switchAdminTab = function(tab, winId) {
   // Affichage du contenu avec animation
   const filmsContent = win.querySelector('#films-content');
   const iconsContent = win.querySelector('#icons-content');
+  const homeContent = win.querySelector('#home-content');
   
+  // Masquer tous les contenus
+  filmsContent.style.display = 'none';
+  iconsContent.style.display = 'none';
+  homeContent.style.display = 'none';
+  
+  // Afficher le contenu sélectionné
   if (tab === 'films') {
     filmsContent.style.display = 'block';
-    iconsContent.style.display = 'none';
     filmsContent.style.animation = 'slideInFromTop 0.3s ease-out';
-  } else {
+  } else if (tab === 'icons') {
     iconsContent.style.display = 'block';
-    filmsContent.style.display = 'none';
     iconsContent.style.animation = 'slideInFromTop 0.3s ease-out';
+  } else if (tab === 'home') {
+    homeContent.style.display = 'block';
+    homeContent.style.animation = 'slideInFromTop 0.3s ease-out';
   }
 }
 
@@ -882,6 +949,64 @@ function updateFilmWindow(id, winId) {
   if (film.image) document.getElementById('imgpreview_' + winId).innerHTML = `<img src="${film.image}" alt="Image du film">`;
 }
 
+function updateMainWindow() {
+  const winId = 'container';
+  const mainWin = document.getElementById(winId);
+  
+  // Générer les liens sociaux
+  let socialLinksHtml = '';
+  homePageConfig.socialLinks.forEach(link => {
+    socialLinksHtml += `<li><a href="${link.url}" target="_blank">${link.name}</a></li>`;
+  });
+  
+  mainWin.innerHTML = `
+    <div class="xp-titlebar" id="xp-titlebar">
+      <span class="xp-title-content">
+        <span class="xp-icon" id="xp-icon"><img src="avatar.jpg" alt="Avatar" style="border-radius:6px; object-fit:cover; vertical-align:middle;"></span>
+        <span id="xp-title">Mes Liens</span>
+      </span>
+      <span class="xp-buttons">
+        <button id="admin-btn" title="Admin" data-tooltip="Admin" style="background:none;border:none;cursor:pointer;font-size:1.3em;margin-right:8px;"><img src="icons/key.png" alt="Admin"></button>
+        <button id="toggle-dark" title="Mode sombre" data-tooltip="Mode sombre" style="background:none;border:none;cursor:pointer;font-size:1.3em;margin-right:8px;">🌙</button>
+        <span class="xp-btn min" id="btn-min" data-tooltip="Réduire"><img src="icons/minimize.png" alt="Min"></span>
+        <span class="xp-btn max" id="btn-max" data-tooltip="Agrandir"><img src="icons/maximize.png" alt="Max"></span>
+        <span class="xp-btn close" id="btn-close" data-tooltip="Fermer"><img src="icons/close.png" alt="Close"></span>
+      </span>
+    </div>
+    <div class="avatar">
+      <img src="avatar.jpg" alt="Avatar" />
+    </div>
+    <h1>${homePageConfig.name}</h1>
+    <div class="about-section">
+      <p><strong>${homePageConfig.welcomeMessage}</strong><br>
+      ${homePageConfig.description}<br><br>
+      <strong>But du site :</strong> ${homePageConfig.sitePurpose}<br><br>
+      <strong>Contact & réseaux :</strong></p>
+      <ul style="margin-left:18px;">
+        ${socialLinksHtml}
+      </ul>
+      <p style="font-size:0.98em;color:#888;margin-top:18px;">${homePageConfig.footerText}</p>
+    </div>
+    <div id="content"></div>
+  `;
+  
+  // Re-attacher les événements
+  document.getElementById('admin-btn').onclick = () => createAdminLoginWindow();
+  document.getElementById('toggle-dark').onclick = () => {
+    document.body.classList.toggle('dark-mode');
+    if (document.body.classList.contains('dark-mode')) {
+      localStorage.setItem('dark-mode', '1');
+      document.getElementById('toggle-dark').textContent = '☀️';
+    } else {
+      localStorage.setItem('dark-mode', '0');
+      document.getElementById('toggle-dark').textContent = '🌙';
+    }
+  };
+  document.getElementById('btn-min').onclick = () => minimizeWindow('container', 'Mes Liens', 'avatar.jpg');
+  document.getElementById('btn-max').onclick = () => maxFilmWindow('container');
+  document.getElementById('btn-close').onclick = () => { playErrorSound(); showBSOD(); };
+}
+
 function createMainWindow() {
   const winId = 'container';
   const mainWin = document.getElementById(winId);
@@ -926,21 +1051,6 @@ function createMainWindow() {
   mainWin.style.zIndex = getNextZIndex();
   addResizeHandle(mainWin);
   makeDraggable(mainWin, 'container');
-  // Re-attacher les événements
-  document.getElementById('admin-btn').onclick = () => createAdminLoginWindow();
-  document.getElementById('toggle-dark').onclick = () => {
-    document.body.classList.toggle('dark-mode');
-    if (document.body.classList.contains('dark-mode')) {
-      localStorage.setItem('dark-mode', '1');
-      document.getElementById('toggle-dark').textContent = '☀️';
-    } else {
-      localStorage.setItem('dark-mode', '0');
-      document.getElementById('toggle-dark').textContent = '🌙';
-    }
-  };
-  document.getElementById('btn-min').onclick = () => minimizeWindow('container', 'Mes Liens', 'avatar.jpg');
-  document.getElementById('btn-max').onclick = () => maxFilmWindow('container');
-  document.getElementById('btn-close').onclick = () => { playErrorSound(); showBSOD(); };
 }
 
 // Gestion des info-bulles (tooltips)
