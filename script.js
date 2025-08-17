@@ -570,14 +570,14 @@ function createAdminPanelWindow(editFilmId = null) {
     <div id="home-content" style="display:none;">
       <form id="admin-home-form" style="margin-bottom:18px;">
         <h3 style="margin-top:0;">Modifier la page d'accueil</h3>
-        <label>Nom : <input type="text" name="homeName" value="${homePageConfig.name}" required style="width:70%"></label><br><br>
-        <label>Message de bienvenue : <input type="text" name="welcomeMessage" value="${homePageConfig.welcomeMessage}" required style="width:70%"></label><br><br>
-        <label>Description :<br><textarea name="description" rows="2" style="width:90%">${homePageConfig.description}</textarea></label><br><br>
-        <label>But du site :<br><textarea name="sitePurpose" rows="2" style="width:90%">${homePageConfig.sitePurpose}</textarea></label><br><br>
-        <label>Texte de fin : <input type="text" name="footerText" value="${homePageConfig.footerText}" style="width:70%"></label><br><br>
+        <label>Nom : <input type="text" name="homeName" value="${homePageConfig?.name || 'Théo Van Waas'}" required style="width:70%"></label><br><br>
+        <label>Message de bienvenue : <input type="text" name="welcomeMessage" value="${homePageConfig?.welcomeMessage || 'Bienvenue sur mon site personnel !'}" required style="width:70%"></label><br><br>
+        <label>Description :<br><textarea name="description" rows="2" style="width:90%">${homePageConfig?.description || 'Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j\'aime partager.'}</textarea></label><br><br>
+        <label>But du site :<br><textarea name="sitePurpose" rows="2" style="width:90%">${homePageConfig?.sitePurpose || 'Centraliser mes passions, mes avis et mes liens favoris dans une interface rétro Windows XP.'}</textarea></label><br><br>
+        <label>Texte de fin : <input type="text" name="footerText" value="${homePageConfig?.footerText || 'Site réalisé avec amour et nostalgie 💾'}" style="width:70%"></label><br><br>
         <hr style="margin:18px 0;">
         <h4>Liens sociaux (nom|url, un par ligne) :</h4>
-        <textarea name="socialLinks" rows="5" style="width:90%">${homePageConfig.socialLinks.map(l => l.name + '|' + l.url).join('\n')}</textarea><br><br>
+        <textarea name="socialLinks" rows="5" style="width:90%">${(homePageConfig?.socialLinks || []).map(l => l.name + '|' + l.url).join('\n')}</textarea><br><br>
         <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:var(--accent);color:#fff;border:none;">Enregistrer</button>
       </form>
     </div>
