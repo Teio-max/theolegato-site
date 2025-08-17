@@ -1,15 +1,40 @@
 @keyframes fadeInZoom {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.92) translateY(10px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1) translateY(0);
   }
 }
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 4px 24px var(--shadow);
+  }
+  50% {
+    box-shadow: 0 6px 32px rgba(58, 92, 168, 0.3);
+  }
+}
+
 .window-opening {
-  animation: fadeInZoom 0.2s ease-out forwards;
+  animation: fadeInZoom 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.window-opening:hover {
+  animation: pulseGlow 2s ease-in-out infinite;
 }
 :root {
   --bg-main: #b4d0ee;
@@ -96,7 +121,19 @@ body {
   justify-content: space-between;
   border-bottom: 2px solid #1d2e50;
   height: 36px;
-  box-shadow: 0 2px 0 #fff8 inset;
+  box-shadow: 0 2px 0 #fff8 inset, 0 1px 3px rgba(0,0,0,0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.xp-titlebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.3), transparent);
 }
 .xp-titlebar .xp-title-content {
   display: flex;
@@ -126,6 +163,12 @@ body {
   position: relative;
   cursor: pointer;
   box-shadow: 0 1px 0 #b4d0ee inset;
+  transition: all 0.15s ease;
+}
+
+.xp-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 .xp-btn.min { background: #b4d0ee; }
 .xp-btn.max { background: #b4d0ee; }
@@ -262,20 +305,37 @@ body {
 .film-item {
   background: var(--accent-light);
   color: var(--accent);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 18px;
   font-size: 1.2em;
   font-weight: bold;
   cursor: pointer;
   border: 2px solid var(--border-main);
-  box-shadow: 1px 1px 0 #fff inset;
-  transition: background 0.2s, color 0.2s, transform 0.2s, box-shadow 0.2s;
+  box-shadow: 1px 1px 0 #fff inset, 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+}
+
+.film-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.5s;
 }
 .film-item:hover {
   background: var(--accent);
   color: #fff;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+
+.film-item:hover::before {
+  left: 100%;
 }
 .film-detail {
   background: #e0e7ef;
@@ -340,18 +400,18 @@ body {
   min-width: 340px;
   max-width: 520px;
   background: var(--bg-window);
-  border-radius: 8px 8px 8px 8px;
-  box-shadow: 0 4px 24px var(--shadow);
+  border-radius: 10px 10px 10px 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15), 0 2px 8px rgba(0,0,0,0.1);
   border: 2px solid var(--border-main);
   z-index: 1000;
   overflow: visible;
-  transition: box-shadow 0.2s, transform 0.2s;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   resize: none;
   border-top-color: var(--accent-light);
   border-left-color: var(--accent-light);
   border-right-color: var(--border-main);
   border-bottom-color: var(--border-main);
-  box-shadow: 2px 2px 4px var(--shadow);
+  backdrop-filter: blur(10px);
 }
 .xp-film-window.maximized {
   width: 98vw !important;
@@ -829,26 +889,44 @@ body {
   cursor: pointer;
   user-select: none;
   outline: none;
+  transition: all 0.2s ease;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.desktop-icon:hover {
+  background: rgba(255,255,255,0.1);
+  transform: scale(1.05);
 }
 .desktop-icon img {
   width: 48px;
   height: 48px;
   margin-bottom: 6px;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.18));
+  transition: all 0.2s ease;
+}
+
+.desktop-icon:hover img {
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
+  transform: scale(1.1);
 }
 .desktop-icon span {
-  background: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.85);
   color: #1e5a9c;
   font-size: 1.08em;
-  border-radius: 6px;
-  padding: 2px 8px;
-  margin-top: 2px;
+  border-radius: 8px;
+  padding: 4px 10px;
+  margin-top: 4px;
   text-align: center;
-  box-shadow: 0 1px 2px #b4d0ee;
-  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+  font-weight: 500;
+  backdrop-filter: blur(5px);
 }
 .desktop-icon:hover span, .desktop-icon:focus span {
   background: #b6d7ff;
   color: #222;
   outline: 2px solid #5a94d4;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 } 

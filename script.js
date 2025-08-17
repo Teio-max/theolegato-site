@@ -358,7 +358,7 @@ function createAboutWindow() {
     <div class="film-detail" style="text-align:left;max-width:480px;margin:0 auto;">
       <div style="text-align:center;margin-bottom:18px;">
         <img src="avatar.jpg" alt="Avatar" style="width:72px;height:72px;border-radius:12px;border:3px solid var(--border-main);box-shadow:0 2px 8px var(--shadow);margin-bottom:8px;">
-        <h2 style="margin:0;">Théolegato</h2>
+        <h2 style="margin:0;">Théo Van Waas</h2>
       </div>
       <p><strong>Bienvenue sur mon site personnel !</strong><br>
       Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j’aime partager.<br><br>
@@ -508,9 +508,9 @@ function createAdminPanelWindow(editFilmId = null) {
 
   // Onglets pour Films et Icônes
   let tabsHtml = `
-    <div style="display:flex;margin-bottom:18px;border-bottom:2px solid var(--border-main);">
-      <button id="tab-films" class="admin-tab active" onclick="switchAdminTab('films', '${winId}')" style="padding:8px 16px;border:none;background:var(--accent);color:#fff;cursor:pointer;">Films</button>
-      <button id="tab-icons" class="admin-tab" onclick="switchAdminTab('icons', '${winId}')" style="padding:8px 16px;border:none;background:transparent;color:var(--text);cursor:pointer;">Icônes Bureau</button>
+    <div style="display:flex;margin-bottom:18px;border-bottom:2px solid var(--border-main);background:var(--accent-light);border-radius:8px 8px 0 0;padding:4px 4px 0 4px;">
+      <button id="tab-films" class="admin-tab active" onclick="switchAdminTab('films', '${winId}')" style="padding:10px 20px;border:none;background:var(--accent);color:#fff;cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.1);">🎬 Films</button>
+      <button id="tab-icons" class="admin-tab" onclick="switchAdminTab('icons', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">🖥️ Icônes Bureau</button>
     </div>
   `;
 
@@ -689,13 +689,25 @@ window.switchAdminTab = function(tab, winId) {
   win.querySelectorAll('.admin-tab').forEach(t => {
     t.style.background = 'transparent';
     t.style.color = 'var(--text)';
+    t.style.boxShadow = 'none';
   });
   win.querySelector('#tab-' + tab).style.background = 'var(--accent)';
   win.querySelector('#tab-' + tab).style.color = '#fff';
+  win.querySelector('#tab-' + tab).style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
   
-  // Affichage du contenu
-  win.querySelector('#films-content').style.display = tab === 'films' ? 'block' : 'none';
-  win.querySelector('#icons-content').style.display = tab === 'icons' ? 'block' : 'none';
+  // Affichage du contenu avec animation
+  const filmsContent = win.querySelector('#films-content');
+  const iconsContent = win.querySelector('#icons-content');
+  
+  if (tab === 'films') {
+    filmsContent.style.display = 'block';
+    iconsContent.style.display = 'none';
+    filmsContent.style.animation = 'slideInFromTop 0.3s ease-out';
+  } else {
+    iconsContent.style.display = 'block';
+    filmsContent.style.display = 'none';
+    iconsContent.style.animation = 'slideInFromTop 0.3s ease-out';
+  }
 }
 
 let zIndexCounter = 1000;
@@ -890,7 +902,7 @@ function createMainWindow() {
     <div class="avatar">
       <img src="avatar.jpg" alt="Avatar" />
     </div>
-    <h1>Théolegato</h1>
+    <h1>Théo Van Waas</h1>
     <div class="about-section">
       <p><strong>Bienvenue sur mon site personnel !</strong><br>
       Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j’aime partager.<br><br>
