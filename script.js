@@ -759,19 +759,24 @@ window.switchAdminTab = function(tab, winId) {
   const iconsContent = win.querySelector('#icons-content');
   const homeContent = win.querySelector('#home-content');
   
+  console.log('Switching to tab:', tab);
+  console.log('Films content found:', !!filmsContent);
+  console.log('Icons content found:', !!iconsContent);
+  console.log('Home content found:', !!homeContent);
+  
   // Masquer tous les contenus
-  filmsContent.style.display = 'none';
-  iconsContent.style.display = 'none';
-  homeContent.style.display = 'none';
+  if (filmsContent) filmsContent.style.display = 'none';
+  if (iconsContent) iconsContent.style.display = 'none';
+  if (homeContent) homeContent.style.display = 'none';
   
   // Afficher le contenu sélectionné
-  if (tab === 'films') {
+  if (tab === 'films' && filmsContent) {
     filmsContent.style.display = 'block';
     filmsContent.style.animation = 'slideInFromTop 0.3s ease-out';
-  } else if (tab === 'icons') {
+  } else if (tab === 'icons' && iconsContent) {
     iconsContent.style.display = 'block';
     iconsContent.style.animation = 'slideInFromTop 0.3s ease-out';
-  } else if (tab === 'home') {
+  } else if (tab === 'home' && homeContent) {
     homeContent.style.display = 'block';
     homeContent.style.animation = 'slideInFromTop 0.3s ease-out';
   }
