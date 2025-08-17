@@ -95,11 +95,21 @@ let homePageConfig = JSON.parse(localStorage.getItem('homePageConfig')) || {
   ]
 };
 
+// Configuration du BSOD avec sauvegarde
+let bsodConfig = JSON.parse(localStorage.getItem('bsodConfig')) || {
+  title: 'A problem has been detected and windows has been shut down to prevent damage to your computer.',
+  errorCode: 'PAGE_FAULT_IN_NONPAGED_AREA',
+  technicalInfo: 'Technical information:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\n\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3',
+  instructions: 'If this is the first time you\'ve seen this Stop error screen, restart your computer. If this screen appears again, follow these steps:\n\nCheck for viruses on your computer. Remove any newly installed hard drives or hard drive controllers. Check your hard drive to make sure it is properly configured and terminated. Run CHKDSK /F to check for hard drive corruption, and then restart your computer.',
+  memoryDump: 'Beginning dump of physical memory...\nPhysical memory dump complete.\nContact your system administrator or technical support group for further assistance.'
+};
+
 // Fonction de sauvegarde
 function saveData() {
   localStorage.setItem('films', JSON.stringify(films));
   localStorage.setItem('desktopIcons', JSON.stringify(desktopIcons));
   localStorage.setItem('homePageConfig', JSON.stringify(homePageConfig));
+  localStorage.setItem('bsodConfig', JSON.stringify(bsodConfig));
 }
 
 // Fonction de rendu des icônes du bureau
@@ -523,12 +533,13 @@ function createAdminPanelWindow(editFilmId = null) {
   });
   tableHtml += '</table>';
 
-  // Onglets pour Films, Icônes et Page d'accueil
+  // Onglets pour Films, Icônes, Page d'accueil et BSOD
   let tabsHtml = `
     <div style="display:flex;margin-bottom:18px;border-bottom:2px solid var(--border-main);background:var(--accent-light);border-radius:8px 8px 0 0;padding:4px 4px 0 4px;">
       <button id="tab-films" class="admin-tab active" onclick="switchAdminTab('films', '${winId}')" style="padding:10px 20px;border:none;background:var(--accent);color:#fff;cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.1);">🎬 Films</button>
       <button id="tab-icons" class="admin-tab" onclick="switchAdminTab('icons', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">🖥️ Icônes Bureau</button>
       <button id="tab-home" class="admin-tab" onclick="switchAdminTab('home', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">🏠 Page d'accueil</button>
+      <button id="tab-bsod" class="admin-tab" onclick="switchAdminTab('bsod', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">💀 Page d'erreur</button>
     </div>
   `;
 
@@ -583,6 +594,22 @@ function createAdminPanelWindow(editFilmId = null) {
     </div>
   `;
 
+  // Contenu du BSOD
+  let bsodHtml = `
+    <div id="bsod-content" style="display:none;">
+      <form id="admin-bsod-form" style="margin-bottom:18px;">
+        <h3 style="margin-top:0;">Modifier la page d'erreur Windows XP</h3>
+        <label>Titre principal :<br><textarea name="title" rows="2" style="width:90%">${bsodConfig?.title || 'A problem has been detected and windows has been shut down to prevent damage to your computer.'}</textarea></label><br><br>
+        <label>Code d'erreur : <input type="text" name="errorCode" value="${bsodConfig?.errorCode || 'PAGE_FAULT_IN_NONPAGED_AREA'}" style="width:70%"></label><br><br>
+        <label>Informations techniques :<br><textarea name="technicalInfo" rows="4" style="width:90%">${bsodConfig?.technicalInfo || 'Technical information:\\n\\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\\n\\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3'}</textarea></label><br><br>
+        <label>Instructions :<br><textarea name="instructions" rows="6" style="width:90%">${bsodConfig?.instructions || 'If this is the first time you\'ve seen this Stop error screen, restart your computer. If this screen appears again, follow these steps:\\n\\nCheck for viruses on your computer. Remove any newly installed hard drives or hard drive controllers. Check your hard drive to make sure it is properly configured and terminated. Run CHKDSK /F to check for hard drive corruption, and then restart your computer.'}</textarea></label><br><br>
+        <label>Dump mémoire :<br><textarea name="memoryDump" rows="3" style="width:90%">${bsodConfig?.memoryDump || 'Beginning dump of physical memory...\\nPhysical memory dump complete.\\nContact your system administrator or technical support group for further assistance.'}</textarea></label><br><br>
+        <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:var(--accent);color:#fff;border:none;">Enregistrer</button>
+        <button type="button" onclick="testBSOD()" style="padding:7px 18px;font-size:1em;border-radius:6px;background:#e74c3c;color:#fff;border:none;margin-left:10px;">Tester</button>
+      </form>
+    </div>
+  `;
+
   win.innerHTML = `
     <div class="xp-titlebar xp-titlebar-film" onmousedown="startDrag(event, '${winId}')">
       <span class="xp-title-content"><img src="icons/key.png" class="xp-icon" alt=""><span>Administration</span></span>
@@ -602,6 +629,7 @@ function createAdminPanelWindow(editFilmId = null) {
       </div>
       ${iconsHtml}
       ${homeHtml}
+      ${bsodHtml}
     </div>
   `;
   document.body.appendChild(win);
@@ -685,6 +713,22 @@ function createAdminPanelWindow(editFilmId = null) {
     
     saveData();
     updateMainWindow();
+    win.remove();
+    createAdminPanelWindow();
+  };
+
+  // Gestion du formulaire BSOD
+  win.querySelector('#admin-bsod-form').onsubmit = function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this).entries());
+    
+    bsodConfig.title = data.title;
+    bsodConfig.errorCode = data.errorCode;
+    bsodConfig.technicalInfo = data.technicalInfo;
+    bsodConfig.instructions = data.instructions;
+    bsodConfig.memoryDump = data.memoryDump;
+    
+    saveData();
     win.remove();
     createAdminPanelWindow();
   };
@@ -779,7 +823,17 @@ window.switchAdminTab = function(tab, winId) {
   } else if (tab === 'home' && homeContent) {
     homeContent.style.display = 'block';
     homeContent.style.animation = 'slideInFromTop 0.3s ease-out';
+  } else if (tab === 'bsod') {
+    const bsodContent = win.querySelector('#bsod-content');
+    if (bsodContent) {
+      bsodContent.style.display = 'block';
+      bsodContent.style.animation = 'slideInFromTop 0.3s ease-out';
+    }
   }
+}
+
+window.testBSOD = function() {
+  showBSOD();
 }
 
 let zIndexCounter = 1000;
@@ -875,14 +929,25 @@ function showBSOD() {
   const bsod = document.createElement('div');
   bsod.className = 'bsod';
   bsod.innerHTML = `
-    <p>A problem has been detected and windows has been shut down to prevent damage to your computer.</p>
-    <p>... (texte d'erreur Windows XP)</p>
-    <p>... a lot of text here ... </p>
-    <p>... more text ...</p>
-    <p>Beginning dump of physical memory ...</p>
+    <p>${bsodConfig.title}</p>
+    <p>${bsodConfig.errorCode}</p>
+    <p>${bsodConfig.technicalInfo.replace(/\n/g, '<br>')}</p>
+    <p>${bsodConfig.instructions.replace(/\n/g, '<br>')}</p>
+    <p>${bsodConfig.memoryDump.replace(/\n/g, '<br>')}</p>
+    <div style="margin-top: 20px; text-align: center;">
+      <button onclick="hideBSOD()" style="background: #0000a8; color: #fff; border: 1px solid #fff; padding: 10px 20px; cursor: pointer; font-family: 'Lucida Console', monospace;">Retour au site</button>
+    </div>
   `;
   document.body.appendChild(bsod);
   document.body.style.overflow = 'hidden';
+}
+
+function hideBSOD() {
+  const bsod = document.querySelector('.bsod');
+  if (bsod) {
+    bsod.remove();
+    document.body.style.overflow = '';
+  }
 }
 
 window.closeFilmWindow = function(winId) {
