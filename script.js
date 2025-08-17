@@ -995,8 +995,10 @@ function updateMainWindow() {
     <div id="content"></div>
   `;
   
-  // Re-attacher les événements
-  attachMainWindowEvents();
+  // Re-attacher les événements immédiatement
+  setTimeout(() => {
+    attachMainWindowEvents();
+  }, 50);
 }
 
 function attachMainWindowEvents() {
@@ -1011,14 +1013,14 @@ function attachMainWindowEvents() {
   console.log('Found elements:', { adminBtn: !!adminBtn, toggleDark: !!toggleDark, btnMin: !!btnMin, btnMax: !!btnMax, btnClose: !!btnClose });
   
   if (adminBtn) {
-    adminBtn.onclick = () => {
+    adminBtn.addEventListener('click', () => {
       console.log('Admin button clicked');
       createAdminLoginWindow();
-    };
+    });
   }
   
   if (toggleDark) {
-    toggleDark.onclick = () => {
+    toggleDark.addEventListener('click', () => {
       console.log('Toggle dark clicked');
       document.body.classList.toggle('dark-mode');
       if (document.body.classList.contains('dark-mode')) {
@@ -1028,29 +1030,29 @@ function attachMainWindowEvents() {
         localStorage.setItem('dark-mode', '0');
         toggleDark.textContent = '🌙';
       }
-    };
+    });
   }
   
   if (btnMin) {
-    btnMin.onclick = () => {
+    btnMin.addEventListener('click', () => {
       console.log('Minimize clicked');
       minimizeWindow('container', 'Mes Liens', 'avatar.jpg');
-    };
+    });
   }
   
   if (btnMax) {
-    btnMax.onclick = () => {
+    btnMax.addEventListener('click', () => {
       console.log('Maximize clicked');
       maxFilmWindow('container');
-    };
+    });
   }
   
   if (btnClose) {
-    btnClose.onclick = () => {
+    btnClose.addEventListener('click', () => {
       console.log('Close clicked');
       playErrorSound();
       showBSOD();
-    };
+    });
   }
 }
 
