@@ -960,7 +960,7 @@ function updateMainWindow() {
   
   // Générer les liens sociaux
   let socialLinksHtml = '';
-  homePageConfig.socialLinks.forEach(link => {
+  (homePageConfig?.socialLinks || []).forEach(link => {
     socialLinksHtml += `<li><a href="${link.url}" target="_blank">${link.name}</a></li>`;
   });
   
@@ -981,35 +981,45 @@ function updateMainWindow() {
     <div class="avatar">
       <img src="avatar.jpg" alt="Avatar" />
     </div>
-    <h1>${homePageConfig.name}</h1>
+    <h1>${homePageConfig?.name || 'Théo Van Waas'}</h1>
     <div class="about-section">
-      <p><strong>${homePageConfig.welcomeMessage}</strong><br>
-      ${homePageConfig.description}<br><br>
-      <strong>But du site :</strong> ${homePageConfig.sitePurpose}<br><br>
+      <p><strong>${homePageConfig?.welcomeMessage || 'Bienvenue sur mon site personnel !'}</strong><br>
+      ${homePageConfig?.description || 'Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j\'aime partager.'}<br><br>
+      <strong>But du site :</strong> ${homePageConfig?.sitePurpose || 'Centraliser mes passions, mes avis et mes liens favoris dans une interface rétro Windows XP.'}<br><br>
       <strong>Contact & réseaux :</strong></p>
       <ul style="margin-left:18px;">
         ${socialLinksHtml}
       </ul>
-      <p style="font-size:0.98em;color:#888;margin-top:18px;">${homePageConfig.footerText}</p>
+      <p style="font-size:0.98em;color:#888;margin-top:18px;">${homePageConfig?.footerText || 'Site réalisé avec amour et nostalgie 💾'}</p>
     </div>
     <div id="content"></div>
   `;
   
   // Re-attacher les événements
-  document.getElementById('admin-btn').onclick = () => createAdminLoginWindow();
-  document.getElementById('toggle-dark').onclick = () => {
+  attachMainWindowEvents();
+}
+
+function attachMainWindowEvents() {
+  const adminBtn = document.getElementById('admin-btn');
+  const toggleDark = document.getElementById('toggle-dark');
+  const btnMin = document.getElementById('btn-min');
+  const btnMax = document.getElementById('btn-max');
+  const btnClose = document.getElementById('btn-close');
+  
+  if (adminBtn) adminBtn.onclick = () => createAdminLoginWindow();
+  if (toggleDark) toggleDark.onclick = () => {
     document.body.classList.toggle('dark-mode');
     if (document.body.classList.contains('dark-mode')) {
       localStorage.setItem('dark-mode', '1');
-      document.getElementById('toggle-dark').textContent = '☀️';
+      toggleDark.textContent = '☀️';
     } else {
       localStorage.setItem('dark-mode', '0');
-      document.getElementById('toggle-dark').textContent = '🌙';
+      toggleDark.textContent = '🌙';
     }
   };
-  document.getElementById('btn-min').onclick = () => minimizeWindow('container', 'Mes Liens', 'avatar.jpg');
-  document.getElementById('btn-max').onclick = () => maxFilmWindow('container');
-  document.getElementById('btn-close').onclick = () => { playErrorSound(); showBSOD(); };
+  if (btnMin) btnMin.onclick = () => minimizeWindow('container', 'Mes Liens', 'avatar.jpg');
+  if (btnMax) btnMax.onclick = () => maxFilmWindow('container');
+  if (btnClose) btnClose.onclick = () => { playErrorSound(); showBSOD(); };
 }
 
 function createMainWindow() {
