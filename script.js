@@ -349,6 +349,81 @@ async function uploadFilmImageInWindow(filmId, winId) {
   }
 }
 
+// Fonction d'upload multiple pour galerie
+async function uploadGalleryImages() {
+  const fileInput = document.getElementById('gallery-upload');
+  const files = Array.from(fileInput.files);
+  
+  if (files.length === 0) {
+    alert('Veuillez sélectionner au moins une image');
+    return;
+  }
+  
+  const token = localStorage.getItem('github_token');
+  if (!token) {
+    alert('Token GitHub requis. Configurez-le dans l\'onglet GitHub.');
+    return;
+  }
+  
+  try {
+    showNotification(`📸 Upload de ${files.length} image(s) en cours...`, 'info');
+    
+    const uploadedUrls = [];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      
+      if (!file.type.startsWith('image/')) {
+        console.warn(`Fichier ignoré (pas une image): ${file.name}`);
+        continue;
+      }
+      
+      // Convertir en base64
+      const base64Content = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+        reader.readAsDataURL(file);
+      });
+      
+      const fileName = `gallery_${Date.now()}_${i}_${file.name}`;
+      const filePath = `images/films/${fileName}`;
+      
+      // Upload vers GitHub
+      const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `📸 Upload galerie: ${fileName}`,
+          content: base64Content,
+          branch: GITHUB_CONFIG.branch
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        uploadedUrls.push(result.content.download_url);
+      } else {
+        throw new Error(`Échec upload ${file.name}`);
+      }
+    }
+    
+    // Ajouter les URLs à la galerie existante
+    const galerieTextarea = document.querySelector('textarea[name="galerie"]');
+    const existingUrls = galerieTextarea.value.split(',').map(url => url.trim()).filter(url => url);
+    const allUrls = [...existingUrls, ...uploadedUrls];
+    galerieTextarea.value = allUrls.join(', ');
+    
+    showNotification(`✅ ${uploadedUrls.length} image(s) uploadée(s) !`, 'success');
+    
+  } catch (error) {
+    console.error('Erreur upload galerie:', error);
+    showNotification('❌ Erreur lors de l\'upload de la galerie', 'error');
+  }
+}
+
 // Fonction principale de sauvegarde
 async function saveData() {
   const success = await saveDataToGitHub();
@@ -795,7 +870,10 @@ function createAdminPanelWindow(editFilmId = null) {
     <input type="text" name="image" value="${filmToEdit ? filmToEdit.image : ''}" placeholder="URL de l'image" style="width:70%"><br>
     <input type="file" id="film-image-upload" accept="image/*" style="margin:8px 0;">
     <button type="button" onclick="uploadFilmImage()" style="padding:4px 12px;background:#3498db;color:#fff;border:none;border-radius:4px;">📤 Upload</button><br><br>
-    <label>Galerie (URLs séparées par des virgules) :<br><textarea name="galerie" rows="2" style="width:90%">${filmToEdit && filmToEdit.galerie ? filmToEdit.galerie.join(', ') : ''}</textarea></label><br><br>
+    <label>Galerie d'images :</label><br>
+    <textarea name="galerie" rows="2" placeholder="URLs séparées par des virgules" style="width:90%">${filmToEdit && filmToEdit.galerie ? filmToEdit.galerie.join(', ') : ''}</textarea><br>
+    <input type="file" id="gallery-upload" accept="image/*" multiple style="margin:8px 0;">
+    <button type="button" onclick="uploadGalleryImages()" style="padding:4px 12px;background:#9b59b6;color:#fff;border:none;border-radius:4px;">📸 Upload Galerie</button><br><br>
     <label>Bande-annonce (URL YouTube) : <input type="text" name="bandeAnnonce" value="${filmToEdit ? filmToEdit.bandeAnnonce : ''}" style="width:70%"></label><br><br>
     <label>Liens critiques (nom|url, un par ligne) :<br><textarea name="liens" rows="2" style="width:90%">${filmToEdit && filmToEdit.liens ? filmToEdit.liens.map(l=>l.nom+'|'+l.url).join('\n') : ''}</textarea></label><br><br>
     <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:var(--accent);color:#fff;border:none;">${filmToEdit ? 'Enregistrer' : 'Ajouter'}</button>
