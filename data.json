@@ -98,7 +98,7 @@
   "bsodConfig": {
     "title": "NOOOOON tout est cassÃ© comment je vais faire ?!",
     "errorCode": "PAGE_FERMEE_SABOTAGE_VOLONTAIRE",
-    "technicalInfo": "Information technique:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\nAlors en faite, elle a mis sa souris sur fermer l'onglet et là, elle a cliqué sans aucun scrupule.\n\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3",
+    "technicalInfo": "Information technique:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\nAlors en faite, la souris c'est approchée de la croix rouge et sans prévenir elle a cliquer dessus.\n\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3",
     "instructions": "Paniquez... Respirez... Cliquez juste en dessous",
     "memoryDump": "Beginning dump of physical memory...\nPhysical memory dump complete.\nContact your system administrator or technical support group for further assistance."
   }
