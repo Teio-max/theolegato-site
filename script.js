@@ -1214,6 +1214,7 @@ window.setNoteWindow = function(id, note, winId) {
   if (film) {
     film.note = note;
     updateFilmWindow(id, winId);
+    saveData(); // Sauvegarder après modification
   }
 };
 window.updateImageWindow = function(id, winId) {
@@ -1222,6 +1223,7 @@ window.updateImageWindow = function(id, winId) {
   if (film) {
     film.image = url;
     updateFilmWindow(id, winId);
+    saveData(); // Sauvegarder après modification
   }
 };
 window.updateCritiqueWindow = function(id, winId) {
@@ -1230,6 +1232,7 @@ window.updateCritiqueWindow = function(id, winId) {
   if (film) {
     film.critique = critique;
     updateFilmWindow(id, winId);
+    saveData(); // Sauvegarder après modification
   }
 };
 function updateFilmWindow(id, winId) {
