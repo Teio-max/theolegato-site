@@ -12,8 +12,14 @@
       ],
       "bandeAnnonce": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       "liens": [
-        { "nom": "Allociné", "url": "https://www.allocine.fr/" },
-        { "nom": "SensCritique", "url": "https://www.senscritique.com/" }
+        {
+          "nom": "Allociné",
+          "url": "https://www.allocine.fr/"
+        },
+        {
+          "nom": "SensCritique",
+          "url": "https://www.senscritique.com/"
+        }
       ]
     },
     {
@@ -66,28 +72,45 @@
       "name": "Films",
       "icon": "icons/film.png",
       "action": "createFilmsWindow",
-      "position": { "x": 50, "y": 50 }
+      "position": {
+        "x": 50,
+        "y": 50
+      }
     },
     {
       "id": "icon-manga",
       "name": "Manga",
       "icon": "icons/key.png",
       "action": "createMangaWindow",
-      "position": { "x": 50, "y": 150 }
+      "position": {
+        "x": 50,
+        "y": 150
+      }
     }
   ],
   "homePageConfig": {
     "name": "Théo Van Waas",
-    "welcomeMessage": "Bienvenue sur mon site personnel !",
-    "description": "Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j'aime partager.",
-    "sitePurpose": "Centraliser mes passions, mes avis et mes liens favoris dans une interface rétro Windows XP.",
-    "footerText": "Site réalisé avec amour et nostalgie 💾",
+    "welcomeMessage": "Bienvenue !",
+    "description": "Ici, je vais essayer de r�unir toutes mes informations et mes travaux ",
+    "sitePurpose": "Rendre mes �crits disponibles dans une forme plus originale. ",
+    "footerText": "Ne cassez pas mon site s'il vous plait !!",
     "socialLinks": [
-      { "name": "Instagram", "url": "https://www.instagram.com/theolegato_o?igsh=Z2w5eTVqemNrZHpl" },
-      { "name": "Twitter", "url": "#" },
-      { "name": "Tumblr", "url": "#" },
-      { "name": "Mangacollec", "url": "https://www.mangacollec.com/user/theolegato/collection" },
-      { "name": "Letterboxd", "url": "https://letterboxd.com/tei/" }
+      {
+        "name": "Instagram",
+        "url": "https://www.instagram.com/theolegato_o?igsh=Z2w5eTVqemNrZHpl"
+      },
+      {
+        "name": "Tumblr",
+        "url": "#https://www.tumblr.com/theolegato?source=share"
+      },
+      {
+        "name": "Mangacollec",
+        "url": "https://www.mangacollec.com/user/theolegato/collection"
+      },
+      {
+        "name": "Letterboxd",
+        "url": "https://letterboxd.com/tei/"
+      }
     ]
   },
   "bsodConfig": {
