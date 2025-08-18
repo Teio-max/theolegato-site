@@ -213,6 +213,142 @@ function saveDataLocally() {
   localStorage.setItem('bsodConfig', JSON.stringify(bsodConfig));
 }
 
+// Fonction d'upload d'image pour films
+async function uploadFilmImage() {
+  const fileInput = document.getElementById('film-image-upload');
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert('Veuillez sélectionner une image');
+    return;
+  }
+  
+  if (!file.type.startsWith('image/')) {
+    alert('Veuillez sélectionner un fichier image valide');
+    return;
+  }
+  
+  const token = localStorage.getItem('github_token');
+  if (!token) {
+    alert('Token GitHub requis. Configurez-le dans l\'onglet GitHub.');
+    return;
+  }
+  
+  try {
+    // Convertir le fichier en base64
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const base64Content = e.target.result.split(',')[1];
+      const fileName = `film_${Date.now()}_${file.name}`;
+      const filePath = `images/films/${fileName}`;
+      
+      // Upload vers GitHub
+      const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `📸 Upload image film: ${fileName}`,
+          content: base64Content,
+          branch: GITHUB_CONFIG.branch
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        const imageUrl = result.content.download_url;
+        
+        // Mettre à jour le champ URL
+        document.querySelector('input[name="image"]').value = imageUrl;
+        
+        showNotification('✅ Image uploadée avec succès !', 'success');
+      } else {
+        throw new Error('Échec upload');
+      }
+    };
+    
+    reader.readAsDataURL(file);
+    
+  } catch (error) {
+    console.error('Erreur upload:', error);
+    showNotification('❌ Erreur lors de l\'upload', 'error');
+  }
+}
+
+// Fonction d'upload d'image dans une fenêtre de film
+async function uploadFilmImageInWindow(filmId, winId) {
+  const fileInput = document.getElementById(`film-image-upload-${winId}`);
+  const file = fileInput.files[0];
+  
+  if (!file) {
+    alert('Veuillez sélectionner une image');
+    return;
+  }
+  
+  if (!file.type.startsWith('image/')) {
+    alert('Veuillez sélectionner un fichier image valide');
+    return;
+  }
+  
+  const token = localStorage.getItem('github_token');
+  if (!token) {
+    alert('Token GitHub requis. Configurez-le dans l\'onglet GitHub.');
+    return;
+  }
+  
+  try {
+    showNotification('📤 Upload en cours...', 'info');
+    
+    // Convertir le fichier en base64
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const base64Content = e.target.result.split(',')[1];
+      const fileName = `film_${Date.now()}_${file.name}`;
+      const filePath = `images/films/${fileName}`;
+      
+      // Upload vers GitHub
+      const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${filePath}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `📸 Upload image film: ${fileName}`,
+          content: base64Content,
+          branch: GITHUB_CONFIG.branch
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        const imageUrl = result.content.download_url;
+        
+        // Mettre à jour le champ URL et l'image du film
+        document.getElementById(`imgurl_${winId}`).value = imageUrl;
+        const film = films.find(f => f.id === filmId);
+        if (film) {
+          film.image = imageUrl;
+          updateFilmWindow(filmId, winId);
+          saveData();
+        }
+        
+        showNotification('✅ Image uploadée avec succès !', 'success');
+      } else {
+        throw new Error('Échec upload');
+      }
+    };
+    
+    reader.readAsDataURL(file);
+    
+  } catch (error) {
+    console.error('Erreur upload:', error);
+    showNotification('❌ Erreur lors de l\'upload', 'error');
+  }
+}
+
 // Fonction principale de sauvegarde
 async function saveData() {
   const success = await saveDataToGitHub();
@@ -655,7 +791,10 @@ function createAdminPanelWindow(editFilmId = null) {
     <label>Titre : <input type="text" name="titre" value="${filmToEdit ? filmToEdit.titre : ''}" required style="width:70%"></label><br><br>
     <label>Note (0-5) : <input type="number" name="note" min="0" max="5" value="${filmToEdit ? filmToEdit.note : 0}" style="width:50px"></label><br><br>
     <label>Critique :<br><textarea name="critique" rows="3" style="width:90%">${filmToEdit ? filmToEdit.critique : ''}</textarea></label><br><br>
-    <label>Image principale (URL) : <input type="text" name="image" value="${filmToEdit ? filmToEdit.image : ''}" style="width:70%"></label><br><br>
+    <label>Image principale :</label><br>
+    <input type="text" name="image" value="${filmToEdit ? filmToEdit.image : ''}" placeholder="URL de l'image" style="width:70%"><br>
+    <input type="file" id="film-image-upload" accept="image/*" style="margin:8px 0;">
+    <button type="button" onclick="uploadFilmImage()" style="padding:4px 12px;background:#3498db;color:#fff;border:none;border-radius:4px;">📤 Upload</button><br><br>
     <label>Galerie (URLs séparées par des virgules) :<br><textarea name="galerie" rows="2" style="width:90%">${filmToEdit && filmToEdit.galerie ? filmToEdit.galerie.join(', ') : ''}</textarea></label><br><br>
     <label>Bande-annonce (URL YouTube) : <input type="text" name="bandeAnnonce" value="${filmToEdit ? filmToEdit.bandeAnnonce : ''}" style="width:70%"></label><br><br>
     <label>Liens critiques (nom|url, un par ligne) :<br><textarea name="liens" rows="2" style="width:90%">${filmToEdit && filmToEdit.liens ? filmToEdit.liens.map(l=>l.nom+'|'+l.url).join('\n') : ''}</textarea></label><br><br>
@@ -1244,8 +1383,11 @@ function updateFilmWindow(id, winId) {
     <div class="note">Note : ${renderStars(film.note, film.id, winId)}</div>
     <div class="critique">${film.critique || 'Aucune critique pour le moment.'}</div>
     <div style="margin-top:18px;">
-      <label>Image (URL) : <input type="text" id="imgurl_${winId}" value="${film.image}" style="width:60%"></label>
-      <button onclick="updateImageWindow(${film.id},'${winId}')">Mettre à jour</button>
+      <label>Image :</label><br>
+      <input type="text" id="imgurl_${winId}" value="${film.image}" placeholder="URL de l'image" style="width:60%"><br>
+      <input type="file" id="film-image-upload-${winId}" accept="image/*" style="margin:8px 0;">
+      <button type="button" onclick="uploadFilmImageInWindow(${film.id}, '${winId}')" style="padding:4px 12px;background:#3498db;color:#fff;border:none;border-radius:4px;">📤 Upload</button>
+      <button onclick="updateImageWindow(${film.id},'${winId}')" style="margin-left:8px;">Mettre à jour</button>
     </div>
     <div id="imgpreview_${winId}">${film.image ? `<img src="${film.image}" alt="Image du film">` : ''}</div>
     <div style="margin-top:18px;">
