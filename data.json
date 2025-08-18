@@ -12,8 +12,14 @@
       ],
       "bandeAnnonce": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       "liens": [
-        { "nom": "Allociné", "url": "https://www.allocine.fr/" },
-        { "nom": "SensCritique", "url": "https://www.senscritique.com/" }
+        {
+          "nom": "AllocinÃƒÂ©",
+          "url": "https://www.allocine.fr/"
+        },
+        {
+          "nom": "SensCritique",
+          "url": "https://www.senscritique.com/"
+        }
       ]
     },
     {
@@ -48,16 +54,6 @@
       "galerie": [],
       "bandeAnnonce": "",
       "liens": []
-    },
-    {
-      "id": 5,
-      "titre": "Film 5",
-      "note": 0,
-      "critique": "",
-      "image": "",
-      "galerie": [],
-      "bandeAnnonce": "",
-      "liens": []
     }
   ],
   "desktopIcons": [
@@ -66,35 +62,44 @@
       "name": "Films",
       "icon": "icons/film.png",
       "action": "createFilmsWindow",
-      "position": { "x": 50, "y": 50 }
+      "position": {
+        "x": 50,
+        "y": 50
+      }
     },
     {
       "id": "icon-manga",
       "name": "Manga",
       "icon": "icons/key.png",
       "action": "createMangaWindow",
-      "position": { "x": 50, "y": 150 }
+      "position": {
+        "x": 50,
+        "y": 150
+      }
     }
   ],
   "homePageConfig": {
-    "name": "Théo Van Waas",
-    "welcomeMessage": "Bienvenue sur mon site personnel !",
-    "description": "Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j'aime partager.",
-    "sitePurpose": "Centraliser mes passions, mes avis et mes liens favoris dans une interface rétro Windows XP.",
-    "footerText": "Site réalisé avec amour et nostalgie 💾",
+    "name": "ThÃƒÂ©o Van Waas",
+    "welcomeMessage": "Bienvenue !",
+    "description": "Ici, je vais essayer de rÃ©unir toutes mes informations et mes travaux ",
+    "sitePurpose": "Rendre mes Ã©crits disponibles dans une forme plus originale. ",
+    "footerText": "Ne cassez pas mon site s'il vous plait !!",
     "socialLinks": [
-      { "name": "Instagram", "url": "https://www.instagram.com/theolegato_o?igsh=Z2w5eTVqemNrZHpl" },
-      { "name": "Twitter", "url": "#" },
-      { "name": "Tumblr", "url": "#" },
-      { "name": "Mangacollec", "url": "https://www.mangacollec.com/user/theolegato/collection" },
-      { "name": "Letterboxd", "url": "https://letterboxd.com/tei/" }
+      {
+        "name": "Instagram",
+        "url": "https://www.instagram.com/theolegato_o?igsh=Z2w5eTVqemNrZHpl"
+      },
+      {
+        "name": "Tumblr",
+        "url": "#https://www.tumblr.com/theolegato?source=share"
+      }
     ]
   },
   "bsodConfig": {
-    "title": "A problem has been detected and windows has been shut down to prevent damage to your computer.",
-    "errorCode": "PAGE_FAULT_IN_NONPAGED_AREA",
+    "title": "NOOOOON tout est cassé comment je vais faire ?!",
+    "errorCode": "PAGE_FERMEE_SABOTAGE_VOLONTAIRE",
     "technicalInfo": "Technical information:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\n\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3",
-    "instructions": "If this is the first time you've seen this Stop error screen, restart your computer. If this screen appears again, follow these steps:\n\nCheck for viruses on your computer. Remove any newly installed hard drives or hard drive controllers. Check your hard drive to make sure it is properly configured and terminated. Run CHKDSK /F to check for hard drive corruption, and then restart your computer.",
+    "instructions": "Paniquez... Respirez... Cliquez juste en dessous",
     "memoryDump": "Beginning dump of physical memory...\nPhysical memory dump complete.\nContact your system administrator or technical support group for further assistance."
   }
 }
