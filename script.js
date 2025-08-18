@@ -1,5 +1,14 @@
-// Données de base avec sauvegarde locale
-let films = JSON.parse(localStorage.getItem('films')) || [
+// Configuration GitHub pour la sauvegarde persistante
+const GITHUB_CONFIG = {
+  owner: 'Teio-max',
+  repo: 'theolegato-site',
+  branch: 'main',
+  dataFile: 'data.json',
+  token: localStorage.getItem('github_token') || null
+};
+
+// Données de base avec sauvegarde GitHub
+let films = [
   {
     id: 1,
     titre: 'Film 1',
@@ -61,8 +70,8 @@ let films = JSON.parse(localStorage.getItem('films')) || [
   }
 ];
 
-// Configuration des icônes du bureau avec sauvegarde
-let desktopIcons = JSON.parse(localStorage.getItem('desktopIcons')) || [
+// Configuration des icônes du bureau
+let desktopIcons = [
   {
     id: 'icon-films',
     name: 'Films',
@@ -79,8 +88,8 @@ let desktopIcons = JSON.parse(localStorage.getItem('desktopIcons')) || [
   }
 ];
 
-// Configuration de la page d'accueil avec sauvegarde
-let homePageConfig = JSON.parse(localStorage.getItem('homePageConfig')) || {
+// Configuration de la page d'accueil
+let homePageConfig = {
   name: 'Théo Van Waas',
   welcomeMessage: 'Bienvenue sur mon site personnel !',
   description: 'Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j\'aime partager.',
@@ -95,8 +104,8 @@ let homePageConfig = JSON.parse(localStorage.getItem('homePageConfig')) || {
   ]
 };
 
-// Configuration du BSOD avec sauvegarde
-let bsodConfig = JSON.parse(localStorage.getItem('bsodConfig')) || {
+// Configuration du BSOD
+let bsodConfig = {
   title: 'A problem has been detected and windows has been shut down to prevent damage to your computer.',
   errorCode: 'PAGE_FAULT_IN_NONPAGED_AREA',
   technicalInfo: 'Technical information:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\n\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3',
@@ -104,12 +113,148 @@ let bsodConfig = JSON.parse(localStorage.getItem('bsodConfig')) || {
   memoryDump: 'Beginning dump of physical memory...\nPhysical memory dump complete.\nContact your system administrator or technical support group for further assistance.'
 };
 
-// Fonction de sauvegarde
-function saveData() {
+// Fonction de chargement des données depuis GitHub
+async function loadDataFromGitHub() {
+  try {
+    const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dataFile}?ref=${GITHUB_CONFIG.branch}`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      const content = JSON.parse(atob(data.content));
+      
+      films = content.films || [];
+      desktopIcons = content.desktopIcons || [];
+      homePageConfig = content.homePageConfig || {};
+      bsodConfig = content.bsodConfig || {};
+      
+      console.log('✅ Données chargées depuis GitHub');
+      return true;
+    } else {
+      console.warn('⚠️ Impossible de charger depuis GitHub, utilisation des données par défaut');
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Erreur lors du chargement:', error);
+    return false;
+  }
+}
+
+// Fonction de sauvegarde sur GitHub
+async function saveDataToGitHub() {
+  if (!GITHUB_CONFIG.token) {
+    console.warn('⚠️ Token GitHub manquant, sauvegarde locale uniquement');
+    saveDataLocally();
+    return false;
+  }
+
+  try {
+    // Récupérer le SHA actuel du fichier
+    const getResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dataFile}?ref=${GITHUB_CONFIG.branch}`, {
+      headers: {
+        'Authorization': `token ${GITHUB_CONFIG.token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    let sha = null;
+    if (getResponse.ok) {
+      const currentFile = await getResponse.json();
+      sha = currentFile.sha;
+    }
+
+    // Préparer les données
+    const dataToSave = {
+      films,
+      desktopIcons,
+      homePageConfig,
+      bsodConfig
+    };
+
+    const content = btoa(JSON.stringify(dataToSave, null, 2));
+
+    // Sauvegarder sur GitHub
+    const saveResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dataFile}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${GITHUB_CONFIG.token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `🔄 Mise à jour des données du site - ${new Date().toLocaleString('fr-FR')}`,
+        content: content,
+        sha: sha,
+        branch: GITHUB_CONFIG.branch
+      })
+    });
+
+    if (saveResponse.ok) {
+      console.log('✅ Données sauvegardées sur GitHub');
+      showNotification('✅ Modifications sauvegardées !', 'success');
+      return true;
+    } else {
+      const error = await saveResponse.json();
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+      showNotification('❌ Erreur de sauvegarde', 'error');
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Erreur lors de la sauvegarde:', error);
+    showNotification('❌ Erreur de sauvegarde', 'error');
+    return false;
+  }
+}
+
+// Fonction de sauvegarde locale (fallback)
+function saveDataLocally() {
   localStorage.setItem('films', JSON.stringify(films));
   localStorage.setItem('desktopIcons', JSON.stringify(desktopIcons));
   localStorage.setItem('homePageConfig', JSON.stringify(homePageConfig));
   localStorage.setItem('bsodConfig', JSON.stringify(bsodConfig));
+}
+
+// Fonction principale de sauvegarde
+async function saveData() {
+  const success = await saveDataToGitHub();
+  if (!success) {
+    saveDataLocally();
+  }
+}
+
+// Fonction pour afficher des notifications
+function showNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    z-index: 10000;
+    opacity: 0;
+    transform: translateX(100%);
+    transition: all 0.3s ease;
+    ${type === 'success' ? 'background: #27ae60;' : ''}
+    ${type === 'error' ? 'background: #e74c3c;' : ''}
+    ${type === 'info' ? 'background: #3498db;' : ''}
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.style.opacity = '1';
+    notification.style.transform = 'translateX(0)';
+  }, 100);
+  
+  setTimeout(() => {
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateX(100%)';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
 }
 
 // Fonction de rendu des icônes du bureau
@@ -533,13 +678,14 @@ function createAdminPanelWindow(editFilmId = null) {
   });
   tableHtml += '</table>';
 
-  // Onglets pour Films, Icônes, Page d'accueil et BSOD
+  // Onglets pour Films, Icônes, Page d'accueil, BSOD et GitHub
   let tabsHtml = `
     <div style="display:flex;margin-bottom:18px;border-bottom:2px solid var(--border-main);background:var(--accent-light);border-radius:8px 8px 0 0;padding:4px 4px 0 4px;">
       <button id="tab-films" class="admin-tab active" onclick="switchAdminTab('films', '${winId}')" style="padding:10px 20px;border:none;background:var(--accent);color:#fff;cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.1);">🎬 Films</button>
       <button id="tab-icons" class="admin-tab" onclick="switchAdminTab('icons', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">🖥️ Icônes Bureau</button>
       <button id="tab-home" class="admin-tab" onclick="switchAdminTab('home', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">🏠 Page d'accueil</button>
       <button id="tab-bsod" class="admin-tab" onclick="switchAdminTab('bsod', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">💀 Page d'erreur</button>
+      <button id="tab-github" class="admin-tab" onclick="switchAdminTab('github', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">⚙️ GitHub</button>
     </div>
   `;
 
@@ -610,6 +756,43 @@ function createAdminPanelWindow(editFilmId = null) {
     </div>
   `;
 
+  // Contenu GitHub
+  let githubHtml = `
+    <div id="github-content" style="display:none;">
+      <h3 style="margin-top:0;">⚙️ Configuration GitHub</h3>
+      <div style="background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:20px;border-left:4px solid var(--accent);">
+        <p><strong>🔐 Sauvegarde persistante</strong></p>
+        <p>Pour que vos modifications soient sauvegardées de façon permanente, vous devez configurer un token GitHub.</p>
+      </div>
+      
+      <form id="admin-github-form" style="margin-bottom:18px;">
+        <label>Token GitHub Personnel :<br>
+        <input type="password" name="githubToken" value="${GITHUB_CONFIG.token || ''}" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width:90%;padding:8px;margin-top:5px;font-family:monospace;">
+        </label><br><br>
+        
+        <div style="background:#fff3cd;padding:12px;border-radius:6px;margin:10px 0;border-left:4px solid #ffc107;">
+          <p style="margin:0;"><strong>📝 Comment créer un token :</strong></p>
+          <ol style="margin:8px 0 0 18px;padding:0;">
+            <li>Allez sur <a href="https://github.com/settings/tokens" target="_blank">GitHub → Settings → Developer settings → Personal access tokens</a></li>
+            <li>Cliquez sur "Generate new token (classic)"</li>
+            <li>Cochez les permissions : <code>repo</code> (accès complet au repository)</li>
+            <li>Copiez le token généré et collez-le ci-dessus</li>
+          </ol>
+        </div>
+        
+        <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:var(--accent);color:#fff;border:none;">💾 Sauvegarder Token</button>
+        <button type="button" onclick="testGitHubConnection()" style="padding:7px 18px;font-size:1em;border-radius:6px;background:#28a745;color:#fff;border:none;margin-left:10px;">🔍 Tester Connexion</button>
+        <button type="button" onclick="loadDataFromGitHub().then(() => location.reload())" style="padding:7px 18px;font-size:1em;border-radius:6px;background:#17a2b8;color:#fff;border:none;margin-left:10px;">🔄 Recharger Données</button>
+      </form>
+      
+      <div style="background:#d4edda;padding:12px;border-radius:6px;border-left:4px solid #28a745;">
+        <p style="margin:0;"><strong>✅ Statut :</strong> ${GITHUB_CONFIG.token ? '🟢 Token configuré' : '🔴 Token manquant'}</p>
+        <p style="margin:8px 0 0 0;"><strong>📁 Repository :</strong> ${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}</p>
+        <p style="margin:8px 0 0 0;"><strong>📄 Fichier de données :</strong> ${GITHUB_CONFIG.dataFile}</p>
+      </div>
+    </div>
+  `;
+
   win.innerHTML = `
     <div class="xp-titlebar xp-titlebar-film" onmousedown="startDrag(event, '${winId}')">
       <span class="xp-title-content"><img src="icons/key.png" class="xp-icon" alt=""><span>Administration</span></span>
@@ -630,6 +813,7 @@ function createAdminPanelWindow(editFilmId = null) {
       ${iconsHtml}
       ${homeHtml}
       ${bsodHtml}
+      ${githubHtml}
     </div>
   `;
   document.body.appendChild(win);
@@ -733,6 +917,25 @@ function createAdminPanelWindow(editFilmId = null) {
     createAdminPanelWindow();
   };
 
+  // Gestion du formulaire GitHub
+  win.querySelector('#admin-github-form').onsubmit = function(e) {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(this).entries());
+    
+    if (data.githubToken) {
+      localStorage.setItem('github_token', data.githubToken);
+      GITHUB_CONFIG.token = data.githubToken;
+      showNotification('✅ Token GitHub sauvegardé !', 'success');
+    } else {
+      localStorage.removeItem('github_token');
+      GITHUB_CONFIG.token = null;
+      showNotification('🗑️ Token GitHub supprimé', 'info');
+    }
+    
+    win.remove();
+    createAdminPanelWindow();
+  };
+
   // Gestion du select pour URL personnalisée
   win.querySelector('select[name="iconAction"]').onchange = function() {
     const customLabel = win.querySelector('#customUrlLabel');
@@ -802,16 +1005,19 @@ window.switchAdminTab = function(tab, winId) {
   const filmsContent = win.querySelector('#films-content');
   const iconsContent = win.querySelector('#icons-content');
   const homeContent = win.querySelector('#home-content');
+  const githubContent = win.querySelector('#github-content');
   
   console.log('Switching to tab:', tab);
   console.log('Films content found:', !!filmsContent);
   console.log('Icons content found:', !!iconsContent);
   console.log('Home content found:', !!homeContent);
+  console.log('GitHub content found:', !!githubContent);
   
   // Masquer tous les contenus
   if (filmsContent) filmsContent.style.display = 'none';
   if (iconsContent) iconsContent.style.display = 'none';
   if (homeContent) homeContent.style.display = 'none';
+  if (githubContent) githubContent.style.display = 'none';
   
   // Afficher le contenu sélectionné
   if (tab === 'films' && filmsContent) {
@@ -829,11 +1035,39 @@ window.switchAdminTab = function(tab, winId) {
       bsodContent.style.display = 'block';
       bsodContent.style.animation = 'slideInFromTop 0.3s ease-out';
     }
+  } else if (tab === 'github' && githubContent) {
+    githubContent.style.display = 'block';
+    githubContent.style.animation = 'slideInFromTop 0.3s ease-out';
   }
 }
 
 window.testBSOD = function() {
   showBSOD();
+}
+
+// Fonction pour tester la connexion GitHub
+window.testGitHubConnection = async function() {
+  if (!GITHUB_CONFIG.token) {
+    showNotification('❌ Token GitHub manquant', 'error');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}`, {
+      headers: {
+        'Authorization': `token ${GITHUB_CONFIG.token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    
+    if (response.ok) {
+      showNotification('✅ Connexion GitHub réussie !', 'success');
+    } else {
+      showNotification('❌ Erreur de connexion GitHub', 'error');
+    }
+  } catch (error) {
+    showNotification('❌ Erreur de connexion', 'error');
+  }
 }
 
 let zIndexCounter = 1000;
@@ -1188,13 +1422,17 @@ document.addEventListener('mouseout', function(e) {
   }
 });
 
-window.onload = () => {
+window.onload = async () => {
   playStartupSound();
   if (!document.getElementById('container')) {
     alert('Erreur : la div #container est introuvable dans le HTML !');
     return;
   }
+  
   try {
+    // Charger les données depuis GitHub au démarrage
+    await loadDataFromGitHub();
+    
     createMainWindow();
     console.log('createMainWindow exécutée');
 
