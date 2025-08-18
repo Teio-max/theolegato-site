@@ -54,16 +54,6 @@
       "galerie": [],
       "bandeAnnonce": "",
       "liens": []
-    },
-    {
-      "id": 5,
-      "titre": "Film 5",
-      "note": 0,
-      "critique": "",
-      "image": "",
-      "galerie": [],
-      "bandeAnnonce": "",
-      "liens": []
     }
   ],
   "desktopIcons": [
@@ -109,7 +99,7 @@
     "title": "NOOOOON tout est cassé comment je vais faire ?!",
     "errorCode": "PAGE_FERMEE_SABOTAGE_VOLONTAIRE",
     "technicalInfo": "Technical information:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\n\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3",
-    "instructions": "Paniquez ",
+    "instructions": "Paniquez... Respirez... Cliquez juste en dessous",
     "memoryDump": "Beginning dump of physical memory...\nPhysical memory dump complete.\nContact your system administrator or technical support group for further assistance."
   }
 }
