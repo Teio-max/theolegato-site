@@ -13,7 +13,7 @@
       "bandeAnnonce": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       "liens": [
         {
-          "nom": "Allociné",
+          "nom": "AllocinÃ©",
           "url": "https://www.allocine.fr/"
         },
         {
@@ -89,10 +89,10 @@
     }
   ],
   "homePageConfig": {
-    "name": "Théo Van Waas",
+    "name": "ThÃ©o Van Waas",
     "welcomeMessage": "Bienvenue !",
-    "description": "Ici, je vais essayer de r�unir toutes mes informations et mes travaux ",
-    "sitePurpose": "Rendre mes �crits disponibles dans une forme plus originale. ",
+    "description": "Ici, je vais essayer de réunir toutes mes informations et mes travaux ",
+    "sitePurpose": "Rendre mes écrits disponibles dans une forme plus originale. ",
     "footerText": "Ne cassez pas mon site s'il vous plait !!",
     "socialLinks": [
       {
