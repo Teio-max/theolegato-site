@@ -13,7 +13,7 @@
       "bandeAnnonce": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       "liens": [
         {
-          "nom": "AllocinÃ©",
+          "nom": "AllocinÃƒÂ©",
           "url": "https://www.allocine.fr/"
         },
         {
@@ -79,10 +79,10 @@
     }
   ],
   "homePageConfig": {
-    "name": "ThÃ©o Van Waas",
+    "name": "ThÃƒÂ©o Van Waas",
     "welcomeMessage": "Bienvenue !",
-    "description": "Ici, je vais essayer de réunir toutes mes informations et mes travaux ",
-    "sitePurpose": "Rendre mes écrits disponibles dans une forme plus originale. ",
+    "description": "Ici, je vais essayer de rÃ©unir toutes mes informations et mes travaux ",
+    "sitePurpose": "Rendre mes Ã©crits disponibles dans une forme plus originale. ",
     "footerText": "Ne cassez pas mon site s'il vous plait !!",
     "socialLinks": [
       {
@@ -96,7 +96,7 @@
     ]
   },
   "bsodConfig": {
-    "title": "NOOOOON tout est cass� comment je vais faire ?!",
+    "title": "NOOOOON tout est cassé comment je vais faire ?!",
     "errorCode": "PAGE_FERMEE_SABOTAGE_VOLONTAIRE",
     "technicalInfo": "Technical information:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\n\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3",
     "instructions": "Paniquez... Respirez... Cliquez juste en dessous",
