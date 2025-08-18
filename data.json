@@ -5,7 +5,7 @@
       "titre": "Teorema, Pier Paolo Pasolini",
       "note": 4,
       "critique": "",
-      "image": "https://m.media-amazon.com/images/M/MV5BMGZkMDRlY2QtNjUwYS00Y2NkLWEzZmItNDIwNTU0YjQzYjAzXkEyXkFqcGc@._V1_.jpg",
+      "image": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/images/films/film_1755557121675_affiche.jpg",
       "galerie": [
         "https://via.placeholder.com/420x240?text=Image+1",
         "https://via.placeholder.com/420x240?text=Image+2"
@@ -13,7 +13,7 @@
       "bandeAnnonce": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
       "liens": [
         {
-          "nom": "AllocinÃƒÂ©",
+          "nom": "AllocinÃƒÆ’Ã‚Â©",
           "url": "https://www.allocine.fr/"
         },
         {
@@ -59,7 +59,7 @@
     },
     {
       "id": "icon-1755555569132",
-      "name": "R�dactions",
+      "name": "Rédactions",
       "icon": "https://img.icons8.com/?size=100&id=cjsh58euBD9i&format=png&color=000000",
       "action": "https://www.tumblr.com/theolegato?source=share",
       "position": {
@@ -69,10 +69,10 @@
     }
   ],
   "homePageConfig": {
-    "name": "Th�o Van Waas",
+    "name": "Théo Van Waas",
     "welcomeMessage": "Bienvenue !",
-    "description": "C'est ici que je r�uni toutes mes informations et mes travaux.",
-    "sitePurpose": "Rendre mes �crits disponibles dans une forme plus originale. ",
+    "description": "C'est ici que je réuni toutes mes informations et mes travaux.",
+    "sitePurpose": "Rendre mes écrits disponibles dans une forme plus originale. ",
     "footerText": "Ne cassez pas mon site s'il vous plait !!",
     "socialLinks": [
       {
@@ -86,9 +86,9 @@
     ]
   },
   "bsodConfig": {
-    "title": "NOOOOON tout est cassé comment je vais faire ?!",
+    "title": "NOOOOON tout est cassÃ© comment je vais faire ?!",
     "errorCode": "PAGE_FERMEE_SABOTAGE_VOLONTAIRE",
-    "technicalInfo": "Information technique:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\nAlors en faite, la souris c'est approch�e de la croix rouge et sans pr�venir elle a cliquer dessus.\n\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3",
+    "technicalInfo": "Information technique:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\nAlors en faite, la souris c'est approchée de la croix rouge et sans prévenir elle a cliquer dessus.\n\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3",
     "instructions": "Paniquez... Respirez... Cliquez juste en dessous",
     "memoryDump": "Beginning dump of physical memory...\nPhysical memory dump complete.\nContact your system administrator or technical support group for further assistance."
   }
