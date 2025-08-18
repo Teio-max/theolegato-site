@@ -102,22 +102,14 @@
       {
         "name": "Tumblr",
         "url": "#https://www.tumblr.com/theolegato?source=share"
-      },
-      {
-        "name": "Mangacollec",
-        "url": "https://www.mangacollec.com/user/theolegato/collection"
-      },
-      {
-        "name": "Letterboxd",
-        "url": "https://letterboxd.com/tei/"
       }
     ]
   },
   "bsodConfig": {
-    "title": "A problem has been detected and windows has been shut down to prevent damage to your computer.",
-    "errorCode": "PAGE_FAULT_IN_NONPAGED_AREA",
+    "title": "NOOOOON tout est cassé comment je vais faire ?!",
+    "errorCode": "PAGE_FERMEE_SABOTAGE_VOLONTAIRE",
     "technicalInfo": "Technical information:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)\n\n*** win32k.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3",
-    "instructions": "If this is the first time you've seen this Stop error screen, restart your computer. If this screen appears again, follow these steps:\n\nCheck for viruses on your computer. Remove any newly installed hard drives or hard drive controllers. Check your hard drive to make sure it is properly configured and terminated. Run CHKDSK /F to check for hard drive corruption, and then restart your computer.",
+    "instructions": "Paniquez ",
     "memoryDump": "Beginning dump of physical memory...\nPhysical memory dump complete.\nContact your system administrator or technical support group for further assistance."
   }
 }
