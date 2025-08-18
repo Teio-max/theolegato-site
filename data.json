@@ -2,10 +2,10 @@
   "films": [
     {
       "id": 1,
-      "titre": "Film 1",
-      "note": 0,
+      "titre": "Teorema, Pier Paolo Pasolini",
+      "note": 4,
       "critique": "",
-      "image": "",
+      "image": "https://m.media-amazon.com/images/M/MV5BMGZkMDRlY2QtNjUwYS00Y2NkLWEzZmItNDIwNTU0YjQzYjAzXkEyXkFqcGc@._V1_.jpg",
       "galerie": [
         "https://via.placeholder.com/420x240?text=Image+1",
         "https://via.placeholder.com/420x240?text=Image+2"
@@ -32,26 +32,6 @@
         "https://via.placeholder.com/420x240?text=Image+1",
         "https://via.placeholder.com/420x240?text=Image+2"
       ],
-      "bandeAnnonce": "",
-      "liens": []
-    },
-    {
-      "id": 3,
-      "titre": "Film 3",
-      "note": 0,
-      "critique": "",
-      "image": "",
-      "galerie": [],
-      "bandeAnnonce": "",
-      "liens": []
-    },
-    {
-      "id": 4,
-      "titre": "Film 4",
-      "note": 0,
-      "critique": "",
-      "image": "",
-      "galerie": [],
       "bandeAnnonce": "",
       "liens": []
     }
