@@ -216,7 +216,36 @@ function saveDataLocally() {
   localStorage.setItem('bsodConfig', JSON.stringify(bsodConfig));
 }
 
-// Fonction d'upload d'image pour films
+// Fonction de compression d'image
+function compressImage(file, maxWidth = 800, quality = 0.8) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = function() {
+      // Calculer les nouvelles dimensions
+      let { width, height } = img;
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      // Dessiner l'image redimensionnée
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      // Convertir en blob compressé
+      canvas.toBlob(resolve, 'image/jpeg', quality);
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+// Fonction d'upload d'image pour films avec compression et prévisualisation
 async function uploadFilmImage() {
   const fileInput = document.getElementById('film-image-upload');
   const file = fileInput.files[0];
@@ -238,11 +267,20 @@ async function uploadFilmImage() {
   }
   
   try {
-    // Convertir le fichier en base64
+    showNotification('🔄 Compression et upload en cours...', 'info');
+    
+    // Compresser l'image
+    const compressedFile = await compressImage(file);
+    const originalSize = (file.size / 1024).toFixed(1);
+    const compressedSize = (compressedFile.size / 1024).toFixed(1);
+    
+    console.log(`📊 Compression: ${originalSize}KB → ${compressedSize}KB`);
+    
+    // Convertir en base64
     const reader = new FileReader();
     reader.onload = async function(e) {
       const base64Content = e.target.result.split(',')[1];
-      const fileName = `film_${Date.now()}_${file.name}`;
+      const fileName = `film_${Date.now()}_affiche.jpg`;
       const filePath = `images/films/${fileName}`;
       
       // Upload vers GitHub
@@ -253,7 +291,7 @@ async function uploadFilmImage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: `📸 Upload image film: ${fileName}`,
+          message: `📸 Upload image film: ${fileName} (${compressedSize}KB)`,
           content: base64Content,
           branch: GITHUB_CONFIG.branch
         })
@@ -263,21 +301,43 @@ async function uploadFilmImage() {
         const result = await response.json();
         const imageUrl = result.content.download_url;
         
-        // Mettre à jour le champ URL
-        document.querySelector('input[name="image"]').value = imageUrl;
+        // Mettre à jour le champ URL et afficher prévisualisation
+        const imageInput = document.querySelector('input[name="image"]');
+        imageInput.value = imageUrl;
         
-        showNotification('✅ Image uploadée avec succès !', 'success');
+        // Créer prévisualisation
+        const previewContainer = document.getElementById('image-preview') || createImagePreview();
+        previewContainer.innerHTML = `
+          <div style="margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;">
+            <strong>✅ Image uploadée:</strong><br>
+            <img src="${imageUrl}" alt="Prévisualisation" style="max-width:200px;max-height:150px;margin-top:5px;border-radius:4px;">
+            <br><small>Taille: ${compressedSize}KB (compression: ${((1 - compressedFile.size/file.size) * 100).toFixed(1)}%)</small>
+          </div>
+        `;
+        
+        showNotification(`✅ Image uploadée et compressée (${compressedSize}KB) !`, 'success');
       } else {
         throw new Error('Échec upload');
       }
     };
     
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(compressedFile);
     
   } catch (error) {
     console.error('Erreur upload:', error);
     showNotification('❌ Erreur lors de l\'upload', 'error');
   }
+}
+
+// Créer conteneur de prévisualisation
+function createImagePreview() {
+  const container = document.createElement('div');
+  container.id = 'image-preview';
+  
+  const imageInput = document.querySelector('input[name="image"]');
+  imageInput.parentNode.insertBefore(container, imageInput.nextSibling);
+  
+  return container;
 }
 
 // Fonction d'upload d'image dans une fenêtre de film
@@ -352,7 +412,7 @@ async function uploadFilmImageInWindow(filmId, winId) {
   }
 }
 
-// Fonction d'upload multiple pour galerie
+// Fonction d'upload multiple pour galerie avec compression et prévisualisation
 async function uploadGalleryImages() {
   const fileInput = document.getElementById('gallery-upload');
   const files = Array.from(fileInput.files);
@@ -369,9 +429,15 @@ async function uploadGalleryImages() {
   }
   
   try {
-    showNotification(`📸 Upload de ${files.length} image(s) en cours...`, 'info');
+    showNotification(`🔄 Compression et upload de ${files.length} image(s)...`, 'info');
     
     const uploadedUrls = [];
+    let totalOriginalSize = 0;
+    let totalCompressedSize = 0;
+    
+    // Créer ou récupérer le conteneur de prévisualisation
+    const previewContainer = document.getElementById('gallery-preview') || createGalleryPreview();
+    previewContainer.innerHTML = '<div style="margin-top:10px;"><strong>🔄 Upload en cours...</strong></div>';
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
@@ -381,14 +447,19 @@ async function uploadGalleryImages() {
         continue;
       }
       
+      // Compresser l'image
+      const compressedFile = await compressImage(file, 600, 0.7); // Plus petite pour galerie
+      totalOriginalSize += file.size;
+      totalCompressedSize += compressedFile.size;
+      
       // Convertir en base64
       const base64Content = await new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => resolve(e.target.result.split(',')[1]);
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(compressedFile);
       });
       
-      const fileName = `gallery_${Date.now()}_${i}_${file.name}`;
+      const fileName = `gallery_${Date.now()}_${i}_${file.name.split('.')[0]}.jpg`;
       const filePath = `images/films/${fileName}`;
       
       // Upload vers GitHub
@@ -399,7 +470,7 @@ async function uploadGalleryImages() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          message: `📸 Upload galerie: ${fileName}`,
+          message: `📸 Upload galerie: ${fileName} (${(compressedFile.size/1024).toFixed(1)}KB)`,
           content: base64Content,
           branch: GITHUB_CONFIG.branch
         })
@@ -419,12 +490,185 @@ async function uploadGalleryImages() {
     const allUrls = [...existingUrls, ...uploadedUrls];
     galerieTextarea.value = allUrls.join(', ');
     
-    showNotification(`✅ ${uploadedUrls.length} image(s) uploadée(s) !`, 'success');
+    // Afficher prévisualisation des images uploadées
+    const compressionRate = ((1 - totalCompressedSize/totalOriginalSize) * 100).toFixed(1);
+    previewContainer.innerHTML = `
+      <div style="margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;">
+        <strong>✅ ${uploadedUrls.length} image(s) uploadée(s):</strong><br>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;">
+          ${uploadedUrls.map(url => `<img src="${url}" alt="Galerie" style="width:80px;height:60px;object-fit:cover;border-radius:3px;">`).join('')}
+        </div>
+        <small>Taille totale: ${(totalCompressedSize/1024).toFixed(1)}KB (compression: ${compressionRate}%)</small>
+      </div>
+    `;
+    
+    showNotification(`✅ ${uploadedUrls.length} image(s) compressées et uploadées !`, 'success');
     
   } catch (error) {
     console.error('Erreur upload galerie:', error);
     showNotification('❌ Erreur lors de l\'upload de la galerie', 'error');
   }
+}
+
+// Créer conteneur de prévisualisation galerie
+function createGalleryPreview() {
+  const container = document.createElement('div');
+  container.id = 'gallery-preview';
+  
+  const galerieTextarea = document.querySelector('textarea[name="galerie"]');
+  galerieTextarea.parentNode.insertBefore(container, galerieTextarea.nextSibling);
+  
+  return container;
+}
+
+// Interface de gestion des images uploadées
+function showImageManager() {
+  const winId = 'image-manager-' + Date.now();
+  const win = document.createElement('div');
+  win.id = winId;
+  win.className = 'xp-film-window';
+  win.style.cssText = `
+    position: fixed;
+    top: 150px;
+    left: 200px;
+    width: 600px;
+    height: 500px;
+    background: var(--window-bg);
+    border: 2px solid var(--border-main);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: ${getNextZIndex()};
+    font-family: var(--font-main);
+  `;
+
+  win.innerHTML = `
+    <div class="xp-titlebar" style="background:var(--accent);color:#fff;padding:8px 12px;font-weight:bold;cursor:move;display:flex;justify-content:space-between;align-items:center;">
+      <span>🗂️ Gestionnaire d'Images</span>
+      <button onclick="closeFilmWindow('${winId}')" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:20px;height:calc(100% - 50px);overflow-y:auto;">
+      <div id="image-list-${winId}">
+        <div style="text-align:center;padding:20px;">
+          <div style="font-size:48px;opacity:0.3;">📸</div>
+          <p>Chargement des images...</p>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(win);
+  loadImageList(winId);
+  makeDraggable(win);
+}
+
+// Charger la liste des images depuis GitHub
+async function loadImageList(winId) {
+  const token = localStorage.getItem('github_token');
+  if (!token) {
+    document.getElementById(`image-list-${winId}`).innerHTML = `
+      <div style="text-align:center;padding:20px;color:#e74c3c;">
+        <div style="font-size:48px;">❌</div>
+        <p>Token GitHub requis pour gérer les images</p>
+      </div>
+    `;
+    return;
+  }
+
+  try {
+    const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/images/films`, {
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+
+    if (response.ok) {
+      const files = await response.json();
+      const imageFiles = files.filter(file => 
+        file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i) && file.name !== '.gitkeep'
+      );
+
+      let html = `
+        <div style="margin-bottom:15px;">
+          <strong>📊 ${imageFiles.length} image(s) trouvée(s)</strong>
+          <button onclick="refreshImageList('${winId}')" style="float:right;padding:4px 8px;background:#3498db;color:#fff;border:none;border-radius:3px;cursor:pointer;">🔄 Actualiser</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;">
+      `;
+
+      imageFiles.forEach(file => {
+        const size = (file.size / 1024).toFixed(1);
+        html += `
+          <div style="border:1px solid #ddd;border-radius:6px;padding:8px;background:#f9f9f9;">
+            <img src="${file.download_url}" alt="${file.name}" style="width:100%;height:100px;object-fit:cover;border-radius:4px;margin-bottom:5px;">
+            <div style="font-size:11px;margin-bottom:5px;">
+              <strong>${file.name}</strong><br>
+              <span style="color:#666;">${size}KB</span>
+            </div>
+            <div style="display:flex;gap:3px;">
+              <button onclick="copyImageUrl('${file.download_url}')" style="flex:1;padding:2px 4px;background:#27ae60;color:#fff;border:none;border-radius:2px;font-size:10px;cursor:pointer;">📋 Copier</button>
+              <button onclick="deleteImage('${file.name}', '${file.sha}', '${winId}')" style="flex:1;padding:2px 4px;background:#e74c3c;color:#fff;border:none;border-radius:2px;font-size:10px;cursor:pointer;">🗑️ Suppr</button>
+            </div>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      document.getElementById(`image-list-${winId}`).innerHTML = html;
+
+    } else {
+      throw new Error('Erreur chargement');
+    }
+  } catch (error) {
+    document.getElementById(`image-list-${winId}`).innerHTML = `
+      <div style="text-align:center;padding:20px;color:#e74c3c;">
+        <div style="font-size:48px;">⚠️</div>
+        <p>Erreur lors du chargement des images</p>
+      </div>
+    `;
+  }
+}
+
+// Copier URL d'image
+function copyImageUrl(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    showNotification('📋 URL copiée !', 'success');
+  });
+}
+
+// Supprimer une image
+async function deleteImage(fileName, sha, winId) {
+  if (!confirm(`Supprimer l'image ${fileName} ?`)) return;
+
+  const token = localStorage.getItem('github_token');
+  try {
+    const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/images/films/${fileName}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      },
+      body: JSON.stringify({
+        message: `🗑️ Suppression image: ${fileName}`,
+        sha: sha,
+        branch: GITHUB_CONFIG.branch
+      })
+    });
+
+    if (response.ok) {
+      showNotification('✅ Image supprimée !', 'success');
+      loadImageList(winId);
+    } else {
+      throw new Error('Échec suppression');
+    }
+  } catch (error) {
+    showNotification('❌ Erreur suppression', 'error');
+  }
+}
+
+// Actualiser liste
+function refreshImageList(winId) {
+  loadImageList(winId);
 }
 
 // Fonction principale de sauvegarde
@@ -872,7 +1116,8 @@ function createAdminPanelWindow(editFilmId = null) {
     <label>Image principale :</label><br>
     <input type="text" name="image" value="${filmToEdit ? filmToEdit.image : ''}" placeholder="URL de l'image" style="width:70%"><br>
     <input type="file" id="film-image-upload" accept="image/*" style="margin:8px 0;">
-    <button type="button" onclick="uploadFilmImage()" style="padding:4px 12px;background:#3498db;color:#fff;border:none;border-radius:4px;">📤 Upload</button><br><br>
+    <button type="button" onclick="uploadFilmImage()" style="padding:4px 12px;background:#3498db;color:#fff;border:none;border-radius:4px;">📤 Upload & Compress</button>
+    <button type="button" onclick="showImageManager()" style="padding:4px 12px;background:#e67e22;color:#fff;border:none;border-radius:4px;margin-left:8px;">🗂️ Gérer</button><br><br>
     <label>Galerie d'images :</label><br>
     <textarea name="galerie" rows="2" placeholder="URLs séparées par des virgules" style="width:90%">${filmToEdit && filmToEdit.galerie ? filmToEdit.galerie.join(', ') : ''}</textarea><br>
     <input type="file" id="gallery-upload" accept="image/*" multiple style="margin:8px 0;">
