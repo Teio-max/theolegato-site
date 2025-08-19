@@ -56,16 +56,6 @@
         "x": 50,
         "y": 150
       }
-    },
-    {
-      "id": "icon-1755555569132",
-      "name": "Rédactions",
-      "icon": "https://img.icons8.com/?size=100&id=cjsh58euBD9i&format=png&color=000000",
-      "action": "https://www.tumblr.com/theolegato?source=share",
-      "position": {
-        "x": 250,
-        "y": 250
-      }
     }
   ],
   "homePageConfig": {
