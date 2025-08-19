@@ -36,6 +36,41 @@
       "liens": []
     }
   ],
+  "mangas": [
+    {
+      "id": 1,
+      "titre": "Exemple Manga",
+      "note": 0,
+      "critique": "",
+      "image": "",
+      "galerie": [],
+      "auteur": "",
+      "genre": [],
+      "statut": "En cours",
+      "chapitres": 0,
+      "liens": []
+    }
+  ],
+  "tags": [
+    {
+      "id": "genre-action",
+      "name": "Action",
+      "color": "#e74c3c",
+      "category": "genre"
+    },
+    {
+      "id": "genre-drame",
+      "name": "Drame", 
+      "color": "#9b59b6",
+      "category": "genre"
+    },
+    {
+      "id": "annee-2023",
+      "name": "2023",
+      "color": "#3498db",
+      "category": "annee"
+    }
+  ],
   "desktopIcons": [
     {
       "id": "icon-films",

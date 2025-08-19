@@ -10,6 +10,50 @@ const GITHUB_CONFIG = {
 // Initialiser le token depuis localStorage
 GITHUB_CONFIG.token = localStorage.getItem('github_token') || null;
 
+// Configuration des thèmes et paramètres
+const SITE_CONFIG = {
+  theme: localStorage.getItem('site_theme') || 'luna',
+  darkMode: localStorage.getItem('dark_mode') === 'true' || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches),
+  zoom: localStorage.getItem('zoom_level') || 'normal',
+  highContrast: localStorage.getItem('high_contrast') === 'true',
+  autoSave: localStorage.getItem('auto_save') === 'true',
+  notifications: localStorage.getItem('notifications') !== 'false'
+};
+
+// Détecter les préférences système
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (!localStorage.getItem('dark_mode_manual')) {
+      SITE_CONFIG.darkMode = e.matches;
+      applyTheme();
+    }
+  });
+}
+
+// Appliquer le thème au chargement
+function applyTheme() {
+  const body = document.body;
+  
+  // Supprimer toutes les classes de thème
+  body.classList.remove('dark-mode', 'theme-olive', 'theme-silver', 'high-contrast');
+  body.classList.remove('zoom-small', 'zoom-normal', 'zoom-large', 'zoom-xl');
+  
+  // Appliquer le thème sélectionné
+  if (SITE_CONFIG.highContrast) {
+    body.classList.add('high-contrast');
+  } else if (SITE_CONFIG.darkMode) {
+    body.classList.add('dark-mode');
+  } else if (SITE_CONFIG.theme !== 'luna') {
+    body.classList.add(`theme-${SITE_CONFIG.theme}`);
+  }
+  
+  // Appliquer le niveau de zoom
+  body.classList.add(`zoom-${SITE_CONFIG.zoom}`);
+}
+
+// Initialiser le thème au chargement
+document.addEventListener('DOMContentLoaded', applyTheme);
+
 // Données de base avec sauvegarde GitHub
 let films = [
   {
@@ -26,7 +70,8 @@ let films = [
     liens: [
       { nom: 'Allociné', url: 'https://www.allocine.fr/' },
       { nom: 'SensCritique', url: 'https://www.senscritique.com/' }
-    ]
+    ],
+    tags: []
   },
   {
     id: 2,

@@ -1,0 +1,27 @@
+{
+  "name": "Site Théo - Collection Films & Manga",
+  "short_name": "Site Théo",
+  "description": "Site personnel avec interface Windows XP pour gérer films et manga",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#b4d0ee",
+  "theme_color": "#2156a5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/film.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "avatar.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["entertainment", "lifestyle", "productivity"],
+  "lang": "fr",
+  "dir": "ltr"
+}
