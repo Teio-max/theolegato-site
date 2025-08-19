@@ -4,8 +4,11 @@ const GITHUB_CONFIG = {
   repo: 'theolegato-site',
   branch: 'main',
   dataFile: 'data.json',
-  token: localStorage.getItem('github_token') || null
+  token: null
 };
+
+// Initialiser le token depuis localStorage
+GITHUB_CONFIG.token = localStorage.getItem('github_token') || null;
 
 // Données de base avec sauvegarde GitHub
 let films = [
@@ -120,7 +123,7 @@ async function loadDataFromGitHub() {
     
     if (response.ok) {
       const data = await response.json();
-      const content = JSON.parse(atob(data.content));
+      const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
       
       films = content.films || [];
       desktopIcons = content.desktopIcons || [];
@@ -170,7 +173,7 @@ async function saveDataToGitHub() {
       bsodConfig
     };
 
-    const content = btoa(JSON.stringify(dataToSave, null, 2));
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataToSave, null, 2))));
 
     // Sauvegarder sur GitHub
     const saveResponse = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dataFile}`, {
