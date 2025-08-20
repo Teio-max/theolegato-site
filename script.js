@@ -93,8 +93,26 @@ document.addEventListener('DOMContentLoaded', () => {
   setupKeyboardSupport();
   loadDataFromGitHub().then(() => {
     renderDesktopIcons();
+    updateHomePageDisplay();
+    // Forcer le rendu après un délai pour s'assurer que tout est chargé
+    setTimeout(renderDesktopIcons, 500);
   });
 });
+
+// Fonction pour mettre à jour l'affichage de la page d'accueil
+function updateHomePageDisplay() {
+  const nameEl = document.querySelector('#home-name');
+  const welcomeEl = document.querySelector('#home-welcome');
+  const descEl = document.querySelector('#home-description');
+  const purposeEl = document.querySelector('#home-purpose');
+  const footerEl = document.querySelector('#home-footer');
+  
+  if (nameEl) nameEl.textContent = homePageConfig.name || '';
+  if (welcomeEl) welcomeEl.textContent = homePageConfig.welcomeMessage || '';
+  if (descEl) descEl.textContent = homePageConfig.description || '';
+  if (purposeEl) purposeEl.textContent = homePageConfig.sitePurpose || '';
+  if (footerEl) footerEl.textContent = homePageConfig.footerText || '';
+}
 
 // Lazy loading des images
 function setupLazyLoading() {
@@ -272,6 +290,9 @@ async function loadDataFromGitHub() {
       desktopIcons = content.desktopIcons || [];
       homePageConfig = content.homePageConfig || {};
       bsodConfig = content.bsodConfig || {};
+      
+      // Mettre à jour l'affichage de la page d'accueil si elle est ouverte
+      updateHomePageDisplay();
       
       console.log('✅ Données chargées depuis GitHub');
       return true;
@@ -980,7 +1001,10 @@ function showNotification(message, type = 'info') {
 // Fonction de rendu des icônes du bureau
 function renderDesktopIcons() {
   const desktopContainer = document.querySelector('.desktop-icons');
-  if (!desktopContainer) return;
+  if (!desktopContainer) {
+    console.warn('Container .desktop-icons non trouvé');
+    return;
+  }
   
   desktopContainer.innerHTML = '';
   desktopIcons.forEach(icon => {
@@ -996,19 +1020,29 @@ function renderDesktopIcons() {
       <span>${icon.name}</span>
     `;
     
-    iconElement.onclick = () => {
-      if (window[icon.action]) {
+    // Utiliser addEventListener au lieu de onclick pour plus de fiabilité
+    iconElement.addEventListener('click', () => {
+      console.log(`Clic sur icône: ${icon.name}, action: ${icon.action}`);
+      if (typeof window[icon.action] === 'function') {
         window[icon.action]();
       } else if (icon.action.startsWith('http')) {
-        // Lien personnalisé
         window.open(icon.action, '_blank');
       } else {
-        console.warn(`Action ${icon.action} non trouvée`);
+        console.error(`Action ${icon.action} non trouvée ou non fonction`);
       }
-    };
+    });
+    
+    // Double-clic également
+    iconElement.addEventListener('dblclick', () => {
+      if (typeof window[icon.action] === 'function') {
+        window[icon.action]();
+      }
+    });
     
     desktopContainer.appendChild(iconElement);
   });
+  
+  console.log(`✅ ${desktopIcons.length} icônes rendues`);
 }
 
 const pageIcons = {
@@ -1943,7 +1977,14 @@ function addResizeHandle(win) {
 function makeDraggable(win, winId) {
   const bar = win.querySelector('.xp-titlebar');
   if (!bar) return;
-  bar.onmousedown = function(e) { startDrag(e, winId); };
+  
+  // Supprimer les anciens événements pour éviter les doublons
+  bar.onmousedown = null;
+  
+  // Ajouter le nouvel événement
+  bar.addEventListener('mousedown', function(e) { 
+    startDrag(e, winId); 
+  });
 }
 
 // Préparation des sons XP
