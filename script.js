@@ -1036,24 +1036,30 @@ function renderDesktopIcons() {
       <span>${icon.name}</span>
     `;
     
-    // Utiliser addEventListener au lieu de onclick pour plus de fiabilité
-    iconElement.addEventListener('click', () => {
+    // Utiliser onclick simple et fiable
+    iconElement.onclick = () => {
       console.log(`Clic sur icône: ${icon.name}, action: ${icon.action}`);
-      if (typeof window[icon.action] === 'function') {
-        window[icon.action]();
-      } else if (icon.action.startsWith('http')) {
-        window.open(icon.action, '_blank');
-      } else {
-        console.error(`Action ${icon.action} non trouvée ou non fonction`);
+      try {
+        if (icon.action === 'createFilmsWindow') {
+          createFilmsWindow();
+        } else if (icon.action === 'createMangaWindow') {
+          createMangaWindow();
+        } else if (typeof window[icon.action] === 'function') {
+          window[icon.action]();
+        } else if (icon.action.startsWith('http')) {
+          window.open(icon.action, '_blank');
+        } else {
+          console.error(`Action ${icon.action} non trouvée`);
+        }
+      } catch (error) {
+        console.error('Erreur lors du clic:', error);
       }
-    });
+    };
     
     // Double-clic également
-    iconElement.addEventListener('dblclick', () => {
-      if (typeof window[icon.action] === 'function') {
-        window[icon.action]();
-      }
-    });
+    iconElement.ondblclick = () => {
+      iconElement.onclick();
+    };
     
     desktopContainer.appendChild(iconElement);
   });
