@@ -91,7 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
   startAutoSave();
   setupLazyLoading();
   setupKeyboardSupport();
-  loadDataFromGitHub();
+  loadDataFromGitHub().then(() => {
+    renderDesktopIcons();
+  });
 });
 
 // Lazy loading des images
