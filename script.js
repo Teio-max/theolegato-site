@@ -10,15 +10,34 @@ const GITHUB_CONFIG = {
 // Initialiser le token depuis localStorage
 GITHUB_CONFIG.token = localStorage.getItem('github_token') || null;
 
-// Configuration des thèmes et paramètres
+// Configuration du site
 const SITE_CONFIG = {
   theme: localStorage.getItem('site_theme') || 'luna',
-  darkMode: localStorage.getItem('dark_mode') === 'true' || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches),
-  zoom: localStorage.getItem('zoom_level') || 'normal',
+  darkMode: localStorage.getItem('dark_mode') === 'true' || window.matchMedia('(prefers-color-scheme: dark)').matches,
+  zoom: localStorage.getItem('site_zoom') || 'normal',
   highContrast: localStorage.getItem('high_contrast') === 'true',
   autoSave: localStorage.getItem('auto_save') === 'true',
-  notifications: localStorage.getItem('notifications') !== 'false'
+  notifications: localStorage.getItem('notifications') === 'true'
 };
+
+// Sauvegarde automatique périodique
+let autoSaveInterval = null;
+
+function startAutoSave() {
+  if (SITE_CONFIG.autoSave && !autoSaveInterval) {
+    autoSaveInterval = setInterval(() => {
+      saveDataToGitHub();
+      console.log(' Sauvegarde automatique effectuée');
+    }, 5 * 60 * 1000); // 5 minutes
+  }
+}
+
+function stopAutoSave() {
+  if (autoSaveInterval) {
+    clearInterval(autoSaveInterval);
+    autoSaveInterval = null;
+  }
+}
 
 // Détecter les préférences système
 if (window.matchMedia) {
@@ -51,8 +70,83 @@ function applyTheme() {
   body.classList.add(`zoom-${SITE_CONFIG.zoom}`);
 }
 
+// Cache intelligent pour les images
+const imageCache = new Map();
+
+function cacheImage(url) {
+  if (!imageCache.has(url)) {
+    const img = new Image();
+    img.onload = () => imageCache.set(url, img);
+    img.src = url;
+  }
+}
+
+function getCachedImage(url) {
+  return imageCache.get(url);
+}
+
 // Initialiser le thème au chargement
-document.addEventListener('DOMContentLoaded', applyTheme);
+document.addEventListener('DOMContentLoaded', () => {
+  applyTheme();
+  startAutoSave();
+  setupLazyLoading();
+  setupKeyboardSupport();
+  loadDataFromGitHub();
+});
+
+// Lazy loading des images
+function setupLazyLoading() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        if (img.dataset.src) {
+          img.src = img.dataset.src;
+          img.removeAttribute('data-src');
+          observer.unobserve(img);
+        }
+      }
+    });
+  });
+
+  document.querySelectorAll('img[data-src]').forEach(img => {
+    observer.observe(img);
+  });
+}
+
+// Support clavier complet
+function setupKeyboardSupport() {
+  document.addEventListener('keydown', (e) => {
+    // Échap pour fermer les fenêtres
+    if (e.key === 'Escape') {
+      const windows = document.querySelectorAll('.xp-film-window');
+      if (windows.length > 0) {
+        const topWindow = Array.from(windows).reduce((top, win) => 
+          parseInt(win.style.zIndex) > parseInt(top.style.zIndex) ? win : top
+        );
+        closeFilmWindow(topWindow.id);
+      }
+    }
+    
+    // Alt+F pour ouvrir Films
+    if (e.altKey && e.key === 'f') {
+      e.preventDefault();
+      createFilmsWindow();
+    }
+    
+    // Alt+M pour ouvrir Mangas
+    if (e.altKey && e.key === 'm') {
+      e.preventDefault();
+      createMangaWindow();
+    }
+    
+    // Alt+A pour ouvrir Admin
+    if (e.altKey && e.key === 'a') {
+      e.preventDefault();
+      createAdminLoginWindow();
+    }
+  });
+}
 
 // Données de base avec sauvegarde GitHub
 let films = [
@@ -171,6 +265,8 @@ async function loadDataFromGitHub() {
       const content = JSON.parse(decodeURIComponent(escape(atob(data.content))));
       
       films = content.films || [];
+      mangas = content.mangas || [];
+      tags = content.tags || [];
       desktopIcons = content.desktopIcons || [];
       homePageConfig = content.homePageConfig || {};
       bsodConfig = content.bsodConfig || {};
@@ -213,6 +309,8 @@ async function saveDataToGitHub() {
     // Préparer les données
     const dataToSave = {
       films,
+      mangas,
+      tags,
       desktopIcons,
       homePageConfig,
       bsodConfig
@@ -567,17 +665,18 @@ function createGalleryPreview() {
 }
 
 // Interface de gestion des images uploadées
-function showImageManager() {
-  const winId = 'image-manager-' + Date.now();
+function createMangaWindow() {
+  playOpenSound();
+  const winId = 'mangawin_' + Date.now();
   const win = document.createElement('div');
   win.id = winId;
-  win.className = 'xp-film-window';
+  win.className = 'xp-film-window window-opening';
   win.style.cssText = `
     position: fixed;
-    top: 150px;
+    top: 120px;
     left: 200px;
-    width: 600px;
-    height: 500px;
+    width: 700px;
+    height: 600px;
     background: var(--window-bg);
     border: 2px solid var(--border-main);
     border-radius: 8px;
@@ -586,25 +685,141 @@ function showImageManager() {
     font-family: var(--font-main);
   `;
 
+  let mangaListHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px;margin-top:20px;">';
+  mangas.forEach(manga => {
+    mangaListHtml += `
+      <div style="border:1px solid var(--border-main);border-radius:6px;padding:12px;background:var(--bg-window);cursor:pointer;" onclick="openMangaDetails(${manga.id}, '${winId}')">
+        ${manga.image ? `<img src="${manga.image}" alt="${manga.titre}" style="width:100%;height:120px;object-fit:cover;border-radius:4px;margin-bottom:8px;">` : '<div style="width:100%;height:120px;background:#ddd;border-radius:4px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:#666;">📚</div>'}
+        <h4 style="margin:0 0 5px 0;font-size:14px;">${manga.titre}</h4>
+        <p style="margin:0;font-size:12px;color:#666;">${manga.auteur || 'Auteur inconnu'}</p>
+        <p style="margin:5px 0 0 0;font-size:11px;color:#888;">${manga.statut} - ${manga.chapitres} ch.</p>
+      </div>
+    `;
+  });
+  mangaListHtml += '</div>';
+
   win.innerHTML = `
     <div class="xp-titlebar" style="background:var(--accent);color:#fff;padding:8px 12px;font-weight:bold;cursor:move;display:flex;justify-content:space-between;align-items:center;">
-      <span>🗂️ Gestionnaire d'Images</span>
+      <span>📚 Collection Manga</span>
       <button onclick="closeFilmWindow('${winId}')" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer;">✕</button>
     </div>
     <div style="padding:20px;height:calc(100% - 50px);overflow-y:auto;">
-      <div id="image-list-${winId}">
-        <div style="text-align:center;padding:20px;">
-          <div style="font-size:48px;opacity:0.3;">📸</div>
-          <p>Chargement des images...</p>
-        </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+        <h3 style="margin:0;">Collection Manga (${mangas.length})</h3>
+        <button onclick="createAdminLoginWindow()" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;">⚙️ Admin</button>
       </div>
+      ${mangaListHtml}
     </div>
   `;
 
   document.body.appendChild(win);
-  loadImageList(winId);
-  makeDraggable(win);
-}
+  makeDraggable(win, winId);
+};
+
+// Fonctions de gestion des thèmes
+window.changeTheme = function(theme) {
+  SITE_CONFIG.theme = theme;
+  localStorage.setItem('site_theme', theme);
+  applyTheme();
+};
+
+window.toggleDarkMode = function(enabled) {
+  SITE_CONFIG.darkMode = enabled;
+  localStorage.setItem('dark_mode', enabled);
+  localStorage.setItem('dark_mode_manual', 'true');
+  applyTheme();
+};
+
+window.toggleHighContrast = function(enabled) {
+  SITE_CONFIG.highContrast = enabled;
+  localStorage.setItem('high_contrast', enabled);
+  applyTheme();
+};
+
+window.changeZoom = function(zoom) {
+  SITE_CONFIG.zoom = zoom;
+  localStorage.setItem('site_zoom', zoom);
+  applyTheme();
+};
+
+window.toggleAutoSave = function(enabled) {
+  SITE_CONFIG.autoSave = enabled;
+  localStorage.setItem('auto_save', enabled);
+  if (enabled) {
+    startAutoSave();
+  } else {
+    stopAutoSave();
+  }
+};
+
+window.toggleNotifications = function(enabled) {
+  SITE_CONFIG.notifications = enabled;
+  localStorage.setItem('notifications', enabled);
+  if (enabled && 'Notification' in window) {
+    Notification.requestPermission();
+  }
+};
+
+// Fonctions de gestion des mangas
+window.addNewManga = function(winId) {
+  const titre = prompt('Titre du manga:');
+  if (!titre) return;
+  
+  const auteur = prompt('Auteur:');
+  const statut = prompt('Statut (En cours/Terminé/Abandonné):') || 'En cours';
+  const chapitres = parseInt(prompt('Nombre de chapitres:') || '0');
+  
+  const newManga = {
+    id: Date.now(),
+    titre,
+    auteur: auteur || '',
+    statut,
+    chapitres,
+    note: 0,
+    critique: '',
+    image: '',
+    galerie: [],
+    genre: [],
+    liens: []
+  };
+  
+  mangas.push(newManga);
+  saveDataToGitHub();
+  alert('Manga ajouté avec succès!');
+  document.getElementById(winId).remove();
+  createMangaWindow();
+};
+
+window.editManga = function(id) {
+  const manga = mangas.find(m => m.id === id);
+  if (!manga) return;
+  
+  const titre = prompt('Titre:', manga.titre);
+  if (titre === null) return;
+  
+  const auteur = prompt('Auteur:', manga.auteur);
+  const statut = prompt('Statut:', manga.statut);
+  const chapitres = parseInt(prompt('Chapitres:', manga.chapitres) || '0');
+  
+  manga.titre = titre;
+  manga.auteur = auteur || '';
+  manga.statut = statut || 'En cours';
+  manga.chapitres = chapitres;
+  
+  saveDataToGitHub();
+  alert('Manga modifié avec succès!');
+};
+
+window.deleteManga = function(id) {
+  if (!confirm('Supprimer ce manga?')) return;
+  
+  const index = mangas.findIndex(m => m.id === id);
+  if (index > -1) {
+    mangas.splice(index, 1);
+    saveDataToGitHub();
+    alert('Manga supprimé avec succès!');
+  }
+};
 
 // Charger la liste des images depuis GitHub
 async function loadImageList(winId) {
@@ -1192,10 +1407,12 @@ function createAdminPanelWindow(editFilmId = null) {
   let tabsHtml = `
     <div style="display:flex;margin-bottom:18px;border-bottom:2px solid var(--border-main);background:var(--accent-light);border-radius:8px 8px 0 0;padding:4px 4px 0 4px;">
       <button id="tab-films" class="admin-tab active" onclick="switchAdminTab('films', '${winId}')" style="padding:10px 20px;border:none;background:var(--accent);color:#fff;cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;box-shadow:0 2px 4px rgba(0,0,0,0.1);">🎬 Films</button>
+      <button id="tab-mangas" class="admin-tab" onclick="switchAdminTab('mangas', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">📚 Mangas</button>
       <button id="tab-icons" class="admin-tab" onclick="switchAdminTab('icons', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">🖥️ Icônes Bureau</button>
       <button id="tab-home" class="admin-tab" onclick="switchAdminTab('home', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">🏠 Page d'accueil</button>
       <button id="tab-bsod" class="admin-tab" onclick="switchAdminTab('bsod', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">💀 Page d'erreur</button>
       <button id="tab-github" class="admin-tab" onclick="switchAdminTab('github', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">⚙️ GitHub</button>
+      <button id="tab-themes" class="admin-tab" onclick="switchAdminTab('themes', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:var(--text);cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;transition:all 0.2s ease;">🎨 Thèmes</button>
     </div>
   `;
 
@@ -1303,27 +1520,86 @@ function createAdminPanelWindow(editFilmId = null) {
     </div>
   `;
 
+  // Contenu des thèmes
+  let themesHtml = `
+    <div id="themes-content" style="display:none;">
+      <h3>Configuration des Thèmes</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <h4>Thème Windows XP</h4>
+          <select onchange="changeTheme(this.value)" style="width:100%;padding:8px;">
+            <option value="luna" ${SITE_CONFIG.theme === 'luna' ? 'selected' : ''}>Luna (Bleu)</option>
+            <option value="olive" ${SITE_CONFIG.theme === 'olive' ? 'selected' : ''}>Olive (Vert)</option>
+            <option value="silver" ${SITE_CONFIG.theme === 'silver' ? 'selected' : ''}>Silver (Gris)</option>
+          </select>
+          
+          <h4 style="margin-top:20px;">Mode Sombre</h4>
+          <label><input type="checkbox" ${SITE_CONFIG.darkMode ? 'checked' : ''} onchange="toggleDarkMode(this.checked)"> Activer le mode sombre</label>
+          
+          <h4 style="margin-top:20px;">Contraste Élevé</h4>
+          <label><input type="checkbox" ${SITE_CONFIG.highContrast ? 'checked' : ''} onchange="toggleHighContrast(this.checked)"> Activer le contraste élevé</label>
+        </div>
+        <div>
+          <h4>Niveau de Zoom</h4>
+          <select onchange="changeZoom(this.value)" style="width:100%;padding:8px;">
+            <option value="small" ${SITE_CONFIG.zoom === 'small' ? 'selected' : ''}>Petit (90%)</option>
+            <option value="normal" ${SITE_CONFIG.zoom === 'normal' ? 'selected' : ''}>Normal (100%)</option>
+            <option value="large" ${SITE_CONFIG.zoom === 'large' ? 'selected' : ''}>Grand (110%)</option>
+            <option value="xl" ${SITE_CONFIG.zoom === 'xl' ? 'selected' : ''}>Très Grand (125%)</option>
+          </select>
+          
+          <h4 style="margin-top:20px;">Sauvegarde Automatique</h4>
+          <label><input type="checkbox" ${SITE_CONFIG.autoSave ? 'checked' : ''} onchange="toggleAutoSave(this.checked)"> Sauvegarder automatiquement (5min)</label>
+          
+          <h4 style="margin-top:20px;">Notifications</h4>
+          <label><input type="checkbox" ${SITE_CONFIG.notifications ? 'checked' : ''} onchange="toggleNotifications(this.checked)"> Activer les notifications</label>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Contenu des mangas
+  let mangasHtml = `
+    <div id="mangas-content" style="display:none;">
+      <h3>Gestion des Mangas</h3>
+      <button onclick="addNewManga('${winId}')" style="padding:8px 16px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer;margin-bottom:15px;">➕ Ajouter Manga</button>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr style="background:var(--accent-light);color:var(--accent);font-weight:bold;"><td>Titre</td><td>Auteur</td><td>Statut</td><td>Actions</td></tr>`;
+  mangas.forEach(manga => {
+    mangasHtml += `<tr style="border-bottom:1px solid var(--border-main);">
+      <td>${manga.titre}</td>
+      <td>${manga.auteur || 'N/A'}</td>
+      <td>${manga.statut}</td>
+      <td>
+        <button onclick="editManga(${manga.id})" style="padding:2px 10px;margin-right:6px;">Éditer</button>
+        <button onclick="deleteManga(${manga.id})" style="padding:2px 10px;color:#fff;background:#e74c3c;border:none;border-radius:4px;">Supprimer</button>
+      </td>
+    </tr>`;
+  });
+  mangasHtml += `</table></div>`;
+
+  // Contenu des films
   win.innerHTML = `
     <div class="xp-titlebar xp-titlebar-film" onmousedown="startDrag(event, '${winId}')">
-      <span class="xp-title-content"><img src="icons/key.png" class="xp-icon" alt=""><span>Administration</span></span>
+      <span class="xp-title-content"><img src="icons/key.png" class="xp-icon" alt=""><span>Admin Panel</span></span>
       <span class="xp-buttons">
-        <span class="xp-btn min" data-tooltip="Réduire" onclick="minimizeWindow('${winId}', 'Admin', 'icons/key.png')"><img src="icons/minimize.png" alt="Min"></span>
+        <span class="xp-btn min" data-tooltip="Réduire" onclick="minimizeWindow('${winId}', 'Admin Panel', 'icons/key.png')"><img src="icons/minimize.png" alt="Min"></span>
         <span class="xp-btn max" data-tooltip="Agrandir" onclick="maxFilmWindow('${winId}')"><img src="icons/maximize.png" alt="Max"></span>
         <span class="xp-btn close" data-tooltip="Fermer" onclick="closeFilmWindow('${winId}')"><img src="icons/close.png" alt="Close"></span>
       </span>
     </div>
-    <div class="film-detail" style="text-align:left;max-width:600px;margin:0 auto;">
+    <div class="film-detail">
       ${tabsHtml}
       <div id="films-content">
         ${formHtml}
-        <hr style="margin:18px 0;">
-        <h3 style="margin-bottom:8px;">Liste des films</h3>
         ${tableHtml}
       </div>
+      ${mangasHtml}
       ${iconsHtml}
       ${homeHtml}
       ${bsodHtml}
       ${githubHtml}
+      ${themesHtml}
     </div>
   `;
   document.body.appendChild(win);
@@ -1524,15 +1800,22 @@ window.switchAdminTab = function(tab, winId) {
   console.log('GitHub content found:', !!githubContent);
   
   // Masquer tous les contenus
+  const mangasContent = win.querySelector('#mangas-content');
+  const themesContent = win.querySelector('#themes-content');
   if (filmsContent) filmsContent.style.display = 'none';
+  if (mangasContent) mangasContent.style.display = 'none';
   if (iconsContent) iconsContent.style.display = 'none';
   if (homeContent) homeContent.style.display = 'none';
   if (githubContent) githubContent.style.display = 'none';
+  if (themesContent) themesContent.style.display = 'none';
   
   // Afficher le contenu sélectionné
   if (tab === 'films' && filmsContent) {
     filmsContent.style.display = 'block';
     filmsContent.style.animation = 'slideInFromTop 0.3s ease-out';
+  } else if (tab === 'mangas' && mangasContent) {
+    mangasContent.style.display = 'block';
+    mangasContent.style.animation = 'slideInFromTop 0.3s ease-out';
   } else if (tab === 'icons' && iconsContent) {
     iconsContent.style.display = 'block';
     iconsContent.style.animation = 'slideInFromTop 0.3s ease-out';
@@ -1548,6 +1831,9 @@ window.switchAdminTab = function(tab, winId) {
   } else if (tab === 'github' && githubContent) {
     githubContent.style.display = 'block';
     githubContent.style.animation = 'slideInFromTop 0.3s ease-out';
+  } else if (tab === 'themes' && themesContent) {
+    themesContent.style.display = 'block';
+    themesContent.style.animation = 'slideInFromTop 0.3s ease-out';
   }
 }
 
