@@ -1072,29 +1072,45 @@ function renderDesktopIcons() {
       <span>${icon.name}</span>
     `;
     
-    // Utiliser onclick simple et fiable
-    iconElement.onclick = () => {
-      console.log(`Clic sur icône: ${icon.name}, action: ${icon.action}`);
+    // Utiliser onclick simple et fiable avec vérification
+    iconElement.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log(`🖱️ Clic sur icône: ${icon.name}, action: ${icon.action}`);
+      
       try {
+        // Actions spécifiques
         if (icon.action === 'createFilmsWindow') {
+          console.log('📽️ Ouverture fenêtre Films...');
           createFilmsWindow();
         } else if (icon.action === 'createMangaWindow') {
+          console.log('📚 Ouverture fenêtre Manga...');
           createMangaWindow();
-        } else if (typeof window[icon.action] === 'function') {
-          window[icon.action]();
+        } else if (icon.action === 'createAdminLoginWindow') {
+          console.log('⚙️ Ouverture Admin...');
+          createAdminLoginWindow();
         } else if (icon.action.startsWith('http')) {
+          console.log('🔗 Ouverture lien externe...');
           window.open(icon.action, '_blank');
         } else {
-          console.error(`Action ${icon.action} non trouvée`);
+          // Essayer d'appeler la fonction globale
+          if (typeof window[icon.action] === 'function') {
+            console.log(`🔧 Appel fonction: ${icon.action}`);
+            window[icon.action]();
+          } else {
+            console.error(`❌ Action ${icon.action} non trouvée`);
+          }
         }
       } catch (error) {
-        console.error('Erreur lors du clic:', error);
+        console.error('❌ Erreur lors du clic:', error);
       }
     };
     
     // Double-clic également
-    iconElement.ondblclick = () => {
-      iconElement.onclick();
+    iconElement.ondblclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      iconElement.onclick(e);
     };
     
     desktopContainer.appendChild(iconElement);
@@ -1516,21 +1532,26 @@ function createAdminPanelWindow(editFilmId = null) {
       <form id="admin-icon-form" style="margin-bottom:18px;">
         <h3 style="margin-top:0;">Ajouter une icône</h3>
         <label>Nom : <input type="text" name="iconName" required style="width:70%"></label><br><br>
-        <label>Icône (URL) : <input type="text" name="iconUrl" required style="width:70%"></label><br><br>
-        <label>Action : <select name="iconAction" style="width:70%">
-          <option value="createFilmsWindow">Films</option>
-          <option value="createMangaWindow">Manga</option>
-          <option value="createAboutWindow">À propos</option>
-          <option value="custom">Lien personnalisé</option>
-        </select></label><br><br>
-        <label id="customUrlLabel" style="display:none;">URL personnalisée : <input type="text" name="customUrl" style="width:70%"></label><br><br>
-        <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:var(--accent);color:#fff;border:none;">Ajouter</button>
+        
+        <label>Icône :</label><br>
+        <input type="text" name="iconIcon" placeholder="URL ou emoji" required style="width:60%">
+        <button type="button" id="upload-icon-btn" style="background:var(--accent);color:#fff;border:none;padding:6px 12px;border-radius:4px;margin-left:8px;">📁 Upload</button>
+        <input type="file" id="icon-file-input" accept="image/*" style="display:none;">
+        <br><br>
+        
+        <label>Action : <input type="text" name="iconAction" placeholder="createFilmsWindow ou URL" required style="width:70%"></label><br><br>
+        <label>Position X : <input type="number" name="iconX" value="50" required style="width:30%"></label>
+        <label>Position Y : <input type="number" name="iconY" value="50" required style="width:30%"></label><br><br>
+        <button type="submit" style="background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:4px;">Ajouter</button>
       </form>
-      <hr style="margin:18px 0;">
-      <h3 style="margin-bottom:8px;">Icônes du bureau</h3>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
-        <tr style="background:var(--accent-light);color:var(--accent);font-weight:bold;"><td>Nom</td><td>Action</td><td>Actions</td></tr>
+      
+      <h3>Icônes existantes</h3>
+      <div id="existing-icons" style="max-height:300px;overflow-y:auto;"></div>
+    </div>
   `;
+  
+  iconsHtml += `<table style="width:100%;border-collapse:collapse;margin-top:12px;">
+        <tr style="background:var(--accent-light);color:var(--accent);font-weight:bold;"><td>Nom</td><td>Action</td><td>Actions</td></tr>`;
   
   desktopIcons.forEach(icon => {
     iconsHtml += `<tr style="border-bottom:1px solid var(--border-main);">
@@ -1674,15 +1695,6 @@ function createAdminPanelWindow(editFilmId = null) {
 
   // Contenu des films
   win.innerHTML = `
-    <div class="xp-titlebar xp-titlebar-film" onmousedown="startDrag(event, '${winId}')">
-      <span class="xp-title-content"><img src="icons/key.png" class="xp-icon" alt=""><span>Admin Panel</span></span>
-      <span class="xp-buttons">
-        <span class="xp-btn min" data-tooltip="Réduire" onclick="minimizeWindow('${winId}', 'Admin Panel', 'icons/key.png')"><img src="icons/minimize.png" alt="Min"></span>
-        <span class="xp-btn max" data-tooltip="Agrandir" onclick="maxFilmWindow('${winId}')"><img src="icons/maximize.png" alt="Max"></span>
-        <span class="xp-btn close" data-tooltip="Fermer" onclick="closeFilmWindow('${winId}')"><img src="icons/close.png" alt="Close"></span>
-      </span>
-    </div>
-    <div class="film-detail">
       ${tabsHtml}
       <div id="films-content">
         ${formHtml}
@@ -1696,10 +1708,16 @@ function createAdminPanelWindow(editFilmId = null) {
       ${themesHtml}
     </div>
   `;
+
   document.body.appendChild(win);
-  win.onmousedown = () => win.style.zIndex = getNextZIndex();
+  makeDraggable(win, 'window-header');
   addResizeHandle(win);
-  makeDraggable(win, winId);
+
+  // Configuration des événements après création de la fenêtre
+  setTimeout(() => {
+    setupAdminEvents(winId);
+    setupIconUploadEvents(winId);
+  }, 100);
 
   // Gestion du formulaire films
   win.querySelector('#admin-film-form').onsubmit = function(e) {
@@ -1933,6 +1951,62 @@ window.switchAdminTab = function(tab, winId) {
 
 window.testBSOD = function() {
   showBSOD();
+}
+
+// Configuration des événements d'upload d'icônes
+function setupIconUploadEvents(winId) {
+  const win = document.getElementById(winId);
+  if (!win) return;
+  
+  const uploadBtn = win.querySelector('#upload-icon-btn');
+  const fileInput = win.querySelector('#icon-file-input');
+  const iconInput = win.querySelector('input[name="iconIcon"]');
+  
+  if (uploadBtn && fileInput && iconInput) {
+    uploadBtn.onclick = () => {
+      fileInput.click();
+    };
+    
+    fileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      try {
+        uploadBtn.textContent = '⏳ Upload...';
+        uploadBtn.disabled = true;
+        
+        const compressedFile = await compressImage(file, 0.8, 64, 64);
+        const fileName = `icon_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const imageUrl = await uploadImageToGitHub(compressedFile, fileName, 'icons');
+        
+        iconInput.value = imageUrl;
+        uploadBtn.textContent = '✅ Uploadé';
+        
+        setTimeout(() => {
+          uploadBtn.textContent = '📁 Upload';
+          uploadBtn.disabled = false;
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Erreur upload icône:', error);
+        uploadBtn.textContent = '❌ Erreur';
+        setTimeout(() => {
+          uploadBtn.textContent = '📁 Upload';
+          uploadBtn.disabled = false;
+        }, 2000);
+      }
+    };
+  }
+}
+
+// Fonction pour supprimer une icône
+window.deleteIcon = function(id) {
+  if (confirm('Supprimer cette icône ?')) {
+    const idx = desktopIcons.findIndex(i => i.id === id);
+    if (idx !== -1) desktopIcons.splice(idx, 1);
+    saveData();
+    renderDesktopIcons();
+  }
 }
 
 // Fonction pour tester la connexion GitHub
