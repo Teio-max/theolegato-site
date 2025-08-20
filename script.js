@@ -91,27 +91,43 @@ document.addEventListener('DOMContentLoaded', () => {
   startAutoSave();
   setupLazyLoading();
   setupKeyboardSupport();
+  
+  // Créer la fenêtre principale immédiatement
+  createMainWindow();
+  
+  // Charger les données et mettre à jour
   loadDataFromGitHub().then(() => {
     renderDesktopIcons();
     updateHomePageDisplay();
+    updateMainWindow();
     // Forcer le rendu après un délai pour s'assurer que tout est chargé
-    setTimeout(renderDesktopIcons, 500);
+    setTimeout(() => {
+      renderDesktopIcons();
+      console.log('🔄 Rendu forcé des icônes');
+    }, 1000);
   });
 });
 
 // Fonction pour mettre à jour l'affichage de la page d'accueil
 function updateHomePageDisplay() {
-  const nameEl = document.querySelector('#home-name');
-  const welcomeEl = document.querySelector('#home-welcome');
-  const descEl = document.querySelector('#home-description');
-  const purposeEl = document.querySelector('#home-purpose');
-  const footerEl = document.querySelector('#home-footer');
+  const nameEl = document.querySelector('#main-name');
+  const welcomeEl = document.querySelector('#main-welcome');
+  const descEl = document.querySelector('#main-description');
+  const purposeEl = document.querySelector('#main-purpose');
+  const footerEl = document.querySelector('#main-footer');
+  const socialEl = document.querySelector('#main-social-links');
   
-  if (nameEl) nameEl.textContent = homePageConfig.name || '';
-  if (welcomeEl) welcomeEl.textContent = homePageConfig.welcomeMessage || '';
-  if (descEl) descEl.textContent = homePageConfig.description || '';
-  if (purposeEl) purposeEl.textContent = homePageConfig.sitePurpose || '';
-  if (footerEl) footerEl.textContent = homePageConfig.footerText || '';
+  if (nameEl) nameEl.textContent = homePageConfig.name || 'Théo Van Waas';
+  if (welcomeEl) welcomeEl.textContent = homePageConfig.welcomeMessage || 'Bienvenue sur mon site personnel !';
+  if (descEl) descEl.textContent = homePageConfig.description || 'Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j\'aime partager.';
+  if (purposeEl) purposeEl.textContent = homePageConfig.sitePurpose || 'Centraliser mes passions, mes avis et mes liens favoris dans une interface rétro Windows XP.';
+  if (footerEl) footerEl.textContent = homePageConfig.footerText || 'Site réalisé avec amour et nostalgie 💾';
+  
+  if (socialEl && homePageConfig.socialLinks) {
+    socialEl.innerHTML = homePageConfig.socialLinks.map(link => 
+      `<li><a href="${link.url}" target="_blank">${link.name}</a></li>`
+    ).join('');
+  }
 }
 
 // Lazy loading des images
@@ -2220,20 +2236,20 @@ function createMainWindow() {
     <div class="avatar">
       <img src="avatar.jpg" alt="Avatar" />
     </div>
-    <h1>Théo Van Waas</h1>
+    <h1 id="main-name">Théo Van Waas</h1>
     <div class="about-section">
-      <p><strong>Bienvenue sur mon site personnel !</strong><br>
-      Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j’aime partager.<br><br>
-      <strong>But du site :</strong> Centraliser mes passions, mes avis et mes liens favoris dans une interface rétro Windows XP.<br><br>
+      <p><strong id="main-welcome">Bienvenue sur mon site personnel !</strong><br>
+      <span id="main-description">Ici tu trouveras mes critiques de films, ma collection manga, mes réseaux et tout ce que j'aime partager.</span><br><br>
+      <strong>But du site :</strong> <span id="main-purpose">Centraliser mes passions, mes avis et mes liens favoris dans une interface rétro Windows XP.</span><br><br>
       <strong>Contact & réseaux :</strong></p>
-      <ul style="margin-left:18px;">
+      <ul style="margin-left:18px;" id="main-social-links">
         <li><a href="https://www.instagram.com/theolegato_o?igsh=Z2w5eTVqemNrZHpl" target="_blank">Instagram</a></li>
         <li><a href="#" target="_blank">Twitter</a></li>
         <li><a href="#" target="_blank">Tumblr</a></li>
         <li><a href="https://www.mangacollec.com/user/theolegato/collection" target="_blank">Mangacollec</a></li>
         <li><a href="https://letterboxd.com/tei/" target="_blank">Letterboxd</a></li>
       </ul>
-      <p style="font-size:0.98em;color:#888;margin-top:18px;">Site réalisé avec amour et nostalgie 💾</p>
+      <p style="font-size:0.98em;color:#888;margin-top:18px;" id="main-footer">Site réalisé avec amour et nostalgie 💾</p>
     </div>
     <div id="content"></div>
   `;
