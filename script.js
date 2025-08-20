@@ -95,6 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Créer la fenêtre principale immédiatement
   createMainWindow();
   
+  // Ajouter les événements après création de la fenêtre
+  setTimeout(() => {
+    setupMainWindowEvents();
+  }, 200);
+  
   // Charger les données et mettre à jour
   loadDataFromGitHub().then(() => {
     renderDesktopIcons();
@@ -128,6 +133,37 @@ function updateHomePageDisplay() {
       `<li><a href="${link.url}" target="_blank">${link.name}</a></li>`
     ).join('');
   }
+}
+
+// Configuration des événements de la fenêtre principale
+function setupMainWindowEvents() {
+  const mainWin = document.getElementById('container');
+  if (!mainWin) return;
+  
+  // Bouton admin
+  const adminBtn = document.getElementById('admin-btn');
+  if (adminBtn) {
+    adminBtn.onclick = () => createAdminLoginWindow();
+  }
+  
+  // Bouton mode sombre
+  const toggleDark = document.getElementById('toggle-dark');
+  if (toggleDark) {
+    toggleDark.onclick = () => {
+      SITE_CONFIG.darkMode = !SITE_CONFIG.darkMode;
+      localStorage.setItem('dark_mode', SITE_CONFIG.darkMode);
+      localStorage.setItem('dark_mode_manual', 'true');
+      applyTheme();
+    };
+  }
+  
+  // Bouton fermer
+  const btnClose = document.getElementById('btn-close');
+  if (btnClose) {
+    btnClose.onclick = () => showBSOD();
+  }
+  
+  console.log('✅ Événements fenêtre principale configurés');
 }
 
 // Lazy loading des images
@@ -2265,7 +2301,11 @@ function createMainWindow() {
   mainWin.style.top = '80px';
   mainWin.style.zIndex = getNextZIndex();
   addResizeHandle(mainWin);
-  makeDraggable(mainWin, 'container');
+  
+  // S'assurer que makeDraggable est appelé après que le DOM soit prêt
+  setTimeout(() => {
+    makeDraggable(mainWin, 'container');
+  }, 100);
 }
 
 // Gestion des info-bulles (tooltips)
