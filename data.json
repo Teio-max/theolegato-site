@@ -91,6 +91,16 @@
         "x": 50,
         "y": 150
       }
+    },
+    {
+      "id": "icon-1755690415246",
+      "name": "Films",
+      "icon": "https://img.icons8.com/?size=100&id=cjsh58euBD9i&format=png&color=000000",
+      "action": "createFilmsWindow",
+      "position": {
+        "x": 250,
+        "y": 250
+      }
     }
   ],
   "homePageConfig": {
