@@ -2419,4 +2419,21 @@ window.onload = async () => {
     alert('Erreur lors de la création de la fenêtre Mes Liens : ' + e.message);
     console.error(e);
   }
+  // --- PATCH XP WINDOWS FUNCTIONS GLOBAL SCOPE ---
+window.createFilmsWindow = createFilmsWindow;
+window.createMangaWindow = createMangaWindow;
+window.createAdminLoginWindow = createAdminLoginWindow;
+window.createAdminPanelWindow = createAdminPanelWindow;
+window.minimizeWindow = minimizeWindow;
+window.maxFilmWindow = maxFilmWindow;
+window.closeFilmWindow = closeFilmWindow;
+window.switchAdminTab = switchAdminTab;
+window.editFilmAdmin = editFilmAdmin;
+window.deleteFilmAdmin = deleteFilmAdmin;
+window.deleteIconAdmin = deleteIconAdmin;
+// Ajoute ici toutes les fonctions qui sont appelées dynamiquement par le HTML ou les icônes du bureau
+
+// Optionnel : vérifie aussi pour makeDraggable, addResizeHandle si tu les utilises dans le HTML
+window.makeDraggable = makeDraggable;
+window.addResizeHandle = addResizeHandle;
 }; 
