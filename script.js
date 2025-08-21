@@ -774,10 +774,12 @@ function createMangaWindow() {
   mangaListHtml += '</div>';
 
   win.innerHTML = `
-    <div class="window-header">
-      <div class="window-title">⚙️ Administration</div>
-      <div class="window-controls">
-        <button onclick="document.getElementById('${winId}').remove()" class="close-btn">✖</button>
+    <div class="xp-titlebar" style="background:var(--accent);color:#fff;padding:8px 12px;font-weight:bold;cursor:move;display:flex;justify-content:space-between;align-items:center;">
+      <span>⚙️ Administration</span>
+      <div class="xp-buttons">
+        <span class="xp-btn min" onclick="minimizeWindow('${winId}', 'Admin', '⚙️')">-</span>
+        <span class="xp-btn max" onclick="maxFilmWindow('${winId}')">□</span>
+        <span class="xp-btn close" onclick="document.getElementById('${winId}').remove()">✖</span>
       </div>
     </div>
     <div style="padding:20px;height:calc(100% - 50px);overflow-y:auto;">
@@ -1074,22 +1076,29 @@ function renderDesktopIcons() {
       <span>${icon.name}</span>
     `;
     
-    // Clic simple et direct
-    iconElement.onclick = function() {
-      console.log(`Clic icône: ${icon.name} -> ${icon.action}`);
+    // Événement clic direct sans délai
+    iconElement.addEventListener('click', function(event) {
+      event.stopPropagation();
+      console.log(`Clic: ${icon.name} -> ${icon.action}`);
       
-      if (icon.action === 'createFilmsWindow') {
-        createFilmsWindow();
-      } else if (icon.action === 'createMangaWindow') {
-        createMangaWindow();
-      } else if (icon.action === 'createAdminLoginWindow') {
-        createAdminLoginWindow();
-      } else if (icon.action.startsWith('http')) {
-        window.open(icon.action, '_blank');
-      } else if (typeof window[icon.action] === 'function') {
-        window[icon.action]();
+      switch(icon.action) {
+        case 'createFilmsWindow':
+          if (window.createFilmsWindow) window.createFilmsWindow();
+          break;
+        case 'createMangaWindow':
+          if (window.createMangaWindow) window.createMangaWindow();
+          break;
+        case 'createAdminLoginWindow':
+          if (window.createAdminLoginWindow) window.createAdminLoginWindow();
+          break;
+        default:
+          if (icon.action.startsWith('http')) {
+            window.open(icon.action, '_blank');
+          } else if (window[icon.action]) {
+            window[icon.action]();
+          }
       }
-    };
+    });
     
     iconElement.ondblclick = iconElement.onclick;
     
