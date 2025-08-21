@@ -774,9 +774,11 @@ function createMangaWindow() {
   mangaListHtml += '</div>';
 
   win.innerHTML = `
-    <div class="xp-titlebar" style="background:var(--accent);color:#fff;padding:8px 12px;font-weight:bold;cursor:move;display:flex;justify-content:space-between;align-items:center;">
-      <span>📚 Collection Manga</span>
-      <button onclick="closeFilmWindow('${winId}')" style="background:none;border:none;color:#fff;font-size:16px;cursor:pointer;">✕</button>
+    <div class="window-header">
+      <div class="window-title">⚙️ Administration</div>
+      <div class="window-controls">
+        <button onclick="document.getElementById('${winId}').remove()" class="close-btn">✖</button>
+      </div>
     </div>
     <div style="padding:20px;height:calc(100% - 50px);overflow-y:auto;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
@@ -1072,46 +1074,24 @@ function renderDesktopIcons() {
       <span>${icon.name}</span>
     `;
     
-    // Utiliser onclick simple et fiable avec vérification
-    iconElement.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log(`🖱️ Clic sur icône: ${icon.name}, action: ${icon.action}`);
+    // Clic simple et direct
+    iconElement.onclick = function() {
+      console.log(`Clic icône: ${icon.name} -> ${icon.action}`);
       
-      try {
-        // Actions spécifiques
-        if (icon.action === 'createFilmsWindow') {
-          console.log('📽️ Ouverture fenêtre Films...');
-          createFilmsWindow();
-        } else if (icon.action === 'createMangaWindow') {
-          console.log('📚 Ouverture fenêtre Manga...');
-          createMangaWindow();
-        } else if (icon.action === 'createAdminLoginWindow') {
-          console.log('⚙️ Ouverture Admin...');
-          createAdminLoginWindow();
-        } else if (icon.action.startsWith('http')) {
-          console.log('🔗 Ouverture lien externe...');
-          window.open(icon.action, '_blank');
-        } else {
-          // Essayer d'appeler la fonction globale
-          if (typeof window[icon.action] === 'function') {
-            console.log(`🔧 Appel fonction: ${icon.action}`);
-            window[icon.action]();
-          } else {
-            console.error(`❌ Action ${icon.action} non trouvée`);
-          }
-        }
-      } catch (error) {
-        console.error('❌ Erreur lors du clic:', error);
+      if (icon.action === 'createFilmsWindow') {
+        createFilmsWindow();
+      } else if (icon.action === 'createMangaWindow') {
+        createMangaWindow();
+      } else if (icon.action === 'createAdminLoginWindow') {
+        createAdminLoginWindow();
+      } else if (icon.action.startsWith('http')) {
+        window.open(icon.action, '_blank');
+      } else if (typeof window[icon.action] === 'function') {
+        window[icon.action]();
       }
     };
     
-    // Double-clic également
-    iconElement.ondblclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      iconElement.onclick(e);
-    };
+    iconElement.ondblclick = iconElement.onclick;
     
     desktopContainer.appendChild(iconElement);
   });
