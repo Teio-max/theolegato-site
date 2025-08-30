@@ -283,7 +283,8 @@ let films = [
     liens: []
   }
 ];
-
+let mangas = [];
+let tags = [];
 // Configuration des icônes du bureau
 let desktopIcons = [
   {
@@ -435,7 +436,7 @@ function saveDataLocally() {
 }
 
 // Fonction de compression d'image
-function compressImage(file, maxWidth = 800, quality = 0.8) {
+function compressImage(file, maxWidth = 800, quality = 0.8, maxHeight = null) {
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -444,9 +445,15 @@ function compressImage(file, maxWidth = 800, quality = 0.8) {
     img.onload = function() {
       // Calculer les nouvelles dimensions
       let { width, height } = img;
-      if (width > maxWidth) {
+      
+      if (maxWidth && width > maxWidth) {
         height = (height * maxWidth) / width;
         width = maxWidth;
+      }
+      
+      if (maxHeight && height > maxHeight) {
+        width = (width * maxHeight) / height;
+        height = maxHeight;
       }
       
       canvas.width = width;
@@ -609,7 +616,7 @@ async function uploadFilmImageInWindow(filmId, winId) {
         
         // Mettre à jour le champ URL et l'image du film
         document.getElementById(`imgurl_${winId}`).value = imageUrl;
-        const film = films.find(f => f.id === filmId);
+        const  films.find(f => f.id === filmId);
         if (film) {
           film.image = imageUrl;
           updateFilmWindow(filmId, winId);
@@ -664,7 +671,49 @@ async function uploadGalleryImages() {
         console.warn(`Fichier ignoré (pas une image): ${file.name}`);
         continue;
       }
-      
+      // Fonction pour uploader une image vers GitHub
+async function uploadImageToGitHub(file, fileName, folder = 'films') {
+  const token = localStorage.getItem('github_token');
+  if (!token) {
+    throw new Error('Token GitHub requis');
+    return null;
+  }
+  
+  try {
+    // Lire le fichier en base64
+    const base64Content = await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+      reader.readAsDataURL(file);
+    });
+    
+    const filePath = `images/${folder}/${fileName}`;
+    
+    // Uploader sur GitHub
+    const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${filePath}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `📸 Upload image: ${fileName}`,
+        content: base64Content,
+        branch: GITHUB_CONFIG.branch
+      })
+    });
+    
+    if (response.ok) {
+      const result = await response.json();
+      return result.content.download_url;
+    } else {
+      throw new Error('Échec upload');
+    }
+  } catch (error) {
+    console.error('Erreur upload:', error);
+    throw error;
+  }
+}
       // Compresser l'image
       const compressedFile = await compressImage(file, 600, 0.7); // Plus petite pour galerie
       totalOriginalSize += file.size;
@@ -737,6 +786,44 @@ function createGalleryPreview() {
   galerieTextarea.parentNode.insertBefore(container, galerieTextarea.nextSibling);
   
   return container;
+}
+// Fonction pour afficher le gestionnaire d'images
+function showImageManager() {
+  const winId = 'imagemanager_' + Date.now();
+  const win = document.createElement('div');
+  win.className = 'xp-film-window window-opening';
+  win.id = winId;
+  win.style.position = 'absolute';
+  win.style.left = (180 + Math.random()*120) + 'px';
+  win.style.top = (120 + Math.random()*80) + 'px';
+  win.style.width = '680px';
+  win.style.height = '500px';
+  win.style.zIndex = getNextZIndex();
+  
+  win.innerHTML = `
+    <div class="xp-titlebar xp-titlebar-film" onmousedown="startDrag(event, '${winId}')">
+      <span class="xp-title-content"><img src="icons/film.png" class="xp-icon" alt=""><span>Gestionnaire d'images</span></span>
+      <span class="xp-buttons">
+        <span class="xp-btn min" data-tooltip="Réduire" onclick="minimizeWindow('${winId}', 'Images', 'icons/film.png')"><img src="icons/minimize.png" alt="Min"></span>
+        <span class="xp-btn max" data-tooltip="Agrandir" onclick="maxFilmWindow('${winId}')"><img src="icons/maximize.png" alt="Max"></span>
+        <span class="xp-btn close" data-tooltip="Fermer" onclick="closeFilmWindow('${winId}')"><img src="icons/close.png" alt="Close"></span>
+      </span>
+    </div>
+    <div class="film-detail" style="height: calc(100% - 30px); overflow-y: auto; padding: 15px;">
+      <h3>Images uploadées</h3>
+      <div id="image-list-${winId}" style="margin-top:15px;">
+        <p style="text-align:center;"><img src="icons/loading.gif" alt="Chargement" style="width:32px;height:32px;"> Chargement des images...</p>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(win);
+  win.onmousedown = () => win.style.zIndex = getNextZIndex();
+  addResizeHandle(win);
+  makeDraggable(win, winId);
+  
+  // Charger la liste des images
+  loadImageList(winId);
 }
 
 // Interface de gestion des images uploadées
@@ -899,6 +986,94 @@ window.deleteManga = function(id) {
     alert('Manga supprimé avec succès!');
   }
 };
+// Fonction pour ouvrir les détails d'un manga
+function openMangaDetails(mangaId, parentWinId) {
+  playOpenSound();
+  const manga = mangas.find(m => m.id === mangaId);
+  if (!manga) return;
+  
+  const winId = 'mangadetail_' + mangaId + '_' + Date.now();
+  const win = document.createElement('div');
+  win.id = winId;
+  win.className = 'xp-film-window window-opening';
+  win.style.cssText = `
+    position: fixed;
+    top: 150px;
+    left: 250px;
+    width: 600px;
+    height: 500px;
+    background: var(--window-bg);
+    border: 2px solid var(--border-main);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: ${getNextZIndex()};
+    font-family: var(--font-main);
+  `;
+  
+  win.innerHTML = `
+    <div class="xp-titlebar" style="background:var(--accent);color:#fff;padding:8px 12px;font-weight:bold;cursor:move;display:flex;justify-content:space-between;align-items:center;">
+      <span>${manga.titre}</span>
+      <div class="xp-buttons">
+        <span class="xp-btn min" onclick="minimizeWindow('${winId}', '${manga.titre}', 'icons/key.png')">-</span>
+        <span class="xp-btn max" onclick="maxFilmWindow('${winId}')">□</span>
+        <span class="xp-btn close" onclick="document.getElementById('${winId}').remove()">✖</span>
+      </div>
+    </div>
+    <div style="padding:20px;height:calc(100% - 50px);overflow-y:auto;">
+      <div style="display:flex;gap:20px;margin-bottom:20px;">
+        <div style="flex:0 0 200px;">
+          ${manga.image ? `<img src="${manga.image}" alt="${manga.titre}" style="width:100%;border-radius:6px;">` : '<div style="width:100%;height:200px;background:#ddd;border-radius:6px;display:flex;align-items:center;justify-content:center;color:#666;">📚</div>'}
+        </div>
+        <div style="flex:1;">
+          <h3 style="margin-top:0;">${manga.titre}</h3>
+          <p><strong>Auteur:</strong> ${manga.auteur || 'Non spécifié'}</p>
+          <p><strong>Statut:</strong> ${manga.statut || 'En cours'}</p>
+          <p><strong>Chapitres:</strong> ${manga.chapitres || '0'}</p>
+          <p><strong>Note:</strong> ${renderStars(manga.note || 0, manga.id, winId)}</p>
+          <div style="margin-top:15px;">
+            <button onclick="editManga(${manga.id})" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:4px;margin-right:8px;">✏️ Modifier</button>
+            <button onclick="deleteManga(${manga.id})" style="padding:6px 12px;background:#e74c3c;color:#fff;border:none;border-radius:4px;">🗑️ Supprimer</button>
+          </div>
+        </div>
+      </div>
+      
+      <div style="margin-top:25px;">
+        <h4>Critique</h4>
+        <p>${manga.critique || 'Aucune critique pour le moment.'}</p>
+      </div>
+      
+      ${manga.galerie && manga.galerie.length > 0 ? `
+        <div style="margin-top:25px;">
+          <h4>Galerie d'images</h4>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;">
+            ${manga.galerie.map(img => `<img src="${img}" alt="Image" style="width:100px;height:100px;object-fit:cover;border-radius:4px;">`).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      ${manga.genre && manga.genre.length > 0 ? `
+        <div style="margin-top:25px;">
+          <h4>Genres</h4>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;">
+            ${manga.genre.map(g => `<span style="background:var(--accent-light);color:var(--accent);padding:4px 8px;border-radius:4px;font-size:12px;">${g}</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+      
+      ${manga.liens && manga.liens.length > 0 ? `
+        <div style="margin-top:25px;">
+          <h4>Liens utiles</h4>
+          <ul style="margin-top:10px;">
+            ${manga.liens.map(lien => `<li><a href="${lien.url}" target="_blank">${lien.nom}</a></li>`).join('')}
+          </ul>
+        </div>
+      ` : ''}
+    </div>
+  `;
+  
+  document.body.appendChild(win);
+  makeDraggable(win, winId);
+}
 
 // Charger la liste des images depuis GitHub
 async function loadImageList(winId) {
@@ -1707,6 +1882,72 @@ function createAdminPanelWindow(editFilmId = null) {
     setupAdminEvents(winId);
     setupIconUploadEvents(winId);
   }, 100);
+  // Configuration des événements admin
+function setupAdminEvents(winId) {
+  console.log('Configuration des événements admin pour', winId);
+  
+  const win = document.getElementById(winId);
+  if (!win) return;
+  
+  // S'assurer que les onglets fonctionnent correctement
+  const tabs = ['films', 'mangas', 'icons', 'home', 'bsod', 'github', 'themes'];
+  tabs.forEach(tab => {
+    const tabBtn = win.querySelector(`#tab-${tab}`);
+    if (tabBtn) {
+      tabBtn.onclick = () => switchAdminTab(tab, winId);
+    }
+  });
+  
+  // Autres événements si nécessaires
+}
+  // Configuration des événements d'upload d'icônes
+function setupIconUploadEvents(winId) {
+  const win = document.getElementById(winId);
+  if (!win) return;
+  
+  const uploadBtn = win.querySelector('#upload-icon-btn');
+  const fileInput = win.querySelector('#icon-file-input');
+  const iconInput = win.querySelector('input[name="iconIcon"]');
+  
+  if (uploadBtn && fileInput && iconInput) {
+    uploadBtn.onclick = () => {
+      fileInput.click();
+    };
+    
+    fileInput.onchange = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      try {
+        uploadBtn.textContent = '⏳ Upload...';
+        uploadBtn.disabled = true;
+        
+        // Compression de l'image pour l'icône
+        const compressedFile = await compressImage(file, 64, 0.9);
+        const fileName = `icon_${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        
+        // Upload vers GitHub
+        const imageUrl = await uploadImageToGitHub(compressedFile, fileName, 'icons');
+        
+        iconInput.value = imageUrl;
+        uploadBtn.textContent = '✅ Uploadé';
+        
+        setTimeout(() => {
+          uploadBtn.textContent = '📁 Upload';
+          uploadBtn.disabled = false;
+        }, 2000);
+        
+      } catch (error) {
+        console.error('Erreur upload icône:', error);
+        uploadBtn.textContent = '❌ Erreur';
+        setTimeout(() => {
+          uploadBtn.textContent = '📁 Upload';
+          uploadBtn.disabled = false;
+        }, 2000);
+      }
+    };
+  }
+}
 
   // Gestion du formulaire films
   win.querySelector('#admin-film-form').onsubmit = function(e) {
@@ -2419,21 +2660,4 @@ window.onload = async () => {
     alert('Erreur lors de la création de la fenêtre Mes Liens : ' + e.message);
     console.error(e);
   }
-  // --- PATCH XP WINDOWS FUNCTIONS GLOBAL SCOPE ---
-window.createFilmsWindow = createFilmsWindow;
-window.createMangaWindow = createMangaWindow;
-window.createAdminLoginWindow = createAdminLoginWindow;
-window.createAdminPanelWindow = createAdminPanelWindow;
-window.minimizeWindow = minimizeWindow;
-window.maxFilmWindow = maxFilmWindow;
-window.closeFilmWindow = closeFilmWindow;
-window.switchAdminTab = switchAdminTab;
-window.editFilmAdmin = editFilmAdmin;
-window.deleteFilmAdmin = deleteFilmAdmin;
-window.deleteIconAdmin = deleteIconAdmin;
-// Ajoute ici toutes les fonctions qui sont appelées dynamiquement par le HTML ou les icônes du bureau
-
-// Optionnel : vérifie aussi pour makeDraggable, addResizeHandle si tu les utilises dans le HTML
-window.makeDraggable = makeDraggable;
-window.addResizeHandle = addResizeHandle;
 }; 
