@@ -3,16 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Théo Van Waas - Portfolio Journalisme</title>
+  <title>Site Théo - Collection Films & Manga</title>
+  <meta name="description" content="Site personnel avec interface Windows XP pour gérer films et manga">
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
-  <meta name="description" content="Portfolio de journalisme de Théo Van Waas - Aspirant journaliste passionné par l'écriture, les médias et l'analyse culturelle">
 </head>
-<body class="theme-luna">
+<body>
   <!-- Écran de chargement -->
   <div id="loading-screen">
     <div class="loading-content">
-      <img src="icons/windows-logo.png" alt="Windows Logo" class="windows-logo">
       <div class="loading-bar">
         <div class="loading-progress"></div>
       </div>
@@ -22,38 +20,29 @@
 
   <!-- Bureau Windows XP -->
   <div id="desktop" style="display: none;">
-    <!-- Fond d'écran -->
+    <!-- Overlay pour le fond d'écran -->
     <div id="bg-overlay"></div>
     
     <!-- Icônes du bureau -->
     <div class="desktop-icons">
-      <!-- Les icônes seront ajoutées dynamiquement -->
+      <!-- Les icônes seront générées dynamiquement par JavaScript -->
     </div>
-
-    <!-- Contenu principal -->
+    
+    <!-- Fenêtre principale -->
     <div id="container">
       <!-- Contenu principal généré par JavaScript -->
-      <div id="home-name"></div>
-      <div id="home-welcome"></div>
-      <div id="home-description"></div>
-      <div id="home-purpose"></div>
-      <div id="home-footer"></div>
     </div>
-
+    
     <!-- Barre des tâches -->
     <div id="taskbar">
       <div id="start-button">
-        <img src="icons/start.png" alt="Démarrer">
+        <img src="https://i.imgur.com/g65y9dC.png" alt="Start">
         <span>Démarrer</span>
       </div>
       <div id="minimized-windows"></div>
-      <div id="notification-area">
-        <span id="time">16:48</span>
-      </div>
     </div>
   </div>
-
-  <!-- Scripts -->
+  
   <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
