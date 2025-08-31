@@ -867,7 +867,9 @@ const DesktopManager = {
     
     activeIcon = null;
   }
-}; // Accolade fermante pour l'objet DesktopManager
+});
+  } // Fin de la méthode setupDraggableIcons
+}; // Fin de l'objet DesktopManager
 
 // Code d'initialisation
 document.addEventListener('DOMContentLoaded', function() {
