@@ -567,11 +567,12 @@ const WindowManager = {
   
   playSound(soundName) {
     const sounds = {
-      open: new Audio('sounds/open.wav'),
-      close: new Audio('sounds/close.wav'),
-      error: new Audio('sounds/error.wav'),
-      startup: new Audio('sounds/startup.wav')
-    };
+  open: new Audio('sounds/open.wav'),
+  close: new Audio('sounds/close.wav'),
+  error: new Audio('sounds/error.wav'),
+  startup: new Audio('sounds/startup.wav')
+};
+    
     
     try {
       if (sounds[soundName]) {
