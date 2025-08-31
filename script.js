@@ -1061,17 +1061,43 @@ function renderMangaList() {
 
 // Fonctions pour le panneau d'administration
 function showAdminLogin() {
-  const loginForm = document.createElement('div');
-  loginForm.className = 'admin-login';
-  loginForm.innerHTML = `
-    <div class="admin-login-form">
-      <h2>Administration</h2>
-      <input type="password" id="admin-password" placeholder="Mot de passe">
-      <button id="btn-admin-login">Connexion</button>
+  const winId = 'admin-login-' + Date.now();
+  const loginWindow = document.createElement('div');
+  loginWindow.id = winId;
+  loginWindow.className = 'xp-window admin-login';
+  loginWindow.style.position = 'absolute';
+  loginWindow.style.width = '300px';
+  loginWindow.style.height = 'auto';
+  loginWindow.style.left = '50%';
+  loginWindow.style.top = '50%';
+  loginWindow.style.transform = 'translate(-50%, -50%)';
+  loginWindow.style.zIndex = typeof getNextZIndex === 'function' ? getNextZIndex() : 9999;
+  
+  loginWindow.innerHTML = `
+    <div class="xp-titlebar" style="background:linear-gradient(to right,#0058a8,#2586e7);">
+      <span style="display:flex;align-items:center;padding:5px;">
+        <img src="icons/key.png" alt="Admin" style="height:16px;margin-right:5px;">
+        <span>Administration</span>
+      </span>
+      <span style="display:flex;">
+        <span class="xp-btn close" onclick="document.getElementById('${winId}').remove()">✖</span>
+      </span>
+    </div>
+    <div style="padding:20px;">
+      <h2 style="margin-top:0;">Connexion Admin</h2>
+      <div style="margin:15px 0;">
+        <label for="admin-pass" style="display:block;margin-bottom:5px;">Mot de passe:</label>
+        <input type="password" id="admin-pass" style="width:100%;padding:5px;">
+      </div>
+      <div id="admin-error" style="color:red;margin-bottom:10px;"></div>
+      <button onclick="checkAdminPass('${winId}')" style="background:#0058a8;color:white;border:none;padding:5px 15px;cursor:pointer;">
+        Connexion
+      </button>
     </div>
   `;
   
-  document.body.appendChild(loginForm);
+  document.body.appendChild(loginWindow);
+}
   
   window.checkAdminPass = function(winId) {
   const pass = document.getElementById('admin-pass').value;
