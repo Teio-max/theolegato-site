@@ -1073,15 +1073,15 @@ function showAdminLogin() {
   
   document.body.appendChild(loginForm);
   
-  document.getElementById('btn-admin-login').addEventListener('click', () => {
-    const password = document.getElementById('admin-password').value;
-    if (password === 'sitethéi') { // Mot de passe défini dans le README
-      document.body.removeChild(loginForm);
-      createAdminWindow();
-    } else {
-      alert('Mot de passe incorrect');
-    }
-  });
+  window.checkAdminPass = function(winId) {
+  const pass = document.getElementById('admin-pass').value;
+  if (pass === 'sitethéi') { // Mot de passe personnalisé
+    document.getElementById(winId).remove();
+    createAdminPanelWindow(); // Utilisez la nouvelle fonction d'administration
+  } else {
+    document.getElementById('admin-error').textContent = 'Mot de passe incorrect.';
+  }
+}
 }
 
 function showAddFilmForm() {
