@@ -1,0 +1,105 @@
+/* admin.css - Styles pour le panneau d'administration */
+.admin-panel {
+  background: #ECE9D8;
+  border: 1px solid #0058a8;
+  border-radius: 5px;
+  font-family: 'Tahoma', 'Arial', sans-serif;
+}
+
+.admin-titlebar {
+  background: linear-gradient(to right, #0058a8, #2586e7, #83b3ec);
+  color: white;
+  padding: 5px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.admin-toolbar {
+  background: #ECE9D8;
+  padding: 10px;
+  border-bottom: 1px solid #ACA899;
+  display: flex;
+  gap: 5px;
+}
+
+.admin-toolbar button {
+  background: #ECE9D8;
+  border: 1px solid #ACA899;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.admin-toolbar button:hover {
+  background: #C2D5F2;
+}
+
+.admin-content {
+  padding: 15px;
+}
+
+.admin-content h3 {
+  color: #0058a8;
+  margin-top: 0;
+  border-bottom: 1px solid #ACA899;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.admin-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.admin-form input[type="text"],
+.admin-form input[type="number"],
+.admin-form input[type="url"],
+.admin-form textarea {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #ACA899;
+  border-radius: 3px;
+  margin-bottom: 15px;
+}
+
+.admin-form button {
+  background: #0058a8;
+  color: white;
+  border: 1px solid #003f7d;
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+/* Styles pour les uploads et aperçus d'images */
+.image-preview {
+  margin-top: 10px;
+  border: 1px solid #ACA899;
+  padding: 10px;
+  background: #fff;
+}
+
+.image-preview img {
+  max-width: 200px;
+  max-height: 120px;
+  display: block;
+  margin: 5px 0;
+}
+
+.admin-upload-controls {
+  margin: 10px 0;
+  display: flex;
+  gap: 10px;
+}
+
+.admin-upload-controls button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+}
