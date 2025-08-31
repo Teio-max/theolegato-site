@@ -849,11 +849,23 @@ const DesktopManager = {
     });
     
     document.addEventListener('mouseup', () => {
-      if (activeIcon) {
-        activeIcon.classList.remove('dragging');
-        
-        // Update icon position in data
-        const iconId = activeIcon.id;
-        const iconData = DataManager.data.desktopIcons.find(icon => icon.id === iconId);
-        if (iconData) {
-          iconData.position = {
+  if (activeIcon) {
+    activeIcon.classList.remove('dragging');
+    
+    // Update icon position in data
+    const iconId = activeIcon.id;
+    const iconData = DataManager.data.desktopIcons.find(icon => icon.id === iconId);
+    if (iconData) {
+      iconData.position = {
+        x: parseInt(activeIcon.style.left) || 0,
+        y: parseInt(activeIcon.style.top) || 0
+      };
+      
+      // Save updated positions
+      DataManager.saveDataLocally();
+    }
+    
+    activeIcon = null;
+  }
+});
+    // Correction: Completed the mouseup event handler to properly update and save icon positions
