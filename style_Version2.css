@@ -1,0 +1,712 @@
+/* --- Reset & Base Styles --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Tahoma', 'Arial', sans-serif;
+}
+
+body {
+  overflow: hidden;
+  background-color: #000;
+  color: #000;
+}
+
+/* --- Loading Screen --- */
+#loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-bar {
+  width: 280px;
+  height: 20px;
+  background-color: #065ac1;
+  border-radius: 3px;
+  margin: 20px auto;
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-progress {
+  height: 100%;
+  background-color: #6eb8ff;
+  width: 0;
+  position: absolute;
+  animation: loading 3s ease-in-out forwards;
+}
+
+@keyframes loading {
+  0% { width: 0; }
+  100% { width: 100%; }
+}
+
+.loading-text {
+  color: #ccc;
+  font-size: 14px;
+}
+
+/* --- Desktop --- */
+#desktop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 30px); /* Hauteur moins la barre des tâches */
+  background-image: url('https://i.imgur.com/Zk6TR5k.jpg');
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+#bg-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* --- Desktop Icons --- */
+.desktop-icons {
+  position: relative;
+  z-index: 1;
+  padding: 10px;
+}
+
+.desktop-icon {
+  width: 80px;
+  height: 90px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 5px;
+  cursor: pointer;
+  position: absolute;
+  text-align: center;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 5px rgba(0, 0, 0, 0.5);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 5px;
+}
+
+.desktop-icon:hover {
+  background-color: rgba(49, 106, 197, 0.2);
+  border: 1px solid rgba(49, 106, 197, 0.4);
+}
+
+.desktop-icon.dragging {
+  opacity: 0.7;
+  z-index: 10;
+}
+
+.desktop-icon img {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 5px;
+}
+
+.desktop-icon span {
+  font-size: 12px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Windows XP Window --- */
+.xp-window {
+  position: absolute;
+  min-width: 280px;
+  min-height: 180px;
+  background-color: #ECE9D8;
+  border: 1px solid #0058a8;
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  border-radius: 5px 5px 3px 3px;
+  overflow: hidden;
+}
+
+.window-focused {
+  box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.7);
+}
+
+.window-opening {
+  animation: window-open 0.3s ease-out;
+}
+
+.window-closing {
+  animation: window-close 0.3s ease-in forwards;
+}
+
+@keyframes window-open {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes window-close {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.8); opacity: 0; }
+}
+
+.maximized {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: calc(100% - 30px) !important; /* Compte pour la taskbar */
+  border-radius: 0;
+}
+
+/* --- Window Titlebar --- */
+.xp-titlebar {
+  height: 30px;
+  background: linear-gradient(to right, #0058a8, #2586e7, #83b3ec);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 5px;
+  user-select: none;
+  cursor: move;
+  color: white;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
+}
+
+.xp-title-content {
+  display: flex;
+  align-items: center;
+}
+
+.xp-title-content img {
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+}
+
+.xp-controls {
+  display: flex;
+  height: 100%;
+}
+
+.xp-btn {
+  width: 22px;
+  height: 22px;
+  border: 1px solid transparent;
+  background: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 2px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.xp-btn img {
+  width: 14px;
+  height: 14px;
+}
+
+.xp-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.xp-btn.close:hover {
+  background-color: #e81123;
+}
+
+.window-content {
+  flex: 1;
+  overflow: auto;
+  padding: 10px;
+  background-color: #ffffff;
+  border-top: 1px solid #ccc;
+}
+
+/* --- Window Content Styles --- */
+.window-films, .window-articles, .window-portfolio, .window-cv, .window-contact {
+  height: 100%;
+  overflow: auto;
+}
+
+.window-films h1, .window-articles h1, .window-portfolio h1, .window-cv h1, .window-contact h1 {
+  color: #0058a8;
+  font-size: 18px;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 5px;
+}
+
+/* --- Films List --- */
+.film-card {
+  display: flex;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.film-image {
+  width: 120px;
+  height: 180px;
+  object-fit: cover;
+  border-right: 1px solid #ddd;
+}
+
+.film-details {
+  flex: 1;
+  padding: 10px;
+}
+
+.film-title {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.film-rating {
+  color: #f8a100;
+  margin-bottom: 8px;
+}
+
+.film-critique {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.film-links {
+  display: flex;
+  gap: 10px;
+}
+
+.film-links a {
+  color: #0058a8;
+  text-decoration: none;
+}
+
+.film-links a:hover {
+  text-decoration: underline;
+}
+
+/* --- Taskbar --- */
+#taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  background: linear-gradient(to bottom, #235fce, #1153c7 5%, #0e50c9 8%, #0b4bca 64%, #0948cb 95%, #0847ca);
+  border-top: 1px solid #284593;
+  display: flex;
+  z-index: 9000;
+}
+
+#start-button {
+  width: auto;
+  height: 30px;
+  background: linear-gradient(to bottom, #3f8cf7, #5496f4 10%, #3888f0 45%, #387ced 60%, #2a75eb);
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid #1346ca;
+  cursor: pointer;
+}
+
+#start-button:hover {
+  background: linear-gradient(to bottom, #4c98fb, #67a8fc 45%, #3585f8 60%, #1a70fa);
+}
+
+#start-button img {
+  width: 20px;
+  height: 20px;
+  margin-right: 5px;
+}
+
+#start-button span {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.7);
+}
+
+#minimized-windows {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 5px;
+  overflow-x: auto;
+}
+
+.taskbar-tab {
+  height: 22px;
+  min-width: 160px;
+  max-width: 200px;
+  margin: 0 2px;
+  background: linear-gradient(to bottom, #5895dc, #3676cf);
+  border: 1px solid #1e4fad;
+  border-radius: 2px;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.taskbar-tab:hover {
+  background: linear-gradient(to bottom, #5f9fe2, #4080d0);
+}
+
+.taskbar-tab .xp-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 5px;
+}
+
+.taskbar-tab .xp-icon img {
+  width: 16px;
+  height: 16px;
+}
+
+/* --- Resize Handle --- */
+.resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: se-resize;
+  background-image: url('icons/resize.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 10;
+}
+
+/* --- Notifications --- */
+.notification {
+  position: fixed;
+  bottom: 40px;
+  right: -300px;
+  width: 280px;
+  padding: 10px 15px;
+  background-color: #fffde7;
+  border: 1px solid #dcc091;
+  border-radius: 3px;
+  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+  z-index: 9999;
+}
+
+.notification-info {
+  background-color: #e8f4f8;
+  border-color: #a9d3e2;
+}
+
+.notification-success {
+  background-color: #e8f7e4;
+  border-color: #a3d896;
+}
+
+.notification-error {
+  background-color: #fef0ef;
+  border-color: #e9b8b4;
+}
+
+/* --- Admin Panel --- */
+.admin-panel {
+  padding: 10px;
+}
+
+.admin-panel h2 {
+  margin-bottom: 15px;
+  color: #0058a8;
+}
+
+.admin-panel .form-group {
+  margin-bottom: 15px;
+}
+
+.admin-panel label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.admin-panel input, 
+.admin-panel textarea, 
+.admin-panel select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+  background-color: #fff;
+}
+
+.admin-panel .btn {
+  padding: 8px 15px;
+  background-color: #0058a8;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.admin-panel .btn:hover {
+  background-color: #0078d7;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .desktop-icon {
+    width: 70px;
+    height: 80px;
+  }
+  
+  .desktop-icon img {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .xp-window {
+    min-width: 250px;
+    min-height: 150px;
+  }
+}
+
+/* Animations pour le BSOD (écran bleu) */
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.typewriter {
+  overflow: hidden;
+  white-space: pre-wrap;
+  animation: typewriter 2s steps(40, end);
+}
+
+.bsod {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #0000aa;
+  color: #ffffff;
+  font-family: 'Consolas', monospace;
+  font-size: 16px;
+  padding: 40px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  z-index: 10000;
+}
+
+.bsod-content {
+  max-width: 80%;
+  margin: 0 auto;
+}
+
+.bsod-header {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.bsod-error {
+  margin: 20px 0;
+}
+
+.bsod-instructions {
+  margin: 30px 0;
+}
+
+.bsod-dump {
+  margin-top: 30px;
+  opacity: 0.8;
+}
+
+.bsod-continue {
+  margin-top: 40px;
+  text-align: center;
+}
+
+.bsod-continue button {
+  background: #ffffff;
+  color: #0000aa;
+  border: none;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.bsod-continue button:hover {
+  background: #eeeeee;
+}
+
+/* Classes pour l'admin */
+.admin-login {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.admin-login-form {
+  width: 300px;
+  padding: 20px;
+  background-color: #ECE9D8;
+  border: 1px solid #0058a8;
+  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
+}
+
+.admin-login-form h2 {
+  color: #0058a8;
+  margin-bottom: 15px;
+}
+
+.admin-login-form input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #bbb;
+}
+
+.admin-login-form button {
+  padding: 8px 15px;
+  background-color: #0058a8;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.admin-toolbar {
+  padding: 5px;
+  background-color: #ECE9D8;
+  border-bottom: 1px solid #ccc;
+  display: flex;
+  gap: 5px;
+}
+
+.admin-toolbar button {
+  padding: 3px 8px;
+  background-color: #e1e1e1;
+  border: 1px solid #bbb;
+  cursor: pointer;
+}
+
+.admin-toolbar button:hover {
+  background-color: #d1d1d1;
+}
+
+/* Film Details */
+.film-gallery {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.film-gallery img {
+  height: 150px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
+.film-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.film-tag {
+  font-size: 12px;
+  padding: 3px 8px;
+  background-color: #e1e1e1;
+  border-radius: 3px;
+}
+
+/* Anime/Manga styling */
+.manga-card {
+  display: flex;
+  margin-bottom: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: #f9f9f9;
+}
+
+.manga-image {
+  width: 100px;
+  height: 150px;
+  object-fit: cover;
+}
+
+.manga-details {
+  flex: 1;
+  padding: 10px;
+}
+
+.manga-title {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.manga-info {
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+.manga-status {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.manga-status.completed {
+  background-color: #e3f7e8;
+  color: #2e7d32;
+}
+
+.manga-status.ongoing {
+  background-color: #e3f0f9;
+  color: #1565c0;
+}
+
+.manga-status.hiatus {
+  background-color: #fef0c7;
+  color: #ed6c02;
+}
