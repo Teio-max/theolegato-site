@@ -1284,92 +1284,7 @@ function showManageTagsForm() {
   });
 }
 
-// Code d'initialisation
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialiser les données
-  DataManager.initData();
-  
-  // Simuler le chargement Windows XP
-  setTimeout(() => {
-    document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('desktop').style.display = 'block';
-    
-    // Initialiser l'interface
-    DesktopManager.renderDesktopIcons();
-    DesktopManager.setupDraggableIcons();
-    
-    // Jouer le son de démarrage
-    WindowManager.playSound('startup');
-  }, 3000);
-});
-
-// Fonctions de création de fenêtres
-function createArticlesWindow() {
-  return WindowManager.createWindow({
-    title: 'Articles',
-    icon: 'icons/article.png',
-    content: '<div class="window-articles"><h1>Mes Articles</h1><div id="articles-list"></div></div>'
-  });
-}
-
-function createPortfolioWindow() {
-  return WindowManager.createWindow({
-    title: 'Portfolio',
-    icon: 'icons/portfolio.png',
-    content: '<div class="window-portfolio"><h1>Mon Portfolio</h1><div id="portfolio-content"></div></div>'
-  });
-}
-
-function createFilmsWindow() {
-  return WindowManager.createWindow({
-    title: 'Critiques Ciné',
-    icon: 'icons/film.png',
-    content: '<div class="window-films"><h1>Mes Critiques de Films</h1><div id="films-list"></div></div>'
-  });
-}
-
-function createCVWindow() {
-  return WindowManager.createWindow({
-    title: 'CV',
-    icon: 'icons/cv.png',
-    content: '<div class="window-cv"><h1>Mon CV</h1><div id="cv-content"></div></div>'
-  });
-}
-
-function createContactWindow() {
-  return WindowManager.createWindow({
-    title: 'Contact',
-    icon: 'icons/email.png',
-    content: '<div class="window-contact"><h1>Contact</h1><form id="contact-form"></form></div>'
-  });
-}
-// Code d'initialisation
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialiser les données
-  DataManager.initData();
-  
-  // Simuler le chargement Windows XP
-  setTimeout(() => {
-    document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('desktop').style.display = 'block';
-    
-    // Initialiser l'interface
-    DesktopManager.renderDesktopIcons();
-    DesktopManager.setupDraggableIcons();
-    
-    // Jouer le son de démarrage
-    WindowManager.playSound('startup');
-  }, 3000);
-  
-  // Ajouter un raccourci clavier pour l'administration
-  document.addEventListener('keydown', function(e) {
-    // Ctrl+Shift+A pour ouvrir le panneau d'administration
-    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
-      e.preventDefault();
-      showAdminLogin();
-    }
-  });
-  // Fonction pour afficher un écran bleu (BSOD)
+// Fonction pour afficher un écran bleu (BSOD)
 function showBSOD(error = null) {
   const bsodConfig = DataManager.data.bsodConfig || {
     title: "ERREUR SYSTÈME",
@@ -1415,12 +1330,31 @@ function showBSOD(error = null) {
     });
   }, 2000);
 }
+
+// Code d'initialisation - UN SEUL BLOC
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialiser les données
+  DataManager.initData();
+  
+  // Simuler le chargement Windows XP
+  setTimeout(() => {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('desktop').style.display = 'block';
+    
+    // Initialiser l'interface
+    DesktopManager.renderDesktopIcons();
+    DesktopManager.setupDraggableIcons();
+    
+    // Jouer le son de démarrage
+    WindowManager.playSound('startup');
+  }, 3000);
+  
   // Ajouter un raccourci clavier pour l'administration
-document.addEventListener('keydown', function(e) {
-  // Ctrl+Shift+A pour ouvrir le panneau d'administration
-  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
-    e.preventDefault();
-    showAdminLogin();
-  }
-});
+  document.addEventListener('keydown', function(e) {
+    // Ctrl+Shift+A pour ouvrir le panneau d'administration
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
+      e.preventDefault();
+      showAdminLogin();
+    }
+  });
 });
