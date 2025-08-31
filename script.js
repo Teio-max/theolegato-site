@@ -1343,3 +1343,84 @@ function createContactWindow() {
     content: '<div class="window-contact"><h1>Contact</h1><form id="contact-form"></form></div>'
   });
 }
+// Code d'initialisation
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialiser les données
+  DataManager.initData();
+  
+  // Simuler le chargement Windows XP
+  setTimeout(() => {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('desktop').style.display = 'block';
+    
+    // Initialiser l'interface
+    DesktopManager.renderDesktopIcons();
+    DesktopManager.setupDraggableIcons();
+    
+    // Jouer le son de démarrage
+    WindowManager.playSound('startup');
+  }, 3000);
+  
+  // Ajouter un raccourci clavier pour l'administration
+  document.addEventListener('keydown', function(e) {
+    // Ctrl+Shift+A pour ouvrir le panneau d'administration
+    if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
+      e.preventDefault();
+      showAdminLogin();
+    }
+  });
+  // Fonction pour afficher un écran bleu (BSOD)
+function showBSOD(error = null) {
+  const bsodConfig = DataManager.data.bsodConfig || {
+    title: "ERREUR SYSTÈME",
+    errorCode: "ERROR_UNEXPECTED_FAILURE",
+    technicalInfo: "Information technique:\n\n*** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)",
+    instructions: "Redémarrez votre ordinateur. Si cette erreur persiste, contactez l'administrateur système.",
+    memoryDump: "Beginning dump of physical memory...\nPhysical memory dump complete.\nContact your system administrator for assistance."
+  };
+  
+  const bsod = document.createElement('div');
+  bsod.className = 'bsod';
+  bsod.innerHTML = `
+    <div class="bsod-content">
+      <div class="bsod-header typewriter">
+        <h1>${bsodConfig.title}</h1>
+      </div>
+      <div class="bsod-error typewriter">
+        <p>${bsodConfig.errorCode}</p>
+      </div>
+      <div class="bsod-technical typewriter">
+        <pre>${bsodConfig.technicalInfo}</pre>
+        ${error ? `<pre>Error details: ${error.message || 'Unknown error'}</pre>` : ''}
+      </div>
+      <div class="bsod-instructions typewriter">
+        <p>${bsodConfig.instructions}</p>
+      </div>
+      <div class="bsod-dump typewriter">
+        <pre>${bsodConfig.memoryDump}</pre>
+      </div>
+      <div class="bsod-continue">
+        <button id="bsod-restart-btn">Redémarrer</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(bsod);
+  
+  // Ajouter un écouteur pour le bouton de redémarrage
+  setTimeout(() => {
+    document.getElementById('bsod-restart-btn').addEventListener('click', () => {
+      document.body.removeChild(bsod);
+      location.reload();
+    });
+  }, 2000);
+}
+  // Ajouter un raccourci clavier pour l'administration
+document.addEventListener('keydown', function(e) {
+  // Ctrl+Shift+A pour ouvrir le panneau d'administration
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
+    e.preventDefault();
+    showAdminLogin();
+  }
+});
+});
