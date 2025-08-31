@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Théo Van Waas - Portfolio Journalisme</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+  <meta name="description" content="Portfolio de journalisme de Théo Van Waas - Aspirant journaliste passionné par l'écriture, les médias et l'analyse culturelle">
+</head>
+<body class="theme-luna">
+  <!-- Écran de chargement -->
+  <div id="loading-screen">
+    <div class="loading-content">
+      <img src="icons/windows-logo.png" alt="Windows Logo" class="windows-logo">
+      <div class="loading-bar">
+        <div class="loading-progress"></div>
+      </div>
+      <div class="loading-text">Windows XP démarre...</div>
+    </div>
+  </div>
+
+  <!-- Bureau Windows XP -->
+  <div id="desktop" style="display: none;">
+    <!-- Fond d'écran -->
+    <div class="wallpaper"></div>
+    
+    <!-- Icônes du bureau -->
+    <div class="desktop-icons">
+      <!-- Les icônes seront ajoutées dynamiquement -->
+    </div>
+
+    <!-- Menu de démarrage -->
+    <div id="start-menu" class="hidden">
+      <div class="start-header">
+        <img src="icons/avatar.jpg" alt="User" class="user-avatar">
+        <div class="user-name">Théo Van Waas</div>
+      </div>
+      
+      <div class="start-menu-content">
+        <div class="left-panel">
+          <div class="menu-item" data-action="createPortfolioWindow">
+            <img src="icons/portfolio.png" alt="Portfolio">
+            <span>Mon Portfolio</span>
+          </div>
+          <div class="menu-item" data-action="createArticlesWindow">
+            <img src="icons/article.png" alt="Articles">
+            <span>Mes Articles</span>
+          </div>
+          <div class="menu-item" data-action="createFilmsWindow">
+            <img src="icons/film.png" alt="Critiques">
+            <span>Critiques Cinéma</span>
+          </div>
+          <div class="menu-item" data-action="createCVWindow">
+            <img src="icons/cv.png" alt="CV">
+            <span>Curriculum Vitae</span>
+          </div>
+          <div class="menu-item" data-action="createProjectsWindow">
+            <img src="icons/projects.png" alt="Projets">
+            <span>Projets Journalistiques</span>
+          </div>
+          <div class="menu-item" data-action="createContactWindow">
+            <img src="icons/email.png" alt="Contact">
+            <span>Contact</span>
+          </div>
+          <div class="separator"></div>
+          <div class="menu-item" data-action="toggleDarkMode">
+            <img src="icons/theme.png" alt="Thème">
+            <span>Changer de thème</span>
+          </div>
+          <div class="menu-item" data-action="showBSOD">
+            <img src="icons/error.png" alt="BSOD">
+            <span>Simuler une erreur</span>
+          </div>
+        </div>
+        
+        <div class="right-panel">
+          <div class="section-title">Journalisme</div>
+          <div class="menu-item" data-action="openURL" data-url="https://www.lemonde.fr/">
+            <img src="icons/external.png" alt="Le Monde">
+            <span>Le Monde</span>
+          </div>
+          <div class="menu-item" data-action="openURL" data-url="https://www.francetvinfo.fr/">
+            <img src="icons/external.png" alt="FranceInfo">
+            <span>FranceInfo</span>
+          </div>
+          <div class="menu-item" data-action="openURL" data-url="https://www.mediapart.fr/">
+            <img src="icons/external.png" alt="Mediapart">
+            <span>Mediapart</span>
+          </div>
+          <div class="section-title">Réseaux sociaux</div>
+          <div class="menu-item" data-action="openURL" data-url="https://www.instagram.com/theolegato_o?igsh=Z2w5eTVqemNrZHBs">
+            <img src="icons/instagram.png" alt="Instagram">
+            <span>Instagram</span>
+          </div>
+          <div class="menu-item" data-action="openURL" data-url="https://twitter.com">
+            <img src="icons/twitter.png" alt="Twitter">
+            <span>Twitter</span>
+          </div>
+          <div class="menu-item" data-action="openURL" data-url="https://linkedin.com">
+            <img src="icons/linkedin.png" alt="LinkedIn">
+            <span>LinkedIn</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="start-footer">
+        <div class="menu-item" data-action="showAboutWindow">
+          <img src="icons/about.png" alt="À propos">
+          <span>À propos</span>
+        </div>
+        <div class="menu-item" data-action="showShutdownOptions">
+          <img src="icons/shutdown.png" alt="Éteindre">
+          <span>Éteindre</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barre des tâches -->
+    <div id="taskbar">
+      <div id="start-button">
+        <img src="icons/start.png" alt="Démarrer">
+        <span>Démarrer</span>
+      </div>
+      <div id="minimized-windows"></div>
+      <div id="notification-area">
+        <span id="time">16:26</span>
+      </div>
+    </div>
+    
+    <!-- Options d'arrêt (caché par défaut) -->
+    <div id="shutdown-options" class="hidden">
+      <div class="option" data-action="shutdown">Éteindre</div>
+      <div class="option" data-action="restart">Redémarrer</div>
+      <div class="option" data-action="cancel">Annuler</div>
+    </div>
+  </div>
+
+  <!-- Écran bleu de la mort (BSOD) -->
+  <div id="bsod" style="display: none;">
+    <div class="bsod-content">
+      <h1>A problem has been detected and windows has been shut down to prevent damage to your computer.</h1>
+      
+      <p class="error-code">FAKE_NEWS_DETECTED</p>
+      
+      <p class="technical-info">Technical information:<br><br>
+      *** STOP: 0x00000050 (0x8872A990, 0x00000001, 0x804F35D8, 0x00000000)<br><br>
+      *** media.sys - Address 804F35D8 base at 804D7000, DateStamp 3b7d85c3</p>
+      
+      <p class="instructions">Si vous voyez cette erreur, c'est peut-être que vous avez besoin de vérifier vos sources ! En journalisme, la vérification des faits est essentielle.<br><br>
+      Retournez à l'accueil pour continuer votre exploration.</p>
+      
+      <p class="memory-dump">Beginning dump of media literacy...<br>
+      Media literacy dump complete.<br>
+      Contact your journalism professor for further assistance.</p>
+      
+      <div class="bsod-actions">
+        <button id="bsod-restart">Redémarrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modèles de fenêtres (cachés) -->
+  <template id="window-template">
+    <div class="xp-window window-opening" role="dialog">
+      <div class="xp-titlebar">
+        <span class="xp-title-content">
+          <img src="icons/window.png" class="xp-icon" alt="">
+          <span></span>
+        </span>
+        <span class="xp-buttons">
+          <span class="xp-btn min" data-tooltip="Réduire" tabindex="0" role="button" aria-label="Réduire">
+            <img src="icons/minimize.png" alt="Min">
+          </span>
+          <span class="xp-btn max" data-tooltip="Agrandir" tabindex="0" role="button" aria-label="Agrandir">
+            <img src="icons/maximize.png" alt="Max">
+          </span>
+          <span class="xp-btn close" data-tooltip="Fermer" tabindex="0" role="button" aria-label="Fermer">
+            <img src="icons/close.png" alt="Close">
+          </span>
+        </span>
+      </div>
+      <div class="window-content"></div>
+      <div class="resize-handle" aria-label="Redimensionner" tabindex="0" role="button"></div>
+    </div>
+  </template>
+
+  <!-- Scripts -->
+  <script src="script.js"></script>
+</body>
+</html>
