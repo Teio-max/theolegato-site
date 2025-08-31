@@ -41,7 +41,24 @@
       </div>
       <div id="minimized-windows"></div>
     </div>
+  </div><!-- Template pour les fenêtres Windows XP -->
+<template id="window-template">
+  <div class="xp-window">
+    <div class="xp-titlebar">
+      <div class="xp-title-content">
+        <img src="icons/window.png" alt="">
+        <span>Fenêtre</span>
+      </div>
+      <div class="xp-controls">
+        <button class="xp-btn min" aria-label="Minimiser"><img src="icons/minimize.png" alt="Minimiser"></button>
+        <button class="xp-btn max" aria-label="Maximiser"><img src="icons/maximize.png" alt="Maximiser"></button>
+        <button class="xp-btn close" aria-label="Fermer"><img src="icons/close.png" alt="Fermer"></button>
+      </div>
+    </div>
+    <div class="window-content"></div>
+    <div class="resize-handle"></div>
   </div>
+</template>
   
   <script src="script.js"></script>
 </body>
