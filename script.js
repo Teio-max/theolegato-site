@@ -868,4 +868,5 @@ const DesktopManager = {
     activeIcon = null;
   }
 });
+}
     // Correction: Completed the mouseup event handler to properly update and save icon positions
