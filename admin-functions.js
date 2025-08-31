@@ -77,456 +77,413 @@ const MediaManager = {
 
 // Mise à jour de l'interface d'administration
 function createAdminPanelWindow(editFilmId = null) {
-  playOpenSound();
-  const winId = 'adminpanel_' + Date.now();
-  const win = document.createElement('div');
-  win.className = 'xp-film-window window-opening';
-  win.id = winId;
-  win.style.position = 'absolute';
-  win.style.width = '800px';
-  win.style.height = '600px';
-  win.style.left = (100 + Math.random()*150) + 'px';
-  win.style.top = (50 + Math.random()*100) + 'px';
-  win.style.zIndex = getNextZIndex();
-
-  // Récupérer le film à éditer si nécessaire
-  let filmToEdit = editFilmId ? films.find(f => f.id === editFilmId) : null;
+  // Jouer un son d'ouverture si disponible
+  if (typeof playOpenSound === 'function') {
+    playOpenSound();
+  }
   
-  // Formulaire d'ajout/modification
-  let formHtml = `<form id="admin-film-form" style="margin-bottom:18px;">
-    <h3 style="margin-top:0;">${filmToEdit ? 'Modifier' : 'Ajouter'} un film</h3>
-    <label>Titre : <input type="text" name="titre" value="${filmToEdit ? filmToEdit.titre : ''}" required style="width:70%"></label><br><br>
-    <label>Note (0-5) : <input type="number" name="note" min="0" max="5" value="${filmToEdit ? filmToEdit.note : 0}" style="width:50px"></label><br><br>
-    <label>Critique :<br><textarea name="critique" rows="3" style="width:90%">${filmToEdit ? filmToEdit.critique : ''}</textarea></label><br><br>
-    
-    <label>Image principale :</label><br>
-    <input type="text" name="image" value="${filmToEdit ? filmToEdit.image : ''}" placeholder="URL de l'image" style="width:70%"><br>
-    <input type="file" id="film-image-upload" accept="image/*" style="margin:8px 0;">
-    <button type="button" onclick="uploadFilmImage()" style="padding:4px 12px;background:#3498db;color:#fff;border:none;border-radius:4px;">📤 Upload & Compress</button>
-    <button type="button" onclick="showImageManager('${winId}')" style="padding:4px 12px;background:#e67e22;color:#fff;border:none;border-radius:4px;margin-left:8px;">🗂️ Gérer</button><br><br>
-    
-    <label>Galerie d'images :</label><br>
-    <textarea name="galerie" rows="2" placeholder="URLs séparées par des virgules" style="width:90%">${filmToEdit && filmToEdit.galerie ? filmToEdit.galerie.join(', ') : ''}</textarea><br>
-    <input type="file" id="gallery-upload" accept="image/*" multiple style="margin:8px 0;">
-    <button type="button" onclick="uploadGalleryImages()" style="padding:4px 12px;background:#9b59b6;color:#fff;border:none;border-radius:4px;">📸 Upload Galerie</button><br><br>
-    
-    <label>Bande-annonce (URL YouTube) : <input type="text" name="bandeAnnonce" value="${filmToEdit ? filmToEdit.bandeAnnonce : ''}" style="width:70%"></label><br><br>
-    <label>Liens critiques (nom|url, un par ligne) :<br><textarea name="liens" rows="2" style="width:90%">${filmToEdit && filmToEdit.liens ? filmToEdit.liens.map(l=>l.nom+'|'+l.url).join('\n') : ''}</textarea></label><br><br>
-    <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:var(--accent);color:#fff;border:none;">${filmToEdit ? 'Enregistrer' : 'Ajouter'}</button>
-    ${filmToEdit ? '<button type="button" id="cancel-edit" style="margin-left:12px;">Annuler</button>' : ''}
-  </form>`;
-
-  // Tableau des films
-  let tableHtml = `<table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
-    <tr style="background:#e8f4f8;color:#0058a8;font-weight:bold;"><td>Titre</td><td>Note</td><td>Actions</td></tr>`;
-  films.forEach(film => {
-    tableHtml += `<tr style="border-bottom:1px solid #ddd;">
-      <td>${film.titre}</td>
-      <td>${film.note}</td>
-      <td>
-        <button onclick="editFilmAdmin(${film.id})" style="padding:2px 10px;margin-right:6px;">Éditer</button>
-        <button onclick="deleteFilmAdmin(${film.id})" style="padding:2px 10px;color:#fff;background:#e74c3c;border:none;border-radius:4px;">Supprimer</button>
-      </td>
-    </tr>`;
-  });
-  tableHtml += '</table>';
-
-  // Onglets d'administration
-  let tabsHtml = `
-    <div style="display:flex;margin-bottom:18px;border-bottom:2px solid #ccc;padding:4px 4px 0 4px;">
-      <button id="tab-films" class="admin-tab active" onclick="switchAdminTab('films', '${winId}')" style="padding:10px 20px;border:none;background:#0058a8;color:#fff;cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;">🎬 Films</button>
-      <button id="tab-icons" class="admin-tab" onclick="switchAdminTab('icons', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:#333;cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;">🖥️ Icônes Bureau</button>
-      <button id="tab-home" class="admin-tab" onclick="switchAdminTab('home', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:#333;cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;">🏠 Page d'accueil</button>
-      <button id="tab-bsod" class="admin-tab" onclick="switchAdminTab('bsod', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:#333;cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;">💀 Page d'erreur</button>
-      <button id="tab-github" class="admin-tab" onclick="switchAdminTab('github', '${winId}')" style="padding:10px 20px;border:none;background:transparent;color:#333;cursor:pointer;border-radius:6px 6px 0 0;font-weight:bold;">⚙️ GitHub</button>
-    </div>
-  `;
-
+  // Générer un ID unique pour la fenêtre
+  const winId = 'adminpanel_' + Date.now();
+  
+  // Créer l'élément de fenêtre
+  const win = document.createElement('div');
+  win.id = winId;
+  win.className = 'xp-window';
+  win.style.position = 'absolute';
+  win.style.width = '700px';
+  win.style.height = '500px';
+  win.style.left = '150px';
+  win.style.top = '100px';
+  win.style.zIndex = typeof getNextZIndex === 'function' ? getNextZIndex() : 9999;
+  
+  // Récupérer le film à éditer si nécessaire
+  let filmToEdit = null;
+  if (editFilmId && typeof films !== 'undefined') {
+    filmToEdit = films.find(f => f.id === editFilmId);
+  }
+  
+  // Construire le contenu HTML de la fenêtre d'administration
   win.innerHTML = `
-    <div class="xp-titlebar" onmousedown="startDrag(event, '${winId}')">
-      <span class="xp-title-content"><img src="icons/key.png" class="xp-icon" alt=""><span>Administration</span></span>
-      <span class="xp-buttons">
-        <span class="xp-btn min" data-tooltip="Réduire" onclick="minimizeWindow('${winId}', 'Admin', 'icons/key.png')"><img src="icons/minimize.png" alt="Min"></span>
-        <span class="xp-btn max" data-tooltip="Agrandir" onclick="maxFilmWindow('${winId}')"><img src="icons/maximize.png" alt="Max"></span>
-        <span class="xp-btn close" data-tooltip="Fermer" onclick="closeFilmWindow('${winId}')"><img src="icons/close.png" alt="Close"></span>
+    <div class="xp-titlebar" style="background:linear-gradient(to right,#0058a8,#2586e7,#83b3ec);color:white;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="display:flex;align-items:center;">
+        <img src="icons/key.png" alt="Admin" style="width:16px;height:16px;margin-right:6px;">
+        <span>Admin Panel</span>
       </span>
+      <div style="display:flex;">
+        <span class="xp-btn min" style="margin:0 2px;cursor:pointer;" onclick="minimizeWindow('${winId}', 'Admin', 'icons/key.png')">-</span>
+        <span class="xp-btn max" style="margin:0 2px;cursor:pointer;" onclick="maxFilmWindow('${winId}')">□</span>
+        <span class="xp-btn close" style="margin:0 2px;cursor:pointer;" onclick="closeFilmWindow('${winId}')">✖</span>
+      </div>
     </div>
-    <div style="padding:20px;height:calc(100% - 50px);overflow-y:auto;">
-      ${tabsHtml}
-      <div id="films-content">
-        ${formHtml}
-        ${tableHtml}
-      </div>
-      <div id="icons-content" style="display:none;">
-        <form id="admin-icon-form" style="margin-bottom:18px;">
-          <h3 style="margin-top:0;">Ajouter une icône</h3>
-          <label>Nom : <input type="text" name="iconName" required style="width:70%"></label><br><br>
-          <label>Icône (URL) : <input type="text" name="iconIcon" required style="width:70%"></label><br><br>
-          <label>Action : <input type="text" name="iconAction" placeholder="createFilmsWindow ou URL" required style="width:70%"></label><br><br>
-          <button type="submit" style="background:#0058a8;color:#fff;border:none;padding:8px 16px;border-radius:4px;">Ajouter</button>
-        </form>
-        
-        <h3>Icônes existantes</h3>
-        <table style="width:100%;border-collapse:collapse;">
-          <tr style="background:#e8f4f8;color:#0058a8;font-weight:bold;"><td>Nom</td><td>Action</td><td>Actions</td></tr>
-          ${desktopIcons.map(icon => `
-            <tr style="border-bottom:1px solid #ddd;">
-              <td>${icon.name}</td>
-              <td>${icon.action}</td>
-              <td>
-                <button onclick="deleteIconAdmin('${icon.id}')" style="padding:2px 10px;color:#fff;background:#e74c3c;border:none;border-radius:4px;">Supprimer</button>
-              </td>
-            </tr>
-          `).join('')}
-        </table>
-      </div>
-      <div id="home-content" style="display:none;">
-        <form id="admin-home-form" style="margin-bottom:18px;">
-          <h3 style="margin-top:0;">Modifier la page d'accueil</h3>
-          <label>Nom : <input type="text" name="homeName" value="${homePageConfig?.name || ''}" required style="width:70%"></label><br><br>
-          <label>Message de bienvenue : <input type="text" name="welcomeMessage" value="${homePageConfig?.welcomeMessage || ''}" required style="width:70%"></label><br><br>
-          <label>Description :<br><textarea name="description" rows="2" style="width:90%">${homePageConfig?.description || ''}</textarea></label><br><br>
-          <label>But du site :<br><textarea name="sitePurpose" rows="2" style="width:90%">${homePageConfig?.sitePurpose || ''}</textarea></label><br><br>
-          <label>Texte de fin : <input type="text" name="footerText" value="${homePageConfig?.footerText || ''}" style="width:70%"></label><br><br>
-          <hr style="margin:18px 0;">
-          <h4>Liens sociaux (nom|url, un par ligne) :</h4>
-          <textarea name="socialLinks" rows="5" style="width:90%">${(homePageConfig?.socialLinks || []).map(l => l.name + '|' + l.url).join('\n')}</textarea><br><br>
-          <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:#0058a8;color:#fff;border:none;">Enregistrer</button>
-        </form>
-      </div>
-      <div id="bsod-content" style="display:none;">
-        <form id="admin-bsod-form" style="margin-bottom:18px;">
-          <h3 style="margin-top:0;">Modifier la page d'erreur Windows XP</h3>
-          <label>Titre principal :<br><textarea name="title" rows="2" style="width:90%">${bsodConfig?.title || ''}</textarea></label><br><br>
-          <label>Code d'erreur : <input type="text" name="errorCode" value="${bsodConfig?.errorCode || ''}" style="width:70%"></label><br><br>
-          <label>Informations techniques :<br><textarea name="technicalInfo" rows="4" style="width:90%">${bsodConfig?.technicalInfo || ''}</textarea></label><br><br>
-          <label>Instructions :<br><textarea name="instructions" rows="6" style="width:90%">${bsodConfig?.instructions || ''}</textarea></label><br><br>
-          <label>Dump mémoire :<br><textarea name="memoryDump" rows="3" style="width:90%">${bsodConfig?.memoryDump || ''}</textarea></label><br><br>
-          <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:#0058a8;color:#fff;border:none;">Enregistrer</button>
-          <button type="button" onclick="testBSOD()" style="padding:7px 18px;font-size:1em;border-radius:6px;background:#e74c3c;color:#fff;border:none;margin-left:10px;">Tester</button>
-        </form>
-      </div>
-      <div id="github-content" style="display:none;">
-        <h3 style="margin-top:0;">⚙️ Configuration GitHub</h3>
-        <div style="background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:20px;border-left:4px solid #0058a8;">
-          <p><strong>🔐 Sauvegarde persistante</strong></p>
-          <p>Pour que vos modifications soient sauvegardées de façon permanente, vous devez configurer un token GitHub.</p>
+    
+    <div style="background:#ECE9D8;border-bottom:1px solid #ACA899;padding:10px;display:flex;gap:5px;">
+      <button id="${winId}-btn-add-film" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Ajouter Film</button>
+      <button id="${winId}-btn-add-manga" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Ajouter Manga</button>
+      <button id="${winId}-btn-manage-tags" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Gérer Tags</button>
+    </div>
+    
+    <div style="padding:15px;height:calc(100% - 80px);overflow-y:auto;">
+      <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
+        ${editFilmId ? 'Modifier' : 'Ajouter'} un film
+      </h3>
+      
+      <form id="${winId}-film-form">
+        <div style="margin-bottom:15px;">
+          <label for="${winId}-titre" style="display:block;margin-bottom:5px;font-weight:bold;">Titre</label>
+          <input type="text" id="${winId}-titre" name="titre" value="${filmToEdit ? filmToEdit.titre : ''}" 
+            style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;" required>
         </div>
         
-        <form id="admin-github-form" style="margin-bottom:18px;">
-          <label>Token GitHub Personnel :<br>
-          <input type="password" name="githubToken" value="${GITHUB_CONFIG.token || ''}" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="width:90%;padding:8px;margin-top:5px;font-family:monospace;">
-          </label><br><br>
+        <div style="margin-bottom:15px;">
+          <label for="${winId}-note" style="display:block;margin-bottom:5px;font-weight:bold;">Note (1-5)</label>
+          <input type="number" id="${winId}-note" name="note" min="0" max="5" value="${filmToEdit ? filmToEdit.note : 0}" 
+            style="width:60px;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+        </div>
+        
+        <div style="margin-bottom:15px;">
+          <label for="${winId}-critique" style="display:block;margin-bottom:5px;font-weight:bold;">Critique</label>
+          <textarea id="${winId}-critique" name="critique" rows="4" 
+            style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">${filmToEdit ? filmToEdit.critique : ''}</textarea>
+        </div>
+        
+        <div style="margin-bottom:15px;">
+          <label for="${winId}-image" style="display:block;margin-bottom:5px;font-weight:bold;">URL de l'image</label>
+          <input type="text" id="${winId}-image" name="image" value="${filmToEdit ? filmToEdit.image : ''}" 
+            style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
           
-          <button type="submit" style="padding:7px 18px;font-size:1em;border-radius:6px;background:#0058a8;color:#fff;border:none;">💾 Sauvegarder Token</button>
-          <button type="button" onclick="testGitHubConnection()" style="padding:7px 18px;font-size:1em;border-radius:6px;background:#28a745;color:#fff;border:none;margin-left:10px;">🔍 Tester Connexion</button>
-        </form>
-      </div>
+          <div style="display:flex;gap:10px;margin-top:8px;">
+            <input type="file" id="${winId}-image-upload" accept="image/*" style="display:none;">
+            <button type="button" id="${winId}-browse-btn" 
+              style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Parcourir...</button>
+            <button type="button" id="${winId}-upload-btn" 
+              style="padding:4px 10px;background:#3498db;color:white;border:1px solid #2980b9;cursor:pointer;">Upload</button>
+          </div>
+          
+          ${filmToEdit && filmToEdit.image ? `
+          <div style="margin-top:10px;border:1px solid #ACA899;padding:8px;background:#fff;">
+            <p style="margin:0 0 5px 0;font-weight:bold;">Image actuelle:</p>
+            <img src="${filmToEdit.image}" alt="Aperçu" style="max-width:200px;max-height:120px;">
+          </div>
+          ` : ''}
+        </div>
+        
+        <div style="margin-bottom:15px;">
+          <label for="${winId}-bande-annonce" style="display:block;margin-bottom:5px;font-weight:bold;">URL de la bande annonce</label>
+          <input type="text" id="${winId}-bande-annonce" name="bandeAnnonce" value="${filmToEdit ? filmToEdit.bandeAnnonce : ''}" 
+            style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+        </div>
+        
+        <div style="margin-top:20px;">
+          <button type="submit" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
+            ${filmToEdit ? 'Enregistrer' : 'Ajouter'}
+          </button>
+          ${editFilmId ? `
+          <button type="button" id="${winId}-cancel-btn" style="margin-left:10px;padding:6px 12px;border-radius:3px;cursor:pointer;">
+            Annuler
+          </button>
+          ` : ''}
+        </div>
+      </form>
     </div>
   `;
-
+  
+  // Ajouter la fenêtre au document
   document.body.appendChild(win);
-  makeDraggable(win, winId);
-
-  setupAdminEvents(winId);
-
+  
+  // Rendre la fenêtre draggable si la fonction existe
+  if (typeof makeDraggable === 'function') {
+    makeDraggable(win, winId);
+  }
+  
+  // Configurer les événements après l'ajout au DOM
+  setTimeout(() => {
+    // Gestion du bouton parcourir
+    const browseBtn = document.getElementById(`${winId}-browse-btn`);
+    const imageUpload = document.getElementById(`${winId}-image-upload`);
+    
+    if (browseBtn && imageUpload) {
+      browseBtn.addEventListener('click', () => {
+        imageUpload.click();
+      });
+    }
+    
+    // Gestion du bouton upload
+    const uploadBtn = document.getElementById(`${winId}-upload-btn`);
+    if (uploadBtn && imageUpload) {
+      uploadBtn.addEventListener('click', () => {
+        if (imageUpload.files.length > 0) {
+          uploadFilmImage(winId);
+        } else {
+          alert("Veuillez d'abord sélectionner une image");
+        }
+      });
+    }
+    
+    // Traitement du formulaire
+    const form = document.getElementById(`${winId}-film-form`);
+    if (form) {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // Création de l'objet film
+        const filmData = {
+          id: filmToEdit ? filmToEdit.id : Date.now(),
+          titre: document.getElementById(`${winId}-titre`).value,
+          note: parseInt(document.getElementById(`${winId}-note`).value) || 0,
+          critique: document.getElementById(`${winId}-critique`).value,
+          image: document.getElementById(`${winId}-image`).value,
+          bandeAnnonce: document.getElementById(`${winId}-bande-annonce`).value,
+          galerie: filmToEdit ? filmToEdit.galerie || [] : [],
+          liens: filmToEdit ? filmToEdit.liens || [] : []
+        };
+        
+        // Ajouter ou mettre à jour le film
+        if (typeof films !== 'undefined') {
+          if (filmToEdit) {
+            // Mettre à jour le film existant
+            const index = films.findIndex(f => f.id === filmToEdit.id);
+            if (index !== -1) {
+              films[index] = filmData;
+            }
+          } else {
+            // Ajouter un nouveau film
+            films.push(filmData);
+          }
+          
+          // Sauvegarder les données
+          if (typeof saveDataToGitHub === 'function') {
+            saveDataToGitHub();
+          } else if (typeof saveData === 'function') {
+            saveData();
+          }
+          
+          // Afficher une notification
+          if (typeof showNotification === 'function') {
+            showNotification('Film sauvegardé avec succès', 'success');
+          } else {
+            alert('Film sauvegardé avec succès');
+          }
+        } else {
+          alert("Erreur: La variable 'films' n'est pas définie");
+        }
+        
+        // Fermer la fenêtre
+        if (typeof closeFilmWindow === 'function') {
+          closeFilmWindow(winId);
+        } else {
+          document.getElementById(winId).remove();
+        }
+      });
+    }
+    
+    // Gestion du bouton annuler
+    const cancelBtn = document.getElementById(`${winId}-cancel-btn`);
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        if (typeof closeFilmWindow === 'function') {
+          closeFilmWindow(winId);
+        } else {
+          document.getElementById(winId).remove();
+        }
+      });
+    }
+    
+    // Gestion des boutons de la barre d'outils
+    const addFilmBtn = document.getElementById(`${winId}-btn-add-film`);
+    const addMangaBtn = document.getElementById(`${winId}-btn-add-manga`);
+    const manageTagsBtn = document.getElementById(`${winId}-btn-manage-tags`);
+    
+    if (addFilmBtn) {
+      addFilmBtn.addEventListener('click', () => {
+        if (typeof closeFilmWindow === 'function') {
+          closeFilmWindow(winId);
+        } else {
+          document.getElementById(winId).remove();
+        }
+        createAdminPanelWindow();
+      });
+    }
+    
+    if (addMangaBtn && typeof showAddMangaForm === 'function') {
+      addMangaBtn.addEventListener('click', () => {
+        showAddMangaForm();
+      });
+    }
+    
+    if (manageTagsBtn && typeof showManageTagsForm === 'function') {
+      manageTagsBtn.addEventListener('click', () => {
+        showManageTagsForm();
+      });
+    }
+  }, 100);
+  
   return win;
 }
 
-function setupAdminEvents(winId) {
-  // Formulaire films
-  const filmForm = document.getElementById('admin-film-form');
-  if (filmForm) {
-    filmForm.onsubmit = function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      const filmData = {
-        id: parseInt(formData.get('id')) || Date.now(),
-        titre: formData.get('titre'),
-        note: parseInt(formData.get('note')) || 0,
-        critique: formData.get('critique'),
-        image: formData.get('image'),
-        galerie: formData.get('galerie') ? formData.get('galerie').split(',').map(url => url.trim()).filter(Boolean) : [],
-        bandeAnnonce: formData.get('bandeAnnonce'),
-        liens: []
-      };
-      
-      // Traiter les liens
-      const liensText = formData.get('liens');
-      if (liensText) {
-        filmData.liens = liensText.split('\n')
-          .map(line => {
-            const parts = line.split('|');
-            if (parts.length === 2) {
-              return { nom: parts[0].trim(), url: parts[1].trim() };
-            }
-            return null;
-          })
-          .filter(Boolean);
-      }
-      
-      // Modifier un film existant ou en ajouter un nouveau
-      const existingIndex = films.findIndex(f => f.id === filmData.id);
-      if (existingIndex >= 0) {
-        films[existingIndex] = filmData;
-      } else {
-        films.push(filmData);
-      }
-      
-      saveDataToGitHub();
-      showNotification('✅ Film sauvegardé avec succès', 'success');
-      closeFilmWindow(winId);
-      createAdminPanelWindow();
-    };
+// Fonction pour uploader une image
+function uploadFilmImage(winId) {
+  const imageInput = document.getElementById(`${winId}-image`);
+  const fileInput = document.getElementById(`${winId}-image-upload`);
+  
+  if (!fileInput || !fileInput.files.length) {
+    alert("Veuillez sélectionner une image");
+    return;
   }
   
-  // Formulaire icônes
-  const iconForm = document.getElementById('admin-icon-form');
-  if (iconForm) {
-    iconForm.onsubmit = function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      const iconData = {
-        id: 'icon-' + Date.now(),
-        name: formData.get('iconName'),
-        icon: formData.get('iconIcon'),
-        action: formData.get('iconAction'),
-        position: { x: 150, y: 50 + desktopIcons.length * 100 }
-      };
-      
-      desktopIcons.push(iconData);
-      saveDataToGitHub();
-      renderDesktopIcons();
-      showNotification('✅ Icône ajoutée avec succès', 'success');
-      closeFilmWindow(winId);
-      createAdminPanelWindow();
-    };
-  }
-  
-  // Formulaire page d'accueil
-  const homeForm = document.getElementById('admin-home-form');
-  if (homeForm) {
-    homeForm.onsubmit = function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      
-      homePageConfig.name = formData.get('homeName');
-      homePageConfig.welcomeMessage = formData.get('welcomeMessage');
-      homePageConfig.description = formData.get('description');
-      homePageConfig.sitePurpose = formData.get('sitePurpose');
-      homePageConfig.footerText = formData.get('footerText');
-      
-      // Traiter les liens sociaux
-      const socialLinksText = formData.get('socialLinks');
-      if (socialLinksText) {
-        homePageConfig.socialLinks = socialLinksText.split('\n')
-          .map(line => {
-            const parts = line.split('|');
-            if (parts.length === 2) {
-              return { name: parts[0].trim(), url: parts[1].trim() };
-            }
-            return null;
-          })
-          .filter(Boolean);
-      }
-      
-      saveDataToGitHub();
-      showNotification('✅ Page d\'accueil mise à jour', 'success');
-    };
-  }
-  
-  // Formulaire BSOD
-  const bsodForm = document.getElementById('admin-bsod-form');
-  if (bsodForm) {
-    bsodForm.onsubmit = function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      
-      bsodConfig.title = formData.get('title');
-      bsodConfig.errorCode = formData.get('errorCode');
-      bsodConfig.technicalInfo = formData.get('technicalInfo');
-      bsodConfig.instructions = formData.get('instructions');
-      bsodConfig.memoryDump = formData.get('memoryDump');
-      
-      saveDataToGitHub();
-      showNotification('✅ Page d\'erreur mise à jour', 'success');
-    };
-  }
-  
-  // Formulaire GitHub
-  const githubForm = document.getElementById('admin-github-form');
-  if (githubForm) {
-    githubForm.onsubmit = function(e) {
-      e.preventDefault();
-      const token = this.elements['githubToken'].value;
-      
-      if (token) {
-        localStorage.setItem('github_token', token);
-        GITHUB_CONFIG.token = token;
-        showNotification('✅ Token GitHub sauvegardé', 'success');
-      } else {
-        localStorage.removeItem('github_token');
-        GITHUB_CONFIG.token = null;
-        showNotification('⚠️ Token GitHub supprimé', 'warning');
-      }
-    };
-  }
-}
-
-// Changement d'onglet admin
-function switchAdminTab(tab, winId) {
-  const win = document.getElementById(winId);
-  if (!win) return;
-  
-  // Mettre à jour les boutons d'onglets
-  const tabs = ['films', 'icons', 'home', 'bsod', 'github'];
-  tabs.forEach(t => {
-    const button = win.querySelector(`#tab-${t}`);
-    const content = win.querySelector(`#${t}-content`);
-    
-    if (button && content) {
-      if (t === tab) {
-        button.style.background = '#0058a8';
-        button.style.color = '#fff';
-        content.style.display = 'block';
-      } else {
-        button.style.background = 'transparent';
-        button.style.color = '#333';
-        content.style.display = 'none';
-      }
-    }
-  });
-}
-
-// Edition d'un film
-function editFilmAdmin(id) {
-  closeFilmWindow('adminpanel_' + Date.now());
-  createAdminPanelWindow(id);
-}
-
-// Suppression d'un film
-function deleteFilmAdmin(id) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer ce film ?')) {
-    const index = films.findIndex(f => f.id === id);
-    if (index !== -1) {
-      films.splice(index, 1);
-      saveDataToGitHub();
-      showNotification('✅ Film supprimé', 'success');
-      
-      // Rafraîchir la fenêtre admin
-      const adminWindows = document.querySelectorAll('.xp-film-window');
-      adminWindows.forEach(win => {
-        if (win.innerHTML.includes('Administration')) {
-          closeFilmWindow(win.id);
-        }
-      });
-      createAdminPanelWindow();
-    }
-  }
-}
-
-// Suppression d'une icône du bureau
-function deleteIconAdmin(id) {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cette icône ?')) {
-    const index = desktopIcons.findIndex(i => i.id === id);
-    if (index !== -1) {
-      desktopIcons.splice(index, 1);
-      saveDataToGitHub();
-      renderDesktopIcons();
-      showNotification('✅ Icône supprimée', 'success');
-      
-      // Rafraîchir la fenêtre admin
-      const adminWindows = document.querySelectorAll('.xp-film-window');
-      adminWindows.forEach(win => {
-        if (win.innerHTML.includes('Administration')) {
-          closeFilmWindow(win.id);
-        }
-      });
-      createAdminPanelWindow();
-    }
-  }
-}
-
-// Upload d'image pour un film
-async function uploadFilmImage() {
-  const fileInput = document.getElementById('film-image-upload');
   const file = fileInput.files[0];
   
-  if (!file) {
-    alert('Veuillez sélectionner une image');
-    return;
-  }
-  
   if (!file.type.startsWith('image/')) {
-    alert('Veuillez sélectionner un fichier image valide');
+    alert("Veuillez sélectionner un fichier image valide");
     return;
   }
   
-  try {
-    showNotification('🔄 Compression et upload en cours...', 'info');
+  // Vérifier si le token GitHub est configuré
+  if (typeof GITHUB_CONFIG === 'undefined' || !GITHUB_CONFIG.token) {
+    alert("Token GitHub manquant. L'upload ne sera pas persistant.");
+  }
+  
+  // Afficher une notification si la fonction existe
+  if (typeof showNotification === 'function') {
+    showNotification('Upload en cours...', 'info');
+  }
+  
+  // Utiliser la fonction de compression et upload si disponible
+  if (typeof compressImage === 'function') {
+    // Compresser puis uploader
+    compressImage(file, 800, 0.85).then(compressedFile => {
+      uploadImageToGitHub(compressedFile, file.name, winId, imageInput);
+    }).catch(error => {
+      console.error('Erreur compression:', error);
+      alert("Erreur lors de la compression de l'image");
+    });
+  } else {
+    // Upload direct sans compression
+    uploadImageToGitHub(file, file.name, winId, imageInput);
+  }
+}
+
+// Fonction pour uploader une image sur GitHub
+function uploadImageToGitHub(file, fileName, winId, imageInput) {
+  // Vérifier que la configuration GitHub est disponible
+  if (typeof GITHUB_CONFIG === 'undefined') {
+    alert("Configuration GitHub manquante");
+    return;
+  }
+  
+  const token = GITHUB_CONFIG.token;
+  if (!token) {
+    alert("Token GitHub manquant");
+    return;
+  }
+  
+  // Générer un nom de fichier unique
+  const timestamp = Date.now();
+  const safeName = fileName.replace(/[^a-zA-Z0-9.]/g, '_');
+  const uploadName = `film_${timestamp}_${safeName}`;
+  const filePath = `images/films/${uploadName}`;
+  
+  // Convertir le fichier en base64
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64Content = e.target.result.split(',')[1];
     
-    const imageUrl = await MediaManager.uploadImage(file, 'images/films');
-    if (imageUrl) {
-      // Mettre à jour le champ URL
-      const imageInput = document.querySelector('input[name="image"]');
-      if (imageInput) {
-        imageInput.value = imageUrl;
-        
-        // Ajouter prévisualisation
-        const previewDiv = document.createElement('div');
-        previewDiv.innerHTML = `
-          <div style="margin-top:10px;padding:10px;border:1px solid #ddd;border-radius:6px;background:#f9f9f9;">
-            <strong>✅ Image uploadée:</strong><br>
-            <img src="${imageUrl}" alt="Prévisualisation" style="max-width:200px;max-height:150px;margin-top:5px;border-radius:4px;">
-          </div>
-        `;
-        
-        const currentPreview = document.getElementById('image-preview');
-        if (currentPreview) {
-          currentPreview.parentNode.replaceChild(previewDiv, currentPreview);
-        } else {
-          imageInput.parentNode.insertBefore(previewDiv, imageInput.nextSibling);
-        }
-        previewDiv.id = 'image-preview';
+    // Appeler l'API GitHub
+    fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${filePath}`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `📸 Upload image film: ${uploadName}`,
+        content: base64Content,
+        branch: GITHUB_CONFIG.branch || 'main'
+      })
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      // Mettre à jour le champ input avec l'URL
+      imageInput.value = data.content.download_url;
+      
+      // Afficher un aperçu de l'image
+      const previewDiv = document.createElement('div');
+      previewDiv.style.marginTop = '10px';
+      previewDiv.style.border = '1px solid #ACA899';
+      previewDiv.style.padding = '8px';
+      previewDiv.style.background = '#fff';
+      
+      previewDiv.innerHTML = `
+        <p style="margin:0 0 5px 0;font-weight:bold;">Image uploadée:</p>
+        <img src="${data.content.download_url}" alt="Aperçu" style="max-width:200px;max-height:120px;">
+      `;
+      
+      // Remplacer l'aperçu existant ou ajouter le nouveau
+      const existingPreview = imageInput.parentElement.querySelector('div[style*="margin-top:10px"]');
+      if (existingPreview) {
+        imageInput.parentElement.replaceChild(previewDiv, existingPreview);
+      } else {
+        imageInput.parentElement.appendChild(previewDiv);
       }
       
-      showNotification('✅ Image uploadée avec succès!', 'success');
-    } else {
-      throw new Error('Upload échoué');
-    }
-    
-  } catch (error) {
-    console.error('Erreur upload:', error);
-    showNotification('❌ Erreur lors de l\'upload', 'error');
-  }
-}
-
-// Test de la connexion GitHub
-async function testGitHubConnection() {
-  if (!GITHUB_CONFIG.token) {
-    showNotification('❌ Token GitHub manquant', 'error');
-    return;
-  }
-  
-  try {
-    const response = await fetch(`https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}`, {
-      headers: {
-        'Authorization': `token ${GITHUB_CONFIG.token}`,
-        'Accept': 'application/vnd.github.v3+json'
+      // Afficher une notification si la fonction existe
+      if (typeof showNotification === 'function') {
+        showNotification('Image uploadée avec succès', 'success');
+      } else {
+        alert("Image uploadée avec succès");
+      }
+    })
+    .catch(error => {
+      console.error('Erreur upload:', error);
+      
+      if (typeof showNotification === 'function') {
+        showNotification(`Erreur: ${error.message}`, 'error');
+      } else {
+        alert(`Erreur lors de l'upload: ${error.message}`);
       }
     });
-    
-    if (response.ok) {
-      showNotification('✅ Connexion GitHub réussie !', 'success');
-    } else {
-      showNotification('❌ Erreur de connexion GitHub', 'error');
-    }
-  } catch (error) {
-    showNotification('❌ Erreur de connexion', 'error');
-  }
+  };
+  
+  reader.onerror = function() {
+    alert("Erreur lors de la lecture du fichier");
+  };
+  
+  reader.readAsDataURL(file);
 }
 
-// Test de l'écran bleu
-function testBSOD() {
-  showBSOD();
+// Fonction utilitaire pour comprimer une image
+function compressImage(file, maxWidth = 800, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    
+    img.onload = function() {
+      // Calculer les nouvelles dimensions
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > maxWidth) {
+        height = (height * maxWidth) / width;
+        width = maxWidth;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob(
+        blob => resolve(blob),
+        file.type,
+        quality
+      );
+    };
+    
+    img.onerror = () => reject(new Error("Erreur de chargement de l'image"));
+    img.src = URL.createObjectURL(file);
+  });
 }
