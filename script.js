@@ -889,3 +889,44 @@ document.addEventListener('DOMContentLoaded', function() {
     WindowManager.playSound('startup');
   }, 3000);
 });
+
+// Fonctions de création de fenêtres
+function createArticlesWindow() {
+  return WindowManager.createWindow({
+    title: 'Articles',
+    icon: 'icons/article.png',
+    content: '<div class="window-articles"><h1>Mes Articles</h1><div id="articles-list"></div></div>'
+  });
+}
+
+function createPortfolioWindow() {
+  return WindowManager.createWindow({
+    title: 'Portfolio',
+    icon: 'icons/portfolio.png',
+    content: '<div class="window-portfolio"><h1>Mon Portfolio</h1><div id="portfolio-content"></div></div>'
+  });
+}
+
+function createFilmsWindow() {
+  return WindowManager.createWindow({
+    title: 'Critiques Ciné',
+    icon: 'icons/film.png',
+    content: '<div class="window-films"><h1>Mes Critiques de Films</h1><div id="films-list"></div></div>'
+  });
+}
+
+function createCVWindow() {
+  return WindowManager.createWindow({
+    title: 'CV',
+    icon: 'icons/cv.png',
+    content: '<div class="window-cv"><h1>Mon CV</h1><div id="cv-content"></div></div>'
+  });
+}
+
+function createContactWindow() {
+  return WindowManager.createWindow({
+    title: 'Contact',
+    icon: 'icons/email.png',
+    content: '<div class="window-contact"><h1>Contact</h1><form id="contact-form"></form></div>'
+  });
+}
