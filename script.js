@@ -871,6 +871,419 @@ const DesktopManager = {
   } // Fin de la méthode setupDraggableIcons
 }; // Fin de l'objet DesktopManager
 
+// Fonctions de création de fenêtres
+function createFilmsWindow() {
+  const win = WindowManager.createWindow({
+    title: 'Films',
+    icon: 'icons/film.png',
+    content: '<div class="window-films"><h1>Mes Films</h1><div id="films-list"></div></div>'
+  });
+  
+  // Remplir la liste des films
+  renderFilmsList();
+  
+  return win;
+}
+
+function createMangaWindow() {
+  const win = WindowManager.createWindow({
+    title: 'Manga',
+    icon: 'icons/key.png',
+    content: '<div class="window-films"><h1>Ma Collection Manga</h1><div id="manga-list"></div></div>'
+  });
+  
+  // Remplir la liste des mangas
+  renderMangaList();
+  
+  return win;
+}
+
+function createArticlesWindow() {
+  return WindowManager.createWindow({
+    title: 'Articles',
+    icon: 'icons/article.png',
+    content: '<div class="window-articles"><h1>Mes Articles</h1><div id="articles-list">Contenu à venir</div></div>'
+  });
+}
+
+function createPortfolioWindow() {
+  return WindowManager.createWindow({
+    title: 'Portfolio',
+    icon: 'icons/portfolio.png',
+    content: '<div class="window-portfolio"><h1>Mon Portfolio</h1><div id="portfolio-content">Contenu à venir</div></div>'
+  });
+}
+
+function createCVWindow() {
+  return WindowManager.createWindow({
+    title: 'CV',
+    icon: 'icons/cv.png',
+    content: '<div class="window-cv"><h1>Mon CV</h1><div id="cv-content">Contenu à venir</div></div>'
+  });
+}
+
+function createContactWindow() {
+  return WindowManager.createWindow({
+    title: 'Contact',
+    icon: 'icons/email.png',
+    content: `
+      <div class="window-contact">
+        <h1>Contact</h1>
+        <form id="contact-form">
+          <div class="form-group">
+            <label for="name">Nom</label>
+            <input type="text" id="name" required>
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" required>
+          </div>
+          <div class="form-group">
+            <label for="message">Message</label>
+            <textarea id="message" rows="5" required></textarea>
+          </div>
+          <button type="submit" class="btn">Envoyer</button>
+        </form>
+      </div>
+    `
+  });
+}
+
+function createAdminWindow() {
+  const win = WindowManager.createWindow({
+    title: 'Admin Panel',
+    icon: 'icons/key.png',
+    width: '800px',
+    height: '600px',
+    content: `
+      <div class="admin-panel">
+        <div class="admin-toolbar">
+          <button id="btn-add-film">Ajouter Film</button>
+          <button id="btn-add-manga">Ajouter Manga</button>
+          <button id="btn-manage-tags">Gérer Tags</button>
+        </div>
+        <div id="admin-content">
+          <h2>Panel d'administration</h2>
+          <p>Sélectionnez une action dans la barre d'outils.</p>
+        </div>
+      </div>
+    `
+  });
+  
+  // Ajouter les écouteurs d'événements pour les boutons
+  setTimeout(() => {
+    document.getElementById('btn-add-film').addEventListener('click', showAddFilmForm);
+    document.getElementById('btn-add-manga').addEventListener('click', showAddMangaForm);
+    document.getElementById('btn-manage-tags').addEventListener('click', showManageTagsForm);
+  }, 100);
+  
+  return win;
+}
+
+// Fonctions de rendu pour les films et mangas
+function renderFilmsList() {
+  const filmsList = document.getElementById('films-list');
+  if (!filmsList) return;
+  
+  let html = '';
+  
+  if (DataManager.data.films && DataManager.data.films.length) {
+    DataManager.data.films.forEach(film => {
+      const stars = '★'.repeat(film.note) + '☆'.repeat(5 - film.note);
+      
+      html += `
+        <div class="film-card" data-id="${film.id}">
+          <img class="film-image" src="${film.image || 'https://via.placeholder.com/120x180?text=No+Image'}" alt="${film.titre}">
+          <div class="film-details">
+            <div class="film-title">${film.titre}</div>
+            <div class="film-rating">${stars}</div>
+            <div class="film-critique">${film.critique || 'Pas de critique'}</div>
+            <div class="film-links">
+              ${film.liens ? film.liens.map(lien => `<a href="${lien.url}" target="_blank">${lien.nom}</a>`).join(' | ') : ''}
+              ${film.bandeAnnonce ? `<a href="${film.bandeAnnonce}" target="_blank">Bande Annonce</a>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    html = '<p>Aucun film trouvé</p>';
+  }
+  
+  filmsList.innerHTML = html;
+}
+
+function renderMangaList() {
+  const mangaList = document.getElementById('manga-list');
+  if (!mangaList) return;
+  
+  let html = '';
+  
+  if (DataManager.data.mangas && DataManager.data.mangas.length) {
+    DataManager.data.mangas.forEach(manga => {
+      const stars = '★'.repeat(manga.note) + '☆'.repeat(5 - manga.note);
+      const statusClass = manga.statut === 'Terminé' ? 'completed' : (manga.statut === 'En cours' ? 'ongoing' : 'hiatus');
+      
+      html += `
+        <div class="manga-card" data-id="${manga.id}">
+          <img class="manga-image" src="${manga.image || 'https://via.placeholder.com/100x150?text=No+Image'}" alt="${manga.titre}">
+          <div class="manga-details">
+            <div class="manga-title">${manga.titre}</div>
+            <div class="manga-rating">${stars}</div>
+            <div class="manga-info">
+              <div>Auteur: ${manga.auteur || 'Non spécifié'}</div>
+              <div>Chapitres: ${manga.chapitres || '?'}</div>
+            </div>
+            <div class="manga-status ${statusClass}">${manga.statut || 'Non spécifié'}</div>
+          </div>
+        </div>
+      `;
+    });
+  } else {
+    html = '<p>Aucun manga trouvé</p>';
+  }
+  
+  mangaList.innerHTML = html;
+}
+
+// Fonctions pour le panneau d'administration
+function showAdminLogin() {
+  const loginForm = document.createElement('div');
+  loginForm.className = 'admin-login';
+  loginForm.innerHTML = `
+    <div class="admin-login-form">
+      <h2>Administration</h2>
+      <input type="password" id="admin-password" placeholder="Mot de passe">
+      <button id="btn-admin-login">Connexion</button>
+    </div>
+  `;
+  
+  document.body.appendChild(loginForm);
+  
+  document.getElementById('btn-admin-login').addEventListener('click', () => {
+    const password = document.getElementById('admin-password').value;
+    if (password === 'sitethéi') { // Mot de passe défini dans le README
+      document.body.removeChild(loginForm);
+      createAdminWindow();
+    } else {
+      alert('Mot de passe incorrect');
+    }
+  });
+}
+
+function showAddFilmForm() {
+  const adminContent = document.getElementById('admin-content');
+  if (!adminContent) return;
+  
+  adminContent.innerHTML = `
+    <h2>Ajouter un nouveau film</h2>
+    <form id="add-film-form">
+      <div class="form-group">
+        <label for="film-title">Titre</label>
+        <input type="text" id="film-title" required>
+      </div>
+      <div class="form-group">
+        <label for="film-note">Note (1-5)</label>
+        <input type="number" id="film-note" min="0" max="5" value="0">
+      </div>
+      <div class="form-group">
+        <label for="film-critique">Critique</label>
+        <textarea id="film-critique" rows="4"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="film-image">URL de l'image</label>
+        <input type="url" id="film-image">
+      </div>
+      <div class="form-group">
+        <label for="film-trailer">URL de la bande annonce</label>
+        <input type="url" id="film-trailer">
+      </div>
+      <button type="submit" class="btn">Enregistrer</button>
+    </form>
+  `;
+  
+  document.getElementById('add-film-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const newFilm = {
+      id: Date.now(), // Utilise un timestamp comme ID unique
+      titre: document.getElementById('film-title').value,
+      note: parseInt(document.getElementById('film-note').value) || 0,
+      critique: document.getElementById('film-critique').value,
+      image: document.getElementById('film-image').value,
+      bandeAnnonce: document.getElementById('film-trailer').value,
+      galerie: [],
+      liens: []
+    };
+    
+    // Ajouter le nouveau film
+    DataManager.data.films.push(newFilm);
+    DataManager.saveDataLocally();
+    
+    // Rafraîchir la liste si elle est ouverte
+    renderFilmsList();
+    
+    // Notification
+    UIManager.showNotification('Film ajouté avec succès', 'success');
+    
+    // Réinitialiser le formulaire
+    this.reset();
+  });
+}
+
+function showAddMangaForm() {
+  const adminContent = document.getElementById('admin-content');
+  if (!adminContent) return;
+  
+  adminContent.innerHTML = `
+    <h2>Ajouter un nouveau manga</h2>
+    <form id="add-manga-form">
+      <div class="form-group">
+        <label for="manga-title">Titre</label>
+        <input type="text" id="manga-title" required>
+      </div>
+      <div class="form-group">
+        <label for="manga-note">Note (1-5)</label>
+        <input type="number" id="manga-note" min="0" max="5" value="0">
+      </div>
+      <div class="form-group">
+        <label for="manga-auteur">Auteur</label>
+        <input type="text" id="manga-auteur">
+      </div>
+      <div class="form-group">
+        <label for="manga-statut">Statut</label>
+        <select id="manga-statut">
+          <option value="En cours">En cours</option>
+          <option value="Terminé">Terminé</option>
+          <option value="En pause">En pause</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="manga-chapitres">Nombre de chapitres</label>
+        <input type="number" id="manga-chapitres" min="0">
+      </div>
+      <div class="form-group">
+        <label for="manga-image">URL de l'image</label>
+        <input type="url" id="manga-image">
+      </div>
+      <button type="submit" class="btn">Enregistrer</button>
+    </form>
+  `;
+  
+  document.getElementById('add-manga-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const newManga = {
+      id: Date.now(), // Utilise un timestamp comme ID unique
+      titre: document.getElementById('manga-title').value,
+      note: parseInt(document.getElementById('manga-note').value) || 0,
+      auteur: document.getElementById('manga-auteur').value,
+      statut: document.getElementById('manga-statut').value,
+      chapitres: parseInt(document.getElementById('manga-chapitres').value) || 0,
+      image: document.getElementById('manga-image').value,
+      galerie: [],
+      liens: []
+    };
+    
+    // Ajouter le nouveau manga
+    if (!DataManager.data.mangas) {
+      DataManager.data.mangas = [];
+    }
+    DataManager.data.mangas.push(newManga);
+    DataManager.saveDataLocally();
+    
+    // Rafraîchir la liste si elle est ouverte
+    renderMangaList();
+    
+    // Notification
+    UIManager.showNotification('Manga ajouté avec succès', 'success');
+    
+    // Réinitialiser le formulaire
+    this.reset();
+  });
+}
+
+function showManageTagsForm() {
+  const adminContent = document.getElementById('admin-content');
+  if (!adminContent) return;
+  
+  // Préparer l'affichage des tags
+  let tagsHTML = '<ul class="tags-list">';
+  
+  if (DataManager.data.tags && DataManager.data.tags.length) {
+    DataManager.data.tags.forEach(tag => {
+      tagsHTML += `
+        <li data-id="${tag.id}">
+          <span style="background-color: ${tag.color};" class="tag-color"></span>
+          <span class="tag-name">${tag.name}</span>
+          <span class="tag-category">(${tag.category})</span>
+          <button class="btn-delete-tag" data-id="${tag.id}">✕</button>
+        </li>
+      `;
+    });
+  }
+  
+  tagsHTML += '</ul>';
+  
+  adminContent.innerHTML = `
+    <h2>Gérer les tags</h2>
+    ${tagsHTML}
+    <h3>Ajouter un nouveau tag</h3>
+    <form id="add-tag-form">
+      <div class="form-group">
+        <label for="tag-name">Nom</label>
+        <input type="text" id="tag-name" required>
+      </div>
+      <div class="form-group">
+        <label for="tag-color">Couleur</label>
+        <input type="color" id="tag-color" value="#3498db">
+      </div>
+      <div class="form-group">
+        <label for="tag-category">Catégorie</label>
+        <input type="text" id="tag-category" placeholder="Ex: genre, année...">
+      </div>
+      <button type="submit" class="btn">Ajouter</button>
+    </form>
+  `;
+  
+  // Ajouter les écouteurs pour la suppression
+  document.querySelectorAll('.btn-delete-tag').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const tagId = this.getAttribute('data-id');
+      if (confirm('Êtes-vous sûr de vouloir supprimer ce tag?')) {
+        DataManager.data.tags = DataManager.data.tags.filter(tag => tag.id !== tagId);
+        DataManager.saveDataLocally();
+        showManageTagsForm(); // Rafraîchir la liste
+      }
+    });
+  });
+  
+  // Écouteur pour l'ajout de tag
+  document.getElementById('add-tag-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const newTag = {
+      id: 'tag-' + Date.now(),
+      name: document.getElementById('tag-name').value,
+      color: document.getElementById('tag-color').value,
+      category: document.getElementById('tag-category').value || 'divers'
+    };
+    
+    // Ajouter le nouveau tag
+    if (!DataManager.data.tags) {
+      DataManager.data.tags = [];
+    }
+    DataManager.data.tags.push(newTag);
+    DataManager.saveDataLocally();
+    
+    // Rafraîchir le formulaire
+    showManageTagsForm();
+    
+    // Notification
+    UIManager.showNotification('Tag ajouté avec succès', 'success');
+  });
+}
+
 // Code d'initialisation
 document.addEventListener('DOMContentLoaded', function() {
   // Initialiser les données
