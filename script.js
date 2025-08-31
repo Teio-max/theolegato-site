@@ -1,3 +1,15 @@
+// Configuration GitHub pour la sauvegarde persistante
+const GITHUB_CONFIG = {
+  owner: 'Teio-max',
+  repo: 'theolegato-site',
+  branch: 'main',
+  dataFile: 'data.json',
+  token: null
+};
+
+// Initialiser le token depuis localStorage
+GITHUB_CONFIG.token = localStorage.getItem('github_token') || null;
+
 // CONFIGURATION MODULE
 const CONFIG = {
   // GitHub configuration
