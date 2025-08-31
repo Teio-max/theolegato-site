@@ -867,6 +867,23 @@ const DesktopManager = {
     
     activeIcon = null;
   }
+}; // Accolade fermante pour l'objet DesktopManager
+
+// Code d'initialisation
+document.addEventListener('DOMContentLoaded', function() {
+  // Initialiser les données
+  DataManager.initData();
+  
+  // Simuler le chargement Windows XP
+  setTimeout(() => {
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('desktop').style.display = 'block';
+    
+    // Initialiser l'interface
+    DesktopManager.renderDesktopIcons();
+    DesktopManager.setupDraggableIcons();
+    
+    // Jouer le son de démarrage
+    WindowManager.playSound('startup');
+  }, 3000);
 });
-}
-    // Correction: Completed the mouseup event handler to properly update and save icon positions
