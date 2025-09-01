@@ -238,6 +238,8 @@ window.createAdminPanelWindow = function(editFilmId = null) {
     const manageTagsBtn = document.getElementById(`btn-manage-tags`);
     const manageIconsBtn = document.getElementById(`btn-manage-icons`);
     const githubTokenBtn = document.getElementById(`btn-github-token`);
+    const manageArticlesBtn = document.getElementById(`btn-manage-articles`);
+    const manageCVBtn = document.getElementById(`btn-manage-cv`);
     
     if (addFilmBtn) {
       addFilmBtn.addEventListener('click', () => {
@@ -278,6 +280,20 @@ window.createAdminPanelWindow = function(editFilmId = null) {
       manageIconsBtn.addEventListener('click', () => {
         // Remplacer le contenu du panneau admin
         showManageIconsForm();
+      });
+    }
+
+    if (manageArticlesBtn) {
+      manageArticlesBtn.addEventListener('click', () => {*
+        // Remplacer le contenu du panneau admin
+        showManageArticlesForm();
+      });
+    }
+
+    if (manageCVBtn) {
+      manageCVBtn.addEventListener('click', () => {
+        // Remplacer le contenu du panneau admin
+        showManageCVForm();
       });
     }
     
