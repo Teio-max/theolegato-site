@@ -23,6 +23,8 @@ window.createAdminPanelWindow = function(editFilmId = null) {
         <button id="btn-manage-tags" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Gérer Tags</button>
         <button id="btn-manage-icons" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Gérer Icônes</button>
         <button id="btn-github-token" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Token GitHub</button>
+        <button id="btn-manage-articles" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Gérer Articles</button>
+        <button id="btn-manage-cv" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Gérer CV</button>
       </div>
       <div id="admin-content" style="padding:15px;height:calc(100% - 50px);overflow-y:auto;">
         <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
@@ -1207,3 +1209,701 @@ function showManageTagsFormImproved() {
             <span style="font-size:0.8em;color:#555;">${tag.color}</span>
           </td>
           <td style="padding:8px;text-align:center;">${tag.category || 'Non spécifié'}</td>
+// Fonction pour gérer les articles
+function showManageArticlesForm() {
+  const adminContent = document.getElementById('admin-content');
+  if (!adminContent) return;
+  
+  // Préparer la liste des articles existants
+  let articlesHTML = '';
+  
+  if (typeof DataManager !== 'undefined' && DataManager.data.articles && DataManager.data.articles.length) {
+    articlesHTML = `
+      <div class="articles-list" style="margin-bottom:20px;max-height:200px;overflow-y:auto;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#ECE9D8;font-weight:bold;border-bottom:2px solid #ACA899;">
+              <th style="padding:8px;text-align:left;">Titre</th>
+              <th style="padding:8px;text-align:center;">Date</th>
+              <th style="padding:8px;text-align:center;">PDF</th>
+              <th style="padding:8px;text-align:center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    DataManager.data.articles.forEach(article => {
+      articlesHTML += `
+        <tr style="border-bottom:1px solid #ACA899;">
+          <td style="padding:8px;text-align:left;">${article.titre}</td>
+          <td style="padding:8px;text-align:center;">${article.date || '-'}</td>
+          <td style="padding:8px;text-align:center;">
+            ${article.pdfUrl ? '<span style="color:green;">✓</span>' : '<span style="color:red;">✕</span>'}
+          </td>
+          <td style="padding:8px;text-align:center;">
+            <button class="btn-edit-article" data-id="${article.id}" style="background:#3498db;color:white;border:none;border-radius:3px;padding:2px 8px;margin-right:5px;cursor:pointer;">Éditer</button>
+            <button class="btn-delete-article" data-id="${article.id}" style="background:#e74c3c;color:white;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;">Supprimer</button>
+          </td>
+        </tr>
+      `;
+    });
+    
+    articlesHTML += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    articlesHTML = '<p>Aucun article trouvé dans la base de données.</p>';
+  }
+  
+  adminContent.innerHTML = `
+    <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
+      Gérer les articles
+    </h3>
+    ${articlesHTML}
+    <h4 style="color:#0058a8;margin-top:15px;margin-bottom:15px;">Ajouter un nouvel article</h4>
+    <form id="add-article-form">
+      <div style="margin-bottom:15px;">
+        <label for="article-title" style="display:block;margin-bottom:5px;font-weight:bold;">Titre</label>
+        <input type="text" id="article-title" required style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="article-date" style="display:block;margin-bottom:5px;font-weight:bold;">Date</label>
+        <input type="date" id="article-date" style="width:200px;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="article-categorie" style="display:block;margin-bottom:5px;font-weight:bold;">Catégorie</label>
+        <input type="text" id="article-categorie" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label style="display:block;margin-bottom:5px;font-weight:bold;">PDF de l'article</label>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <input type="file" id="article-pdf-upload" accept="application/pdf" style="display:none;">
+          <button type="button" id="article-browse-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Sélectionner un PDF
+          </button>
+          <button type="button" id="article-upload-btn" style="padding:4px 10px;background:#3498db;color:white;border:1px solid #2980b9;cursor:pointer;">
+            Upload
+          </button>
+          <span id="article-pdf-name" style="line-height:28px;"></span>
+        </div>
+        <input type="hidden" id="article-pdf-url">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="article-description" style="display:block;margin-bottom:5px;font-weight:bold;">Description</label>
+        <textarea id="article-description" rows="3" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;"></textarea>
+      </div>
+      <div style="margin-top:20px;">
+        <button type="submit" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
+          Ajouter
+        </button>
+      </div>
+    </form>
+  `;
+  
+  // Configurer les événements après l'ajout au DOM
+  const browseBtn = document.getElementById('article-browse-btn');
+  const pdfUpload = document.getElementById('article-pdf-upload');
+  const uploadBtn = document.getElementById('article-upload-btn');
+  const pdfName = document.getElementById('article-pdf-name');
+  const pdfUrl = document.getElementById('article-pdf-url');
+  
+  if (browseBtn && pdfUpload) {
+    browseBtn.addEventListener('click', () => {
+      pdfUpload.click();
+    });
+  }
+  
+  if (pdfUpload) {
+    pdfUpload.addEventListener('change', () => {
+      if (pdfUpload.files.length > 0) {
+        pdfName.textContent = pdfUpload.files[0].name;
+      }
+    });
+  }
+  
+  if (uploadBtn && pdfUpload) {
+    uploadBtn.addEventListener('click', () => {
+      if (pdfUpload.files.length > 0) {
+        if (typeof MediaManager !== 'undefined' && MediaManager.uploadImage) {
+          const file = pdfUpload.files[0];
+          
+          // Montrer un indicateur de chargement
+          uploadBtn.disabled = true;
+          uploadBtn.textContent = "Chargement...";
+          
+          MediaManager.uploadImage(file, 'files/articles').then(url => {
+            if (url && pdfUrl) {
+              pdfUrl.value = url;
+              uploadBtn.textContent = "✅ Uploadé";
+              uploadBtn.style.background = "#27ae60";
+              if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+                UIManager.showNotification('PDF uploadé avec succès', 'success');
+              }
+            }
+          }).catch(error => {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = "Réessayer";
+            uploadBtn.style.background = "#e74c3c";
+            alert("Erreur lors de l'upload: " + error.message);
+          });
+        } else {
+          alert("Fonctionnalité d'upload non disponible");
+        }
+      } else {
+        alert("Veuillez d'abord sélectionner un fichier PDF");
+      }
+    });
+  }
+  
+  // Configurer les événements pour les boutons d'édition et de suppression
+  document.querySelectorAll('.btn-edit-article').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const articleId = parseInt(this.getAttribute('data-id'));
+      editArticle(articleId);
+    });
+  });
+  
+  document.querySelectorAll('.btn-delete-article').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const articleId = parseInt(this.getAttribute('data-id'));
+      const article = DataManager.data.articles.find(a => a.id === articleId);
+      
+      if (confirm(`Êtes-vous sûr de vouloir supprimer l'article "${article.titre}" ?`)) {
+        DataManager.data.articles = DataManager.data.articles.filter(a => a.id !== articleId);
+        
+        // Sauvegarder les données
+        if (typeof saveDataToGitHub === 'function') {
+          saveDataToGitHub();
+        } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
+          DataManager.saveDataLocally();
+        }
+        
+        // Rafraîchir la liste
+        showManageArticlesForm();
+        
+        if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+          UIManager.showNotification('Article supprimé avec succès', 'success');
+        } else {
+          alert('Article supprimé avec succès');
+        }
+      }
+    });
+  });
+  
+  // Soumettre le formulaire
+  document.getElementById('add-article-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    if (!pdfUrl.value) {
+      alert("Veuillez uploader un PDF pour cet article.");
+      return;
+    }
+    
+    const newArticle = {
+      id: Date.now(),
+      titre: document.getElementById('article-title').value,
+      date: document.getElementById('article-date').value || new Date().toISOString().split('T')[0],
+      categorie: document.getElementById('article-categorie').value || 'Non classé',
+      contenu: document.getElementById('article-description').value || '',
+      pdfUrl: pdfUrl.value,
+      image: ''
+    };
+    
+    // Ajouter le nouvel article
+    if (typeof DataManager !== 'undefined') {
+      if (!DataManager.data.articles) {
+        DataManager.data.articles = [];
+      }
+      
+      DataManager.data.articles.push(newArticle);
+      
+      // Sauvegarder les données
+      if (typeof saveDataToGitHub === 'function') {
+        saveDataToGitHub();
+        if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+          UIManager.showNotification('Article ajouté avec succès sur GitHub', 'success');
+        } else {
+          alert('Article ajouté avec succès sur GitHub');
+        }
+      } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
+        DataManager.saveDataLocally();
+        if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+          UIManager.showNotification('Article ajouté localement', 'success');
+        } else {
+          alert('Article ajouté localement');
+        }
+      } else {
+        alert("Article ajouté mais aucune fonction de sauvegarde trouvée");
+      }
+      
+      // Réinitialiser le formulaire
+      this.reset();
+      pdfName.textContent = "";
+      pdfUrl.value = "";
+      uploadBtn.disabled = false;
+      uploadBtn.textContent = "Upload";
+      uploadBtn.style.background = "#3498db";
+      
+      // Rafraîchir la liste des articles
+      showManageArticlesForm();
+    } else {
+      alert("Erreur: Le gestionnaire de données n'est pas défini");
+    }
+  });
+}
+
+// Fonction pour éditer un article
+function editArticle(articleId) {
+  if (!DataManager.data.articles) return;
+  
+  const article = DataManager.data.articles.find(a => a.id === articleId);
+  if (!article) {
+    alert('Article non trouvé.');
+    return;
+  }
+  
+  const adminContent = document.getElementById('admin-content');
+  if (!adminContent) return;
+  
+  adminContent.innerHTML = `
+    <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
+      Modifier l'article "${article.titre}"
+    </h3>
+    <form id="edit-article-form">
+      <div style="margin-bottom:15px;">
+        <label for="article-title" style="display:block;margin-bottom:5px;font-weight:bold;">Titre</label>
+        <input type="text" id="article-title" required value="${article.titre}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="article-date" style="display:block;margin-bottom:5px;font-weight:bold;">Date</label>
+        <input type="date" id="article-date" value="${article.date || ''}" style="width:200px;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="article-categorie" style="display:block;margin-bottom:5px;font-weight:bold;">Catégorie</label>
+        <input type="text" id="article-categorie" value="${article.categorie || ''}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label style="display:block;margin-bottom:5px;font-weight:bold;">PDF de l'article</label>
+        ${article.pdfUrl ? `
+          <div style="margin-bottom:10px;padding:5px;background:#f5f5f5;border:1px solid #ddd;border-radius:3px;">
+            <p style="margin:0;"><strong>PDF actuel:</strong> 
+              <a href="${article.pdfUrl}" target="_blank" style="color:#3498db;text-decoration:none;">${article.pdfUrl.split('/').pop()}</a>
+            </p>
+          </div>
+        ` : ''}
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <input type="file" id="article-pdf-upload" accept="application/pdf" style="display:none;">
+          <button type="button" id="article-browse-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Changer le PDF
+          </button>
+          <button type="button" id="article-upload-btn" style="padding:4px 10px;background:#3498db;color:white;border:1px solid #2980b9;cursor:pointer;">
+            Upload
+          </button>
+          <span id="article-pdf-name" style="line-height:28px;"></span>
+        </div>
+        <input type="hidden" id="article-pdf-url" value="${article.pdfUrl || ''}">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="article-description" style="display:block;margin-bottom:5px;font-weight:bold;">Description</label>
+        <textarea id="article-description" rows="3" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">${article.contenu || ''}</textarea>
+      </div>
+      <div style="margin-top:20px;">
+        <button type="submit" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
+          Enregistrer les modifications
+        </button>
+        <button type="button" id="cancel-edit-btn" style="margin-left:10px;padding:6px 12px;border-radius:3px;cursor:pointer;">
+          Annuler
+        </button>
+      </div>
+    </form>
+  `;
+  
+  // Configurer les événements après l'ajout au DOM
+  const browseBtn = document.getElementById('article-browse-btn');
+  const pdfUpload = document.getElementById('article-pdf-upload');
+  const uploadBtn = document.getElementById('article-upload-btn');
+  const pdfName = document.getElementById('article-pdf-name');
+  const pdfUrl = document.getElementById('article-pdf-url');
+  
+  if (browseBtn && pdfUpload) {
+    browseBtn.addEventListener('click', () => {
+      pdfUpload.click();
+    });
+  }
+  
+  if (pdfUpload) {
+    pdfUpload.addEventListener('change', () => {
+      if (pdfUpload.files.length > 0) {
+        pdfName.textContent = pdfUpload.files[0].name;
+      }
+    });
+  }
+  
+  if (uploadBtn && pdfUpload) {
+    uploadBtn.addEventListener('click', () => {
+      if (pdfUpload.files.length > 0) {
+        if (typeof MediaManager !== 'undefined' && MediaManager.uploadImage) {
+          const file = pdfUpload.files[0];
+          
+          // Montrer un indicateur de chargement
+          uploadBtn.disabled = true;
+          uploadBtn.textContent = "Chargement...";
+          
+          MediaManager.uploadImage(file, 'files/articles').then(url => {
+            if (url && pdfUrl) {
+              pdfUrl.value = url;
+              uploadBtn.textContent = "✅ Uploadé";
+              uploadBtn.style.background = "#27ae60";
+              if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+                UIManager.showNotification('PDF uploadé avec succès', 'success');
+              }
+            }
+          }).catch(error => {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = "Réessayer";
+            uploadBtn.style.background = "#e74c3c";
+            alert("Erreur lors de l'upload: " + error.message);
+          });
+        } else {
+          alert("Fonctionnalité d'upload non disponible");
+        }
+      } else {
+        alert("Veuillez d'abord sélectionner un fichier PDF");
+      }
+    });
+  }
+  
+  document.getElementById('edit-article-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Mettre à jour les données de l'article
+    article.titre = document.getElementById('article-title').value;
+    article.date = document.getElementById('article-date').value;
+    article.categorie = document.getElementById('article-categorie').value;
+    article.contenu = document.getElementById('article-description').value;
+    
+    // Ne mettre à jour l'URL du PDF que si un nouveau fichier a été uploadé
+    const newPdfUrl = document.getElementById('article-pdf-url').value;
+    if (newPdfUrl && newPdfUrl !== article.pdfUrl) {
+      article.pdfUrl = newPdfUrl;
+    }
+    
+    // Sauvegarder les données
+    if (typeof saveDataToGitHub === 'function') {
+      saveDataToGitHub();
+      if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+        UIManager.showNotification('Article modifié avec succès sur GitHub', 'success');
+      } else {
+        alert('Article modifié avec succès sur GitHub');
+      }
+    } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
+      DataManager.saveDataLocally();
+      if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+        UIManager.showNotification('Article modifié localement', 'success');
+      } else {
+        alert('Article modifié localement');
+      }
+    } else {
+      alert("Article modifié mais aucune fonction de sauvegarde trouvée");
+    }
+    
+    // Retourner à la liste des articles
+    showManageArticlesForm();
+  });
+  
+  document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+    showManageArticlesForm();
+  });
+}
+// Fonction pour gérer le CV
+function showManageCVForm() {
+  const adminContent = document.getElementById('admin-content');
+  if (!adminContent) return;
+  
+  // Vérifier s'il y a déjà un CV
+  const cvData = DataManager.data.cv || {};
+  const hasCv = cvData.pdfUrl && cvData.pdfUrl.length > 0;
+  
+  adminContent.innerHTML = `
+    <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
+      Gérer votre CV
+    </h3>
+    
+    ${hasCv ? `
+      <div style="margin-bottom:20px;padding:15px;background:#f5f5f5;border:1px solid #ddd;border-radius:5px;">
+        <h4 style="margin-top:0;margin-bottom:10px;">CV actuel</h4>
+        <p>
+          <a href="${cvData.pdfUrl}" target="_blank" style="color:#3498db;text-decoration:none;font-weight:bold;">
+            ${cvData.titre || 'Voir le PDF du CV'}
+          </a>
+          <br>
+          <span style="color:#777;font-size:0.9em;">Dernière mise à jour: ${cvData.dateModification || 'non spécifiée'}</span>
+        </p>
+        <div style="margin-top:10px;">
+          <button id="btn-remove-cv" style="background:#e74c3c;color:white;border:none;border-radius:3px;padding:4px 12px;cursor:pointer;">
+            Supprimer ce CV
+          </button>
+        </div>
+      </div>
+    ` : '<p>Aucun CV n\'a encore été ajouté.</p>'}
+    
+    <h4 style="color:#0058a8;margin-top:15px;margin-bottom:15px;">
+      ${hasCv ? 'Mettre à jour votre CV' : 'Ajouter votre CV'}
+    </h4>
+    
+    <form id="cv-form">
+      <div style="margin-bottom:15px;">
+        <label for="cv-title" style="display:block;margin-bottom:5px;font-weight:bold;">Titre/Description</label>
+        <input type="text" id="cv-title" value="${cvData.titre || ''}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      
+      <div style="margin-bottom:15px;">
+        <label style="display:block;margin-bottom:5px;font-weight:bold;">Fichier PDF du CV</label>
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <input type="file" id="cv-pdf-upload" accept="application/pdf" style="display:none;">
+          <button type="button" id="cv-browse-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Sélectionner un PDF
+          </button>
+          <button type="button" id="cv-upload-btn" style="padding:4px 10px;background:#3498db;color:white;border:1px solid #2980b9;cursor:pointer;">
+            Upload
+          </button>
+          <span id="cv-pdf-name" style="line-height:28px;"></span>
+        </div>
+        <input type="hidden" id="cv-pdf-url" value="${cvData.pdfUrl || ''}">
+      </div>
+      
+      <div style="margin-top:20px;">
+        <button type="submit" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
+          ${hasCv ? 'Mettre à jour' : 'Enregistrer'}
+        </button>
+      </div>
+    </form>
+  `;
+  
+  // Configurer les événements
+  const browseBtn = document.getElementById('cv-browse-btn');
+  const pdfUpload = document.getElementById('cv-pdf-upload');
+  const uploadBtn = document.getElementById('cv-upload-btn');
+  const pdfName = document.getElementById('cv-pdf-name');
+  const pdfUrl = document.getElementById('cv-pdf-url');
+  
+  if (browseBtn && pdfUpload) {
+    browseBtn.addEventListener('click', () => {
+      pdfUpload.click();
+    });
+  }
+  
+  if (pdfUpload) {
+    pdfUpload.addEventListener('change', () => {
+      if (pdfUpload.files.length > 0) {
+        pdfName.textContent = pdfUpload.files[0].name;
+      }
+    });
+  }
+  
+  if (uploadBtn && pdfUpload) {
+    uploadBtn.addEventListener('click', () => {
+      if (pdfUpload.files.length > 0) {
+        if (typeof MediaManager !== 'undefined' && MediaManager.uploadImage) {
+          const file = pdfUpload.files[0];
+          
+          // Montrer un indicateur de chargement
+          uploadBtn.disabled = true;
+          uploadBtn.textContent = "Chargement...";
+          
+          MediaManager.uploadImage(file, 'files/cv').then(url => {
+            if (url && pdfUrl) {
+              pdfUrl.value = url;
+              uploadBtn.textContent = "✅ Uploadé";
+              uploadBtn.style.background = "#27ae60";
+              if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+                UIManager.showNotification('CV uploadé avec succès', 'success');
+              }
+            }
+          }).catch(error => {
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = "Réessayer";
+            uploadBtn.style.background = "#e74c3c";
+            alert("Erreur lors de l'upload: " + error.message);
+          });
+        } else {
+          alert("Fonctionnalité d'upload non disponible");
+        }
+      } else {
+        alert("Veuillez d'abord sélectionner un fichier PDF");
+      }
+    });
+  }
+  
+  // Bouton pour supprimer le CV existant
+  const removeBtn = document.getElementById('btn-remove-cv');
+  if (removeBtn) {
+    removeBtn.addEventListener('click', () => {
+      if (confirm("Êtes-vous sûr de vouloir supprimer votre CV actuel ?")) {
+        // Supprimer le CV des données
+        DataManager.data.cv = {};
+        
+        // Sauvegarder les données
+        if (typeof saveDataToGitHub === 'function') {
+          saveDataToGitHub();
+        } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
+          DataManager.saveDataLocally();
+        }
+        
+        if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+          UIManager.showNotification('CV supprimé avec succès', 'success');
+        } else {
+          alert('CV supprimé avec succès');
+        }
+        
+        // Rafraîchir la page
+        showManageCVForm();
+      }
+    });
+  }
+  
+  // Soumettre le formulaire
+  document.getElementById('cv-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Vérifier si un PDF a été sélectionné ou s'il y en a déjà un
+    if (!pdfUrl.value && !hasCv) {
+      alert("Veuillez uploader un PDF pour votre CV.");
+      return;
+    }
+    
+    // Mettre à jour les données du CV
+    DataManager.data.cv = {
+      titre: document.getElementById('cv-title').value || 'Mon CV',
+      dateModification: new Date().toISOString().split('T')[0],
+      pdfUrl: pdfUrl.value || cvData.pdfUrl
+    };
+    
+    // Sauvegarder les données
+    if (typeof saveDataToGitHub === 'function') {
+      saveDataToGitHub();
+      if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+        UIManager.showNotification('CV enregistré avec succès sur GitHub', 'success');
+      } else {
+        alert('CV enregistré avec succès sur GitHub');
+      }
+    } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
+      DataManager.saveDataLocally();
+      if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+        UIManager.showNotification('CV enregistré localement', 'success');
+      } else {
+        alert('CV enregistré localement');
+      }
+    } else {
+      alert("CV enregistré mais aucune fonction de sauvegarde trouvée");
+    }
+    
+    // Rafraîchir la page
+    showManageCVForm();
+  });
+}
+// Fonction pour créer une fenêtre d'articles
+window.createArticlesWindow = function() {
+  // Vérifier si des articles existent
+  const articles = DataManager.data.articles || [];
+  
+  let articlesContent = '';
+  
+  if (articles.length > 0) {
+    articlesContent = `
+      <div class="articles-list">
+        <ul style="list-style-type:none;padding:0;margin:0;">
+          ${articles.map(article => `
+            <li style="margin-bottom:15px;padding:10px;border:1px solid #ddd;border-radius:5px;background:#f9f9f9;">
+              <h3 style="margin-top:0;margin-bottom:5px;color:#0058a8;">${article.titre}</h3>
+              <div style="font-size:0.9em;color:#555;margin-bottom:10px;">
+                <span>${article.date || 'Date non spécifiée'}</span>
+                <span style="margin-left:15px;padding:2px 6px;background:#eee;border-radius:3px;">${article.categorie || 'Non classé'}</span>
+              </div>
+              <p>${article.contenu || 'Pas de description disponible.'}</p>
+              <div style="margin-top:10px;">
+                <button onclick="openArticlePdf('${article.pdfUrl}')" style="background:#0058a8;color:white;border:none;border-radius:3px;padding:4px 12px;cursor:pointer;">
+                  Lire l'article
+                </button>
+              </div>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `;
+  } else {
+    articlesContent = '<p>Aucun article n\'est disponible pour le moment.</p>';
+  }
+  
+  const win = WindowManager.createWindow({
+    title: 'Articles',
+    icon: 'icons/article.png',
+    width: '700px',
+    height: '500px',
+    content: `
+      <div class="window-articles">
+        <h1 style="margin-top:0;color:#0058a8;border-bottom:1px solid #ddd;padding-bottom:10px;">Mes Articles</h1>
+        ${articlesContent}
+      </div>
+    `
+  });
+  
+  return win;
+};
+
+// Fonction pour ouvrir un PDF d'article
+window.openArticlePdf = function(pdfUrl) {
+  if (!pdfUrl) {
+    alert("Erreur: URL du PDF non disponible.");
+    return;
+  }
+  
+  const win = WindowManager.createWindow({
+    title: 'Lecture d\'article',
+    icon: 'icons/article.png',
+    width: '800px',
+    height: '600px',
+    content: `
+      <div style="width:100%;height:100%;overflow:hidden;">
+        <iframe src="${pdfUrl}" style="width:100%;height:100%;border:none;"></iframe>
+      </div>
+    `
+  });
+  
+  return win;
+};
+
+// Fonction pour créer une fenêtre de CV
+window.createCVWindow = function() {
+  // Vérifier si un CV existe
+  const cv = DataManager.data.cv || {};
+  
+  let cvContent = '';
+  
+  if (cv.pdfUrl) {
+    cvContent = `
+      <div style="width:100%;height:calc(100% - 60px);overflow:hidden;">
+        <iframe src="${cv.pdfUrl}" style="width:100%;height:100%;border:none;"></iframe>
+      </div>
+    `;
+  } else {
+    cvContent = '<p>Aucun CV n\'est disponible pour le moment.</p>';
+  }
+  
+  const win = WindowManager.createWindow({
+    title: 'CV',
+    icon: 'icons/cv.png',
+    width: '800px',
+    height: '600px',
+    content: `
+      <div class="window-cv">
+        <h1 style="margin-top:0;color:#0058a8;border-bottom:1px solid #ddd;padding-bottom:10px;">Mon CV</h1>
+        ${cvContent}
+      </div>
+    `
+  });
+  
+  return win;
+};
