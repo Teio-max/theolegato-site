@@ -1,0 +1,494 @@
+/**
+ * Admin Panel CSS - Unified styling for the administration interface
+ * Replaces admin.css and admin-styles.css
+ */
+
+/* Admin Panel Container */
+.admin-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f0f0f0;
+  font-family: 'Tahoma', 'Arial', sans-serif;
+  font-size: 11px;
+}
+
+/* Admin Toolbar */
+.admin-toolbar {
+  background: #ECE9D8;
+  border-bottom: 1px solid #ACA899;
+  padding: 10px;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  min-height: 40px;
+}
+
+.admin-toolbar button {
+  padding: 4px 10px;
+  background: #ECE9D8;
+  border: 1px solid #ACA899;
+  cursor: pointer;
+  font-size: 11px;
+  border-radius: 2px;
+  transition: background-color 0.1s;
+}
+
+.admin-toolbar button:hover {
+  background: #ddd;
+  border-color: #999;
+}
+
+.admin-toolbar button:active {
+  background: #ccc;
+  border: 1px inset #ACA899;
+}
+
+.admin-toolbar button.active {
+  background: #316AC5;
+  color: white;
+  border-color: #1C4C96;
+}
+
+/* Admin Content Area */
+#admin-content {
+  padding: 15px;
+  height: calc(100% - 60px);
+  overflow-y: auto;
+  background: #f0f0f0;
+}
+
+#admin-content h3 {
+  color: #0058a8;
+  margin-top: 0;
+  border-bottom: 1px solid #ACA899;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  font-size: 13px;
+}
+
+#admin-content h4 {
+  color: #0058a8;
+  margin-top: 15px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+
+/* Form Styling */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #ACA899;
+  border-radius: 2px;
+  font-size: 11px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #0058a8;
+  outline: none;
+  box-shadow: 0 0 2px rgba(0, 88, 168, 0.3);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.form-group small {
+  display: block;
+  margin-top: 2px;
+  color: #666;
+  font-size: 10px;
+}
+
+/* Form Actions */
+.form-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn-primary {
+  background: #0058a8;
+  color: white;
+  border: 1px solid #003f7d;
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.btn-primary:hover {
+  background: #004285;
+}
+
+.btn-primary:active {
+  background: #003366;
+}
+
+.btn-secondary {
+  background: #ECE9D8;
+  color: #333;
+  border: 1px solid #ACA899;
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.btn-secondary:hover {
+  background: #ddd;
+}
+
+.btn-edit {
+  background: #2ecc71;
+  color: white;
+  border: 1px solid #27ae60;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.btn-edit:hover {
+  background: #27ae60;
+}
+
+.btn-delete {
+  background: #e74c3c;
+  color: white;
+  border: 1px solid #c0392b;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.btn-delete:hover {
+  background: #c0392b;
+}
+
+.btn-delete-small {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-delete-small:hover {
+  background: #c0392b;
+}
+
+/* Data Tables */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 11px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ACA899;
+}
+
+.data-table th {
+  background: #ECE9D8;
+  font-weight: bold;
+  color: #0058a8;
+}
+
+.data-table tr:hover {
+  background: #f5f5f5;
+}
+
+.data-table img {
+  max-width: 50px;
+  max-height: 50px;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
+
+/* File Upload */
+.file-upload,
+.image-upload {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+
+.file-upload button,
+.image-upload button {
+  padding: 4px 10px;
+  background: #ECE9D8;
+  border: 1px solid #ACA899;
+  cursor: pointer;
+  font-size: 11px;
+  border-radius: 2px;
+}
+
+.file-upload button:hover,
+.image-upload button:hover {
+  background: #ddd;
+}
+
+.file-upload span,
+.image-upload span {
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+/* Tags Management */
+.tags-container {
+  margin-top: 15px;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.tag-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  background: rgba(0, 88, 168, 0.1);
+  border: 1px solid rgba(0, 88, 168, 0.3);
+}
+
+.tag-name {
+  font-weight: bold;
+}
+
+/* Articles Management */
+.articles-container {
+  margin-top: 15px;
+}
+
+.articles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.article-item {
+  background: white;
+  border: 1px solid #ACA899;
+  border-radius: 4px;
+  padding: 15px;
+}
+
+.article-item h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #0058a8;
+}
+
+.article-item p {
+  margin: 5px 0;
+  font-size: 11px;
+}
+
+.article-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* CV Management */
+.current-cv {
+  background: white;
+  border: 1px solid #ACA899;
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.current-cv h4 {
+  margin-top: 0;
+  color: #0058a8;
+}
+
+.current-cv p {
+  margin: 5px 0;
+  font-size: 11px;
+}
+
+/* Info Boxes */
+.info-box {
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 4px;
+  padding: 15px;
+  margin: 15px 0;
+}
+
+.info-box h4 {
+  margin-top: 0;
+  color: #856404;
+}
+
+.info-box ul {
+  margin: 10px 0;
+  padding-left: 20px;
+}
+
+.info-box li {
+  margin-bottom: 5px;
+  font-size: 11px;
+}
+
+/* Status Messages */
+.status-success {
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.status-error {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.status-warning {
+  color: #f39c12;
+  font-weight: bold;
+}
+
+.status-info {
+  color: #3498db;
+  font-weight: bold;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-toolbar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .admin-toolbar button {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .form-actions button {
+    width: 100%;
+  }
+  
+  .file-upload,
+  .image-upload {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .data-table {
+    font-size: 10px;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 4px;
+  }
+  
+  .article-actions {
+    flex-direction: column;
+  }
+  
+  .article-actions button {
+    width: 100%;
+  }
+}
+
+/* Loading States */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: " (Chargement...)";
+  color: #666;
+  font-style: italic;
+}
+
+/* Scrollbars */
+#admin-content::-webkit-scrollbar {
+  width: 12px;
+}
+
+#admin-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#admin-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 6px;
+}
+
+#admin-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Print Styles */
+@media print {
+  .admin-toolbar {
+    display: none;
+  }
+  
+  #admin-content {
+    height: auto;
+    overflow: visible;
+  }
+  
+  .form-actions {
+    display: none;
+  }
+  
+  .btn-edit,
+  .btn-delete,
+  .btn-delete-small {
+    display: none;
+  }
+}
