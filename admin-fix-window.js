@@ -1,5 +1,5 @@
 // Solution complète pour le panneau d'administration avec WindowManager
-// et fonctionnalités complètes
+// et fonctionnalités complètes - Version améliorée
 
 // Sauvegarde de la fonction originale au cas où
 window.originalCreateAdminPanelWindow = window.createAdminPanelWindow;
@@ -15,11 +15,14 @@ window.createAdminPanelWindow = function(editFilmId = null) {
   // Créer le contenu HTML de la fenêtre d'administration
   const content = `
     <div class="admin-panel">
-      <div class="admin-toolbar" style="background:#ECE9D8;border-bottom:1px solid #ACA899;padding:10px;display:flex;gap:5px;">
+      <div class="admin-toolbar" style="background:#ECE9D8;border-bottom:1px solid #ACA899;padding:10px;display:flex;gap:5px;flex-wrap:wrap;">
         <button id="btn-add-film" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Ajouter Film</button>
+        <button id="btn-list-films" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Gérer Films</button>
         <button id="btn-add-manga" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Ajouter Manga</button>
+        <button id="btn-list-mangas" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Gérer Mangas</button>
         <button id="btn-manage-tags" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Gérer Tags</button>
         <button id="btn-manage-icons" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Gérer Icônes</button>
+        <button id="btn-github-token" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">Token GitHub</button>
       </div>
       <div id="admin-content" style="padding:15px;height:calc(100% - 50px);overflow-y:auto;">
         <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
@@ -227,9 +230,12 @@ window.createAdminPanelWindow = function(editFilmId = null) {
     
     // Gestion des boutons de la barre d'outils
     const addFilmBtn = document.getElementById(`btn-add-film`);
+    const listFilmsBtn = document.getElementById(`btn-list-films`);
     const addMangaBtn = document.getElementById(`btn-add-manga`);
+    const listMangasBtn = document.getElementById(`btn-list-mangas`);
     const manageTagsBtn = document.getElementById(`btn-manage-tags`);
     const manageIconsBtn = document.getElementById(`btn-manage-icons`);
+    const githubTokenBtn = document.getElementById(`btn-github-token`);
     
     if (addFilmBtn) {
       addFilmBtn.addEventListener('click', () => {
@@ -238,10 +244,24 @@ window.createAdminPanelWindow = function(editFilmId = null) {
       });
     }
     
+    if (listFilmsBtn) {
+      listFilmsBtn.addEventListener('click', () => {
+        // Afficher la liste des films à gérer
+        showManageFilmsForm();
+      });
+    }
+    
     if (addMangaBtn) {
       addMangaBtn.addEventListener('click', () => {
         // Remplacer le contenu du panneau admin
         showAddMangaFormImproved();
+      });
+    }
+    
+    if (listMangasBtn) {
+      listMangasBtn.addEventListener('click', () => {
+        // Afficher la liste des mangas à gérer
+        showManageMangasForm();
       });
     }
     
@@ -256,6 +276,13 @@ window.createAdminPanelWindow = function(editFilmId = null) {
       manageIconsBtn.addEventListener('click', () => {
         // Remplacer le contenu du panneau admin
         showManageIconsForm();
+      });
+    }
+    
+    if (githubTokenBtn) {
+      githubTokenBtn.addEventListener('click', () => {
+        // Afficher le formulaire de configuration du token GitHub
+        showGithubTokenForm();
       });
     }
   }, 100);
@@ -408,9 +435,286 @@ function showAddFilmFormImproved() {
       
       // Réinitialiser le formulaire
       this.reset();
+      
+      // Retirer l'aperçu de l'image
+      const imagePreview = document.querySelector('div[style*="margin-top:10px"]');
+      if (imagePreview) {
+        imagePreview.remove();
+      }
     } else {
       alert("Erreur: la variable 'films' n'est pas définie");
     }
+  });
+}
+
+// Fonction pour gérer les films existants
+function showManageFilmsForm() {
+  const adminContent = document.getElementById('admin-content');
+  if (!adminContent) return;
+  
+  let filmsHTML = '';
+  
+  if (typeof DataManager !== 'undefined' && DataManager.data.films && DataManager.data.films.length) {
+    filmsHTML = `
+      <div class="films-list" style="margin-bottom:20px;height:350px;overflow-y:auto;border:1px solid #ACA899;padding:10px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#ECE9D8;font-weight:bold;border-bottom:2px solid #ACA899;">
+              <th style="padding:8px;text-align:left;">Titre</th>
+              <th style="padding:8px;text-align:center;">Note</th>
+              <th style="padding:8px;text-align:center;">Image</th>
+              <th style="padding:8px;text-align:center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    DataManager.data.films.forEach(film => {
+      const stars = '★'.repeat(film.note) + '☆'.repeat(5 - film.note);
+      
+      filmsHTML += `
+        <tr style="border-bottom:1px solid #ACA899;">
+          <td style="padding:8px;text-align:left;">${film.titre}</td>
+          <td style="padding:8px;text-align:center;">${stars}</td>
+          <td style="padding:8px;text-align:center;">
+            ${film.image ? `<img src="${film.image}" alt="${film.titre}" style="max-width:50px;max-height:50px;">` : 'Aucune'}
+          </td>
+          <td style="padding:8px;text-align:center;">
+            <button class="btn-edit-film" data-id="${film.id}" style="background:#3498db;color:white;border:none;border-radius:3px;padding:2px 8px;margin-right:5px;cursor:pointer;">Éditer</button>
+            <button class="btn-delete-film" data-id="${film.id}" style="background:#e74c3c;color:white;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;">Supprimer</button>
+          </td>
+        </tr>
+      `;
+    });
+    
+    filmsHTML += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    filmsHTML = '<p>Aucun film trouvé dans la base de données.</p>';
+  }
+  
+  adminContent.innerHTML = `
+    <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
+      Gérer les films
+    </h3>
+    ${filmsHTML}
+    <div style="margin-top:15px;">
+      <button id="btn-return-add-film" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
+        Ajouter un nouveau film
+      </button>
+    </div>
+  `;
+  
+  // Configurer les événements après l'ajout au DOM
+  document.querySelectorAll('.btn-edit-film').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const filmId = parseInt(this.getAttribute('data-id'));
+      editFilm(filmId);
+    });
+  });
+  
+  document.querySelectorAll('.btn-delete-film').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const filmId = parseInt(this.getAttribute('data-id'));
+      const film = DataManager.data.films.find(f => f.id === filmId);
+      
+      if (confirm(`Êtes-vous sûr de vouloir supprimer le film "${film.titre}" ?`)) {
+        DataManager.data.films = DataManager.data.films.filter(f => f.id !== filmId);
+        
+        // Sauvegarder les données
+        if (typeof saveDataToGitHub === 'function') {
+          saveDataToGitHub();
+        } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
+          DataManager.saveDataLocally();
+        }
+        
+        // Rafraîchir la liste
+        showManageFilmsForm();
+        
+        // Rafraîchir la liste des films si elle est ouverte
+        if (typeof renderFilmsList === 'function') {
+          renderFilmsList();
+        }
+        
+        if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+          UIManager.showNotification('Film supprimé avec succès', 'success');
+        } else {
+          alert('Film supprimé avec succès');
+        }
+      }
+    });
+  });
+  
+  const returnButton = document.getElementById('btn-return-add-film');
+  if (returnButton) {
+    returnButton.addEventListener('click', () => {
+      showAddFilmFormImproved();
+    });
+  }
+}
+
+// Fonction pour éditer un film existant
+function editFilm(filmId) {
+  if (!DataManager.data.films) return;
+  
+  const film = DataManager.data.films.find(f => f.id === filmId);
+  if (!film) {
+    alert('Film non trouvé.');
+    return;
+  }
+  
+  const adminContent = document.getElementById('admin-content');
+  if (!adminContent) return;
+  
+  adminContent.innerHTML = `
+    <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
+      Modifier le film "${film.titre}"
+    </h3>
+    <form id="edit-film-form">
+      <div style="margin-bottom:15px;">
+        <label for="film-title" style="display:block;margin-bottom:5px;font-weight:bold;">Titre</label>
+        <input type="text" id="film-title" required value="${film.titre}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="film-note" style="display:block;margin-bottom:5px;font-weight:bold;">Note (1-5)</label>
+        <input type="number" id="film-note" min="0" max="5" value="${film.note}" style="width:60px;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="film-critique" style="display:block;margin-bottom:5px;font-weight:bold;">Critique</label>
+        <textarea id="film-critique" rows="4" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">${film.critique || ''}</textarea>
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="film-image" style="display:block;margin-bottom:5px;font-weight:bold;">URL de l'image</label>
+        <input type="url" id="film-image" value="${film.image || ''}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+        
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <input type="file" id="film-image-upload" accept="image/*" style="display:none;">
+          <button type="button" id="browse-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Parcourir...
+          </button>
+          <button type="button" id="upload-btn" style="padding:4px 10px;background:#3498db;color:white;border:1px solid #2980b9;cursor:pointer;">
+            Upload
+          </button>
+        </div>
+        
+        ${film.image ? `
+        <div style="margin-top:10px;border:1px solid #ACA899;padding:8px;background:#fff;">
+          <p style="margin:0 0 5px 0;font-weight:bold;">Image actuelle:</p>
+          <img src="${film.image}" alt="Aperçu" style="max-width:200px;max-height:120px;">
+        </div>
+        ` : ''}
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="film-trailer" style="display:block;margin-bottom:5px;font-weight:bold;">URL de la bande annonce</label>
+        <input type="url" id="film-trailer" value="${film.bandeAnnonce || ''}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-top:20px;">
+        <button type="submit" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
+          Enregistrer les modifications
+        </button>
+        <button type="button" id="cancel-edit-btn" style="margin-left:10px;padding:6px 12px;border-radius:3px;cursor:pointer;">
+          Annuler
+        </button>
+      </div>
+    </form>
+  `;
+  
+  // Configurer les événements après l'ajout au DOM
+  const browseBtn = document.getElementById('browse-btn');
+  const imageUpload = document.getElementById('film-image-upload');
+  const uploadBtn = document.getElementById('upload-btn');
+  const imageInput = document.getElementById('film-image');
+  
+  if (browseBtn && imageUpload) {
+    browseBtn.addEventListener('click', () => {
+      imageUpload.click();
+    });
+  }
+  
+  if (uploadBtn && imageUpload) {
+    uploadBtn.addEventListener('click', () => {
+      if (imageUpload.files.length > 0) {
+        if (typeof MediaManager !== 'undefined' && MediaManager.uploadImage) {
+          const file = imageUpload.files[0];
+          MediaManager.uploadImage(file).then(url => {
+            if (url && imageInput) {
+              imageInput.value = url;
+              
+              // Mettre à jour l'aperçu de l'image
+              const previewImage = document.querySelector('div[style*="margin-top:10px"] img');
+              if (previewImage) {
+                previewImage.src = url;
+              } else {
+                // Créer un nouvel aperçu
+                const previewDiv = document.createElement('div');
+                previewDiv.style.marginTop = '10px';
+                previewDiv.style.border = '1px solid #ACA899';
+                previewDiv.style.padding = '8px';
+                previewDiv.style.background = '#fff';
+                
+                previewDiv.innerHTML = `
+                  <p style="margin:0 0 5px 0;font-weight:bold;">Image uploadée:</p>
+                  <img src="${url}" alt="Aperçu" style="max-width:200px;max-height:120px;">
+                `;
+                
+                imageInput.parentElement.appendChild(previewDiv);
+              }
+            }
+          }).catch(error => {
+            alert("Erreur lors de l'upload: " + error.message);
+          });
+        } else {
+          alert("Fonctionnalité d'upload non disponible");
+        }
+      } else {
+        alert("Veuillez d'abord sélectionner une image");
+      }
+    });
+  }
+  
+  document.getElementById('edit-film-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Mettre à jour les données du film
+    film.titre = document.getElementById('film-title').value;
+    film.note = parseInt(document.getElementById('film-note').value) || 0;
+    film.critique = document.getElementById('film-critique').value;
+    film.image = document.getElementById('film-image').value;
+    film.bandeAnnonce = document.getElementById('film-trailer').value;
+    
+    // Sauvegarder les données
+    if (typeof saveDataToGitHub === 'function') {
+      saveDataToGitHub();
+      if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+        UIManager.showNotification('Film modifié avec succès sur GitHub', 'success');
+      } else {
+        alert('Film modifié avec succès sur GitHub');
+      }
+    } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
+      DataManager.saveDataLocally();
+      if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+        UIManager.showNotification('Film modifié localement', 'success');
+      } else {
+        alert('Film modifié localement');
+      }
+    } else {
+      alert("Film modifié mais aucune fonction de sauvegarde trouvée");
+    }
+    
+    // Rafraîchir la liste si elle est ouverte
+    if (typeof renderFilmsList === 'function') {
+      renderFilmsList();
+    }
+    
+    // Retourner à la liste des films
+    showManageFilmsForm();
+  });
+  
+  document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+    showManageFilmsForm();
   });
 }
 
@@ -572,9 +876,303 @@ function showAddMangaFormImproved() {
       
       // Réinitialiser le formulaire
       this.reset();
+      
+      // Retirer l'aperçu de l'image
+      const imagePreview = document.querySelector('div[style*="margin-top:10px"]');
+      if (imagePreview) {
+        imagePreview.remove();
+      }
     } else {
       alert("Erreur: Le gestionnaire de données n'est pas défini");
     }
+  });
+}
+
+// Fonction pour gérer les mangas existants
+function showManageMangasForm() {
+  const adminContent = document.getElementById('admin-content');
+  if (!adminContent) return;
+  
+  let mangasHTML = '';
+  
+  if (typeof DataManager !== 'undefined' && DataManager.data.mangas && DataManager.data.mangas.length) {
+    mangasHTML = `
+      <div class="mangas-list" style="margin-bottom:20px;height:350px;overflow-y:auto;border:1px solid #ACA899;padding:10px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#ECE9D8;font-weight:bold;border-bottom:2px solid #ACA899;">
+              <th style="padding:8px;text-align:left;">Titre</th>
+              <th style="padding:8px;text-align:center;">Note</th>
+              <th style="padding:8px;text-align:center;">Auteur</th>
+              <th style="padding:8px;text-align:center;">Statut</th>
+              <th style="padding:8px;text-align:center;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+    
+    DataManager.data.mangas.forEach(manga => {
+      const stars = '★'.repeat(manga.note) + '☆'.repeat(5 - manga.note);
+      
+      mangasHTML += `
+        <tr style="border-bottom:1px solid #ACA899;">
+          <td style="padding:8px;text-align:left;">${manga.titre}</td>
+          <td style="padding:8px;text-align:center;">${stars}</td>
+          <td style="padding:8px;text-align:center;">${manga.auteur || '-'}</td>
+          <td style="padding:8px;text-align:center;">
+            <span style="
+              background:${manga.statut === 'En cours' ? '#2ecc71' : (manga.statut === 'Terminé' ? '#3498db' : '#f39c12')};
+              color:white;
+              padding:2px 6px;
+              border-radius:3px;
+              font-size:0.9em;
+            ">${manga.statut}</span>
+          </td>
+          <td style="padding:8px;text-align:center;">
+            <button class="btn-edit-manga" data-id="${manga.id}" style="background:#3498db;color:white;border:none;border-radius:3px;padding:2px 8px;margin-right:5px;cursor:pointer;">Éditer</button>
+            <button class="btn-delete-manga" data-id="${manga.id}" style="background:#e74c3c;color:white;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;">Supprimer</button>
+          </td>
+        </tr>
+      `;
+    });
+    
+    mangasHTML += `
+          </tbody>
+        </table>
+      </div>
+    `;
+  } else {
+    mangasHTML = '<p>Aucun manga trouvé dans la base de données.</p>';
+  }
+  
+  adminContent.innerHTML = `
+    <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
+      Gérer les mangas
+    </h3>
+    ${mangasHTML}
+    <div style="margin-top:15px;">
+      <button id="btn-return-add-manga" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
+        Ajouter un nouveau manga
+      </button>
+    </div>
+  `;
+  
+  // Configurer les événements après l'ajout au DOM
+  document.querySelectorAll('.btn-edit-manga').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const mangaId = parseInt(this.getAttribute('data-id'));
+      editManga(mangaId);
+    });
+  });
+  
+  document.querySelectorAll('.btn-delete-manga').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const mangaId = parseInt(this.getAttribute('data-id'));
+      const manga = DataManager.data.mangas.find(m => m.id === mangaId);
+      
+      if (confirm(`Êtes-vous sûr de vouloir supprimer le manga "${manga.titre}" ?`)) {
+        DataManager.data.mangas = DataManager.data.mangas.filter(m => m.id !== mangaId);
+        
+        // Sauvegarder les données
+        if (typeof saveDataToGitHub === 'function') {
+          saveDataToGitHub();
+        } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
+          DataManager.saveDataLocally();
+        }
+        
+        // Rafraîchir la liste
+        showManageMangasForm();
+        
+        // Rafraîchir la liste des mangas si elle est ouverte
+        if (typeof renderMangaList === 'function') {
+          renderMangaList();
+        }
+        
+        if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+          UIManager.showNotification('Manga supprimé avec succès', 'success');
+        } else {
+          alert('Manga supprimé avec succès');
+        }
+      }
+    });
+  });
+  
+  const returnButton = document.getElementById('btn-return-add-manga');
+  if (returnButton) {
+    returnButton.addEventListener('click', () => {
+      showAddMangaFormImproved();
+    });
+  }
+}
+
+// Fonction pour éditer un manga existant
+function editManga(mangaId) {
+  if (!DataManager.data.mangas) return;
+  
+  const manga = DataManager.data.mangas.find(m => m.id === mangaId);
+  if (!manga) {
+    alert('Manga non trouvé.');
+    return;
+  }
+  
+  const adminContent = document.getElementById('admin-content');
+  if (!adminContent) return;
+  
+  adminContent.innerHTML = `
+    <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
+      Modifier le manga "${manga.titre}"
+    </h3>
+    <form id="edit-manga-form">
+      <div style="margin-bottom:15px;">
+        <label for="manga-title" style="display:block;margin-bottom:5px;font-weight:bold;">Titre</label>
+        <input type="text" id="manga-title" required value="${manga.titre}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="manga-note" style="display:block;margin-bottom:5px;font-weight:bold;">Note (1-5)</label>
+        <input type="number" id="manga-note" min="0" max="5" value="${manga.note}" style="width:60px;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="manga-auteur" style="display:block;margin-bottom:5px;font-weight:bold;">Auteur</label>
+        <input type="text" id="manga-auteur" value="${manga.auteur || ''}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="manga-statut" style="display:block;margin-bottom:5px;font-weight:bold;">Statut</label>
+        <select id="manga-statut" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+          <option value="En cours" ${manga.statut === 'En cours' ? 'selected' : ''}>En cours</option>
+          <option value="Terminé" ${manga.statut === 'Terminé' ? 'selected' : ''}>Terminé</option>
+          <option value="En pause" ${manga.statut === 'En pause' ? 'selected' : ''}>En pause</option>
+        </select>
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="manga-chapitres" style="display:block;margin-bottom:5px;font-weight:bold;">Nombre de chapitres</label>
+        <input type="number" id="manga-chapitres" min="0" value="${manga.chapitres || 0}" style="width:80px;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+      </div>
+      <div style="margin-bottom:15px;">
+        <label for="manga-image" style="display:block;margin-bottom:5px;font-weight:bold;">URL de l'image</label>
+        <input type="url" id="manga-image" value="${manga.image || ''}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+        
+        <div style="display:flex;gap:10px;margin-top:8px;">
+          <input type="file" id="manga-image-upload" accept="image/*" style="display:none;">
+          <button type="button" id="manga-browse-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Parcourir...
+          </button>
+          <button type="button" id="manga-upload-btn" style="padding:4px 10px;background:#3498db;color:white;border:1px solid #2980b9;cursor:pointer;">
+            Upload
+          </button>
+        </div>
+        
+        ${manga.image ? `
+        <div style="margin-top:10px;border:1px solid #ACA899;padding:8px;background:#fff;">
+          <p style="margin:0 0 5px 0;font-weight:bold;">Image actuelle:</p>
+          <img src="${manga.image}" alt="Aperçu" style="max-width:200px;max-height:120px;">
+        </div>
+        ` : ''}
+      </div>
+      <div style="margin-top:20px;">
+        <button type="submit" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
+          Enregistrer les modifications
+        </button>
+        <button type="button" id="cancel-edit-btn" style="margin-left:10px;padding:6px 12px;border-radius:3px;cursor:pointer;">
+          Annuler
+        </button>
+      </div>
+    </form>
+  `;
+  
+  // Configurer les événements après l'ajout au DOM
+  const browseBtn = document.getElementById('manga-browse-btn');
+  const imageUpload = document.getElementById('manga-image-upload');
+  const uploadBtn = document.getElementById('manga-upload-btn');
+  const imageInput = document.getElementById('manga-image');
+  
+  if (browseBtn && imageUpload) {
+    browseBtn.addEventListener('click', () => {
+      imageUpload.click();
+    });
+  }
+  
+  if (uploadBtn && imageUpload) {
+    uploadBtn.addEventListener('click', () => {
+      if (imageUpload.files.length > 0) {
+        if (typeof MediaManager !== 'undefined' && MediaManager.uploadImage) {
+          const file = imageUpload.files[0];
+          MediaManager.uploadImage(file, 'images/manga').then(url => {
+            if (url && imageInput) {
+              imageInput.value = url;
+              
+              // Mettre à jour l'aperçu de l'image
+              const previewImage = document.querySelector('div[style*="margin-top:10px"] img');
+              if (previewImage) {
+                previewImage.src = url;
+              } else {
+                // Créer un nouvel aperçu
+                const previewDiv = document.createElement('div');
+                previewDiv.style.marginTop = '10px';
+                previewDiv.style.border = '1px solid #ACA899';
+                previewDiv.style.padding = '8px';
+                previewDiv.style.background = '#fff';
+                
+                previewDiv.innerHTML = `
+                  <p style="margin:0 0 5px 0;font-weight:bold;">Image uploadée:</p>
+                  <img src="${url}" alt="Aperçu" style="max-width:200px;max-height:120px;">
+                `;
+                
+                imageInput.parentElement.appendChild(previewDiv);
+              }
+            }
+          }).catch(error => {
+            alert("Erreur lors de l'upload: " + error.message);
+          });
+        } else {
+          alert("Fonctionnalité d'upload non disponible");
+        }
+      } else {
+        alert("Veuillez d'abord sélectionner une image");
+      }
+    });
+  }
+  
+  document.getElementById('edit-manga-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Mettre à jour les données du manga
+    manga.titre = document.getElementById('manga-title').value;
+    manga.note = parseInt(document.getElementById('manga-note').value) || 0;
+    manga.auteur = document.getElementById('manga-auteur').value;
+    manga.statut = document.getElementById('manga-statut').value;
+    manga.chapitres = parseInt(document.getElementById('manga-chapitres').value) || 0;
+    manga.image = document.getElementById('manga-image').value;
+    
+    // Sauvegarder les données
+    if (typeof saveDataToGitHub === 'function') {
+      saveDataToGitHub();
+      if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+        UIManager.showNotification('Manga modifié avec succès sur GitHub', 'success');
+      } else {
+        alert('Manga modifié avec succès sur GitHub');
+      }
+    } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
+      DataManager.saveDataLocally();
+      if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
+        UIManager.showNotification('Manga modifié localement', 'success');
+      } else {
+        alert('Manga modifié localement');
+      }
+    } else {
+      alert("Manga modifié mais aucune fonction de sauvegarde trouvée");
+    }
+    
+    // Rafraîchir la liste si elle est ouverte
+    if (typeof renderMangaList === 'function') {
+      renderMangaList();
+    }
+    
+    // Retourner à la liste des mangas
+    showManageMangasForm();
+  });
+  
+  document.getElementById('cancel-edit-btn').addEventListener('click', () => {
+    showManageMangasForm();
   });
 }
 
@@ -587,466 +1185,25 @@ function showManageTagsFormImproved() {
   let tagsHTML = '<div class="tags-list" style="margin-bottom:20px;max-height:200px;overflow-y:auto;">';
   
   if (typeof DataManager !== 'undefined' && DataManager.data.tags && DataManager.data.tags.length) {
+    tagsHTML += `
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#ECE9D8;font-weight:bold;border-bottom:2px solid #ACA899;">
+            <th style="padding:8px;text-align:left;">Nom</th>
+            <th style="padding:8px;text-align:center;">Couleur</th>
+            <th style="padding:8px;text-align:center;">Catégorie</th>
+            <th style="padding:8px;text-align:center;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+    
     DataManager.data.tags.forEach(tag => {
       tagsHTML += `
-        <div data-id="${tag.id}" style="display:flex;align-items:center;margin-bottom:5px;padding:5px;background:#f5f5f5;border-radius:3px;">
-          <span style="background-color:${tag.color};width:20px;height:20px;display:inline-block;margin-right:10px;border-radius:3px;"></span>
-          <span style="font-weight:bold;margin-right:5px;">${tag.name}</span>
-          <span style="color:#777;margin-right:auto;">(${tag.category})</span>
-          <button class="btn-delete-tag" data-id="${tag.id}" style="background:#e74c3c;color:white;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;">✕</button>
-        </div>
-      `;
-    });
-  } else {
-    tagsHTML += '<p>Aucun tag défini</p>';
-  }
-  
-  tagsHTML += '</div>';
-  
-  adminContent.innerHTML = `
-    <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
-      Gérer les tags
-    </h3>
-    ${tagsHTML}
-    <h4 style="color:#0058a8;margin-top:0;margin-bottom:15px;">Ajouter un nouveau tag</h4>
-    <form id="add-tag-form">
-      <div style="margin-bottom:15px;">
-        <label for="tag-name" style="display:block;margin-bottom:5px;font-weight:bold;">Nom</label>
-        <input type="text" id="tag-name" required style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
-      </div>
-      <div style="margin-bottom:15px;">
-        <label for="tag-color" style="display:block;margin-bottom:5px;font-weight:bold;">Couleur</label>
-        <input type="color" id="tag-color" value="#3498db" style="width:60px;height:30px;padding:0;border:1px solid #ACA899;border-radius:3px;">
-      </div>
-      <div style="margin-bottom:15px;">
-        <label for="tag-category" style="display:block;margin-bottom:5px;font-weight:bold;">Catégorie</label>
-        <input type="text" id="tag-category" placeholder="Ex: genre, année..." style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
-      </div>
-      <div style="margin-top:20px;">
-        <button type="submit" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
-          Ajouter
-        </button>
-      </div>
-    </form>
-  `;
-  
-  // Ajouter les écouteurs pour la suppression
-  document.querySelectorAll('.btn-delete-tag').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const tagId = this.getAttribute('data-id');
-      if (confirm('Êtes-vous sûr de vouloir supprimer ce tag?')) {
-        if (typeof DataManager !== 'undefined') {
-          DataManager.data.tags = DataManager.data.tags.filter(tag => tag.id !== tagId);
-          
-          // Sauvegarder les données
-          if (typeof saveDataToGitHub === 'function') {
-            saveDataToGitHub();
-          } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
-            DataManager.saveDataLocally();
-          }
-          
-          // Rafraîchir le formulaire
-          showManageTagsFormImproved();
-          
-          if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
-            UIManager.showNotification('Tag supprimé avec succès', 'success');
-          } else {
-            alert('Tag supprimé avec succès');
-          }
-        }
-      }
-    });
-  });
-  
-  // Écouteur pour l'ajout de tag
-  document.getElementById('add-tag-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const newTag = {
-      id: 'tag-' + Date.now(),
-      name: document.getElementById('tag-name').value,
-      color: document.getElementById('tag-color').value,
-      category: document.getElementById('tag-category').value || 'divers'
-    };
-    
-    // Ajouter le nouveau tag
-    if (typeof DataManager !== 'undefined') {
-      if (!DataManager.data.tags) {
-        DataManager.data.tags = [];
-      }
-      
-      DataManager.data.tags.push(newTag);
-      
-      // Sauvegarder les données
-      if (typeof saveDataToGitHub === 'function') {
-        saveDataToGitHub();
-      } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
-        DataManager.saveDataLocally();
-      }
-      
-      // Rafraîchir le formulaire
-      showManageTagsFormImproved();
-      
-      if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
-        UIManager.showNotification('Tag ajouté avec succès', 'success');
-      } else {
-        alert('Tag ajouté avec succès');
-      }
-    } else {
-      alert("Erreur: Le gestionnaire de données n'est pas défini");
-    }
-  });
-}
-
-// Fonction pour gérer les icônes du bureau
-function showManageIconsForm() {
-  const adminContent = document.getElementById('admin-content');
-  if (!adminContent) return;
-  
-  // Préparer l'affichage des icônes
-  let iconsHTML = '<div class="icons-list" style="margin-bottom:20px;max-height:200px;overflow-y:auto;">';
-  
-  if (typeof DataManager !== 'undefined' && DataManager.data.desktopIcons && DataManager.data.desktopIcons.length) {
-    DataManager.data.desktopIcons.forEach(icon => {
-      iconsHTML += `
-        <div data-id="${icon.id}" style="display:flex;align-items:center;margin-bottom:5px;padding:5px;background:#f5f5f5;border-radius:3px;">
-          <img src="${icon.icon}" alt="${icon.name}" style="width:24px;height:24px;margin-right:10px;">
-          <span style="font-weight:bold;margin-right:5px;">${icon.name}</span>
-          <span style="color:#777;margin-right:auto;">(${icon.action})</span>
-          <button class="btn-edit-icon" data-id="${icon.id}" style="background:#3498db;color:white;border:none;border-radius:3px;padding:2px 8px;margin-right:5px;cursor:pointer;">✎</button>
-          <button class="btn-delete-icon" data-id="${icon.id}" style="background:#e74c3c;color:white;border:none;border-radius:3px;padding:2px 8px;cursor:pointer;">✕</button>
-        </div>
-      `;
-    });
-  } else {
-    iconsHTML += '<p>Aucune icône définie</p>';
-  }
-  
-  iconsHTML += '</div>';
-  
-  adminContent.innerHTML = `
-    <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
-      Gérer les icônes du bureau
-    </h3>
-    ${iconsHTML}
-    <h4 style="color:#0058a8;margin-top:0;margin-bottom:15px;">Ajouter une nouvelle icône</h4>
-    <form id="add-icon-form">
-      <div style="margin-bottom:15px;">
-        <label for="icon-name" style="display:block;margin-bottom:5px;font-weight:bold;">Nom</label>
-        <input type="text" id="icon-name" required style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
-      </div>
-      <div style="margin-bottom:15px;">
-        <label for="icon-url" style="display:block;margin-bottom:5px;font-weight:bold;">URL de l'icône</label>
-        <input type="text" id="icon-url" required style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
-        
-        <div style="display:flex;gap:10px;margin-top:8px;">
-          <input type="file" id="icon-image-upload" accept="image/*" style="display:none;">
-          <button type="button" id="icon-browse-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
-            Parcourir...
-          </button>
-          <button type="button" id="icon-upload-btn" style="padding:4px 10px;background:#3498db;color:white;border:1px solid #2980b9;cursor:pointer;">
-            Upload
-          </button>
-        </div>
-      </div>
-      <div style="margin-bottom:15px;">
-        <label for="icon-action" style="display:block;margin-bottom:5px;font-weight:bold;">Action</label>
-        <input type="text" id="icon-action" required placeholder="createFilmsWindow ou URL" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
-        <small style="color:#777;display:block;margin-top:5px;">
-          Utilisez le nom d'une fonction (ex: createFilmsWindow) ou une URL externe (ex: https://example.com)
-        </small>
-      </div>
-      <div style="margin-top:20px;">
-        <button type="submit" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
-          Ajouter
-        </button>
-      </div>
-    </form>
-  `;
-  
-  // Configurer les événements après l'ajout au DOM
-  const browseBtn = document.getElementById('icon-browse-btn');
-  const imageUpload = document.getElementById('icon-image-upload');
-  const uploadBtn = document.getElementById('icon-upload-btn');
-  const iconUrlInput = document.getElementById('icon-url');
-  
-  if (browseBtn && imageUpload) {
-    browseBtn.addEventListener('click', () => {
-      imageUpload.click();
-    });
-  }
-  
-  if (uploadBtn && imageUpload) {
-    uploadBtn.addEventListener('click', () => {
-      if (imageUpload.files.length > 0) {
-        if (typeof MediaManager !== 'undefined' && MediaManager.uploadImage) {
-          const file = imageUpload.files[0];
-          MediaManager.uploadImage(file, 'icons').then(url => {
-            if (url && iconUrlInput) {
-              iconUrlInput.value = url;
-              
-              // Ajouter un aperçu de l'icône
-              const previewDiv = document.createElement('div');
-              previewDiv.style.marginTop = '10px';
-              previewDiv.style.border = '1px solid #ACA899';
-              previewDiv.style.padding = '8px';
-              previewDiv.style.background = '#fff';
-              
-              previewDiv.innerHTML = `
-                <p style="margin:0 0 5px 0;font-weight:bold;">Icône uploadée:</p>
-                <img src="${url}" alt="Aperçu" style="max-width:64px;max-height:64px;">
-              `;
-              
-              // Remplacer l'aperçu existant ou ajouter le nouveau
-              const existingPreview = iconUrlInput.parentElement.querySelector('div[style*="margin-top:10px"]');
-              if (existingPreview) {
-                iconUrlInput.parentElement.replaceChild(previewDiv, existingPreview);
-              } else {
-                iconUrlInput.parentElement.appendChild(previewDiv);
-              }
-            }
-          }).catch(error => {
-            alert("Erreur lors de l'upload: " + error.message);
-          });
-        } else {
-          alert("Fonctionnalité d'upload non disponible");
-        }
-      } else {
-        alert("Veuillez d'abord sélectionner une image");
-      }
-    });
-  }
-  
-  // Ajouter les écouteurs pour la suppression des icônes
-  document.querySelectorAll('.btn-delete-icon').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const iconId = this.getAttribute('data-id');
-      if (confirm('Êtes-vous sûr de vouloir supprimer cette icône?')) {
-        if (typeof DataManager !== 'undefined') {
-          DataManager.data.desktopIcons = DataManager.data.desktopIcons.filter(icon => icon.id !== iconId);
-          
-          // Sauvegarder les données
-          if (typeof saveDataToGitHub === 'function') {
-            saveDataToGitHub();
-          } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
-            DataManager.saveDataLocally();
-          }
-          
-          // Rafraîchir les icônes du bureau
-          if (typeof DesktopManager !== 'undefined' && DesktopManager.renderDesktopIcons) {
-            DesktopManager.renderDesktopIcons();
-          }
-          
-          // Rafraîchir le formulaire
-          showManageIconsForm();
-          
-          if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
-            UIManager.showNotification('Icône supprimée avec succès', 'success');
-          } else {
-            alert('Icône supprimée avec succès');
-          }
-        }
-      }
-    });
-  });
-  
-  // Ajouter les écouteurs pour l'édition des icônes
-  document.querySelectorAll('.btn-edit-icon').forEach(btn => {
-    btn.addEventListener('click', function() {
-      const iconId = this.getAttribute('data-id');
-      if (typeof DataManager !== 'undefined') {
-        const iconToEdit = DataManager.data.desktopIcons.find(icon => icon.id === iconId);
-        if (iconToEdit) {
-          showEditIconForm(iconToEdit);
-        }
-      }
-    });
-  });
-  
-  // Écouteur pour l'ajout d'icône
-  document.getElementById('add-icon-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const newIcon = {
-      id: 'icon-' + Date.now(),
-      name: document.getElementById('icon-name').value,
-      icon: document.getElementById('icon-url').value,
-      action: document.getElementById('icon-action').value,
-      position: { x: 150, y: 50 + (DataManager.data.desktopIcons.length * 100) }
-    };
-    
-    // Ajouter la nouvelle icône
-    if (typeof DataManager !== 'undefined') {
-      if (!DataManager.data.desktopIcons) {
-        DataManager.data.desktopIcons = [];
-      }
-      
-      DataManager.data.desktopIcons.push(newIcon);
-      
-      // Sauvegarder les données
-      if (typeof saveDataToGitHub === 'function') {
-        saveDataToGitHub();
-      } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
-        DataManager.saveDataLocally();
-      }
-      
-      // Rafraîchir les icônes du bureau
-      if (typeof DesktopManager !== 'undefined' && DesktopManager.renderDesktopIcons) {
-        DesktopManager.renderDesktopIcons();
-      }
-      
-      // Rafraîchir le formulaire
-      showManageIconsForm();
-      
-      if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
-        UIManager.showNotification('Icône ajoutée avec succès', 'success');
-      } else {
-        alert('Icône ajoutée avec succès');
-      }
-    } else {
-      alert("Erreur: Le gestionnaire de données n'est pas défini");
-    }
-  });
-}
-
-// Fonction pour éditer une icône existante
-function showEditIconForm(icon) {
-  const adminContent = document.getElementById('admin-content');
-  if (!adminContent) return;
-  
-  adminContent.innerHTML = `
-    <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
-      Modifier l'icône "${icon.name}"
-    </h3>
-    <form id="edit-icon-form">
-      <div style="margin-bottom:15px;">
-        <label for="icon-name" style="display:block;margin-bottom:5px;font-weight:bold;">Nom</label>
-        <input type="text" id="icon-name" required value="${icon.name}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
-      </div>
-      <div style="margin-bottom:15px;">
-        <label for="icon-url" style="display:block;margin-bottom:5px;font-weight:bold;">URL de l'icône</label>
-        <input type="text" id="icon-url" required value="${icon.icon}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
-        
-        <div style="display:flex;gap:10px;margin-top:8px;">
-          <input type="file" id="icon-image-upload" accept="image/*" style="display:none;">
-          <button type="button" id="icon-browse-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
-            Parcourir...
-          </button>
-          <button type="button" id="icon-upload-btn" style="padding:4px 10px;background:#3498db;color:white;border:1px solid #2980b9;cursor:pointer;">
-            Upload
-          </button>
-        </div>
-        
-        <div style="margin-top:10px;border:1px solid #ACA899;padding:8px;background:#fff;">
-          <p style="margin:0 0 5px 0;font-weight:bold;">Icône actuelle:</p>
-          <img src="${icon.icon}" alt="Aperçu" style="max-width:64px;max-height:64px;">
-        </div>
-      </div>
-      <div style="margin-bottom:15px;">
-        <label for="icon-action" style="display:block;margin-bottom:5px;font-weight:bold;">Action</label>
-        <input type="text" id="icon-action" required value="${icon.action}" style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
-        <small style="color:#777;display:block;margin-top:5px;">
-          Utilisez le nom d'une fonction (ex: createFilmsWindow) ou une URL externe (ex: https://example.com)
-        </small>
-      </div>
-      <div style="margin-top:20px;">
-        <button type="submit" style="background:#0058a8;color:white;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">
-          Enregistrer
-        </button>
-        <button type="button" id="cancel-edit-btn" style="margin-left:10px;padding:6px 12px;border-radius:3px;cursor:pointer;">
-          Annuler
-        </button>
-      </div>
-    </form>
-  `;
-  
-  // Configurer les événements après l'ajout au DOM
-  const browseBtn = document.getElementById('icon-browse-btn');
-  const imageUpload = document.getElementById('icon-image-upload');
-  const uploadBtn = document.getElementById('icon-upload-btn');
-  const iconUrlInput = document.getElementById('icon-url');
-  
-  if (browseBtn && imageUpload) {
-    browseBtn.addEventListener('click', () => {
-      imageUpload.click();
-    });
-  }
-  
-  if (uploadBtn && imageUpload) {
-    uploadBtn.addEventListener('click', () => {
-      if (imageUpload.files.length > 0) {
-        if (typeof MediaManager !== 'undefined' && MediaManager.uploadImage) {
-          const file = imageUpload.files[0];
-          MediaManager.uploadImage(file, 'icons').then(url => {
-            if (url && iconUrlInput) {
-              iconUrlInput.value = url;
-              
-              // Mettre à jour l'aperçu
-              const previewImage = iconUrlInput.parentElement.querySelector('div[style*="margin-top:10px"] img');
-              if (previewImage) {
-                previewImage.src = url;
-              }
-            }
-          }).catch(error => {
-            alert("Erreur lors de l'upload: " + error.message);
-          });
-        } else {
-          alert("Fonctionnalité d'upload non disponible");
-        }
-      } else {
-        alert("Veuillez d'abord sélectionner une image");
-      }
-    });
-  }
-  
-  // Écouteur pour l'annulation
-  document.getElementById('cancel-edit-btn').addEventListener('click', () => {
-    showManageIconsForm();
-  });
-  
-  // Écouteur pour la soumission du formulaire
-  document.getElementById('edit-icon-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    if (typeof DataManager !== 'undefined') {
-      const iconIndex = DataManager.data.desktopIcons.findIndex(i => i.id === icon.id);
-      if (iconIndex !== -1) {
-        // Mettre à jour l'icône
-        DataManager.data.desktopIcons[iconIndex] = {
-          ...DataManager.data.desktopIcons[iconIndex],
-          name: document.getElementById('icon-name').value,
-          icon: document.getElementById('icon-url').value,
-          action: document.getElementById('icon-action').value
-        };
-        
-        // Sauvegarder les données
-        if (typeof saveDataToGitHub === 'function') {
-          saveDataToGitHub();
-        } else if (typeof DataManager !== 'undefined' && DataManager.saveDataLocally) {
-          DataManager.saveDataLocally();
-        }
-        
-        // Rafraîchir les icônes du bureau
-        if (typeof DesktopManager !== 'undefined' && DesktopManager.renderDesktopIcons) {
-          DesktopManager.renderDesktopIcons();
-        }
-        
-        // Revenir à la gestion des icônes
-        showManageIconsForm();
-        
-        if (typeof UIManager !== 'undefined' && UIManager.showNotification) {
-          UIManager.showNotification('Icône modifiée avec succès', 'success');
-        } else {
-          alert('Icône modifiée avec succès');
-        }
-      }
-    }
-  });
-}
-
-// Jouer un son d'ouverture si nécessaire
-if (typeof WindowManager !== 'undefined' && WindowManager.playSound) {
-  WindowManager.playSound('open');
-}
-
-console.log("✅ Fenêtre admin complète chargée avec succès");
+        <tr style="border-bottom:1px solid #ACA899;">
+          <td style="padding:8px;text-align:left;">${tag.name}</td>
+          <td style="padding:8px;text-align:center;">
+            <span style="display:inline-block;width:20px;height:20px;background:${tag.color};border-radius:3px;"></span>
+            <span style="font-size:0.8em;color:#555;">${tag.color}</span>
+          </td>
+          <td style="padding:8px;text-align:center;">${tag.category || 'Non spécifié'}</td>
