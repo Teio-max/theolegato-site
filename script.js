@@ -39,31 +39,27 @@ const CONFIG = {
   }
 };
 
-// Sécurité et gestion des tokens
-const SecurityManager = {
-  initToken() {
-    try {
-      CONFIG.github.token = sessionStorage.getItem('github_token') || localStorage.getItem('github_token');
-      return !!CONFIG.github.token;
-    } catch (error) {
-      console.error('Error initializing GitHub token', error);
-      return false;
+// Note: Le gestionnaire de données principal a été déplacé vers data-manager.js
+// Cette section est maintenue pour la compatibilité avec le code existant
+// et sera supprimée dans une future version
+(function() {
+  console.log("ℹ️ Utilisation du DataManager centralisé depuis data-manager.js");
+  
+  // S'assurer que le DataManager est correctement initialisé lors du chargement de la page
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof window.DataManager === 'undefined') {
+      console.error("❌ DataManager n'est pas défini. Vérifiez l'ordre de chargement des scripts.");
     }
-  },
-  
-  isValidTokenFormat(token) {
-    return typeof token === 'string' && 
-           (token.startsWith('ghp_') || token.startsWith('github_pat_')) && 
-           token.length >= 40;
-  },
-  
-  sanitizeHTML(content) {
+  });
+})();
+
+// Fonction utilitaire pour échapper au HTML
+function escapeHtml(content) {
     if (!content) return '';
     const tempDiv = document.createElement('div');
     tempDiv.textContent = content;
     return tempDiv.innerHTML;
-  }
-};
+}
 
 // Gestionnaire d'interface utilisateur
 const UIManager = {

@@ -121,6 +121,8 @@ document.addEventListener('DOMContentLoaded', function() {
           // Ajouter Manga
           const addMangaBtn = document.getElementById('btn-add-manga');
           if (addMangaBtn) {
+            // Commenté pour éviter les conflits avec admin-panel-enhanced.js
+            /*
             addMangaBtn.addEventListener('click', () => {
               console.log("📝 Affichage du formulaire d'ajout de manga");
               document.getElementById('admin-content').innerHTML = `
@@ -130,11 +132,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p>Formulaire d'ajout de manga en cours de développement...</p>
               `;
             });
+            */
           }
           
           // Gérer Mangas
           const listMangasBtn = document.getElementById('btn-list-mangas');
           if (listMangasBtn) {
+            // Commenté pour éviter les conflits avec admin-panel-enhanced.js
+            /*
             listMangasBtn.addEventListener('click', () => {
               console.log("📝 Affichage de la liste des mangas");
               document.getElementById('admin-content').innerHTML = `
@@ -144,66 +149,56 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p>Liste des mangas en cours de développement...</p>
               `;
             });
+            */
           }
           
-          // Gérer Tags
+          // Remarque: La gestion des tags est maintenant gérée par admin-panel-enhanced.js
+          // Ce code est conservé pour référence mais désactivé
+          /*
           const manageTagsBtn = document.getElementById('btn-manage-tags');
           if (manageTagsBtn) {
             manageTagsBtn.addEventListener('click', () => {
-              console.log("📝 Affichage du gestionnaire de tags");
-              document.getElementById('admin-content').innerHTML = `
-                <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
-                  Gérer les tags
-                </h3>
-                <p>Les tags permettent de catégoriser les films et mangas pour faciliter leur recherche.</p>
-                <p>Gestion des tags en cours de développement...</p>
-              `;
+              console.log("📝 Redirection vers le gestionnaire de tags moderne");
+              // La fonctionnalité est maintenant dans AdminPanelManager.loadTagsManager()
             });
           }
+          */
           
-          // Gérer Icônes
+          // Remarque: La gestion des icônes est maintenant gérée par admin-desktop-manager.js
+          // Ce code est conservé pour référence mais désactivé
+          /*
           const manageIconsBtn = document.getElementById('btn-manage-icons');
           if (manageIconsBtn) {
             manageIconsBtn.addEventListener('click', () => {
-              console.log("📝 Affichage du gestionnaire d'icônes");
-              document.getElementById('admin-content').innerHTML = `
-                <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
-                  Gérer les icônes du bureau
-                </h3>
-                <p>Gestionnaire d'icônes en cours de développement...</p>
-              `;
+              console.log("📝 Redirection vers le gestionnaire d'icônes moderne");
+              // La fonctionnalité est maintenant dans DesktopManagerAdmin.loadDesktopManager()
             });
           }
+          */
           
-          // Gérer Articles
+          // Remarque: La gestion des articles est maintenant gérée par admin-panel-enhanced.js
+          // Ce code est conservé pour référence mais désactivé
+          /*
           const manageArticlesBtn = document.getElementById('btn-manage-articles');
           if (manageArticlesBtn) {
             manageArticlesBtn.addEventListener('click', () => {
-              console.log("📝 Affichage du gestionnaire d'articles");
-              document.getElementById('admin-content').innerHTML = `
-                <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
-                  Gérer les articles
-                </h3>
-                <p>Uploadez et gérez vos articles au format PDF.</p>
-                <p>Gestionnaire d'articles en cours de développement...</p>
-              `;
+              console.log("📝 Redirection vers le gestionnaire d'articles moderne");
+              // La fonctionnalité est maintenant dans AdminPanelManager.loadArticlesManager()
             });
           }
+          */
           
-          // Gérer CV
+          // Remarque: La gestion du CV est maintenant gérée par admin-panel-enhanced.js
+          // Ce code est conservé pour référence mais désactivé
+          /*
           const manageCVBtn = document.getElementById('btn-manage-cv');
           if (manageCVBtn) {
             manageCVBtn.addEventListener('click', () => {
-              console.log("📝 Affichage du gestionnaire de CV");
-              document.getElementById('admin-content').innerHTML = `
-                <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
-                  Gérer votre CV
-                </h3>
-                <p>Uploadez et gérez votre CV au format PDF.</p>
-                <p>Gestionnaire de CV en cours de développement...</p>
-              `;
+              console.log("📝 Redirection vers le gestionnaire de CV moderne");
+              // La fonctionnalité est maintenant dans AdminPanelManager.loadCVManager()
             });
           }
+          */
           
           // Token GitHub
           const githubTokenBtn = document.getElementById('btn-github-token');
@@ -389,7 +384,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Fonction pour éditer un film
     window.editFilm = function(filmId) {
-      alert('Fonctionnalité d\'édition en cours de développement pour le film ID: ' + filmId);
+      // Redirection vers la fonction d'édition de film dans admin-panel-enhanced.js
+      if (typeof AdminPanelManager !== 'undefined' && typeof AdminPanelManager.loadFilmForm === 'function') {
+        AdminPanelManager.loadFilmForm(filmId);
+      } else {
+        console.error("AdminPanelManager.loadFilmForm n'est pas disponible");
+        alert('Impossible de charger le formulaire d\'édition. Veuillez vérifier la console.');
+      }
     };
     
     // Fonction pour supprimer un film

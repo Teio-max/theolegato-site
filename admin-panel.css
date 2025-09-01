@@ -1,0 +1,328 @@
+/* Styles améliorés pour le panneau d'administration */
+
+/* Styles généraux pour le panneau admin */
+.admin-panel {
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  color: #333;
+  height: 100%;
+}
+
+/* Barre d'outils */
+.admin-toolbar {
+  background: #ECE9D8 !important;
+  border-bottom: 1px solid #ACA899;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* Boutons admin */
+.admin-btn {
+  padding: 4px 10px;
+  background: #ECE9D8;
+  border: 1px solid #ACA899;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  transition: background 0.2s ease;
+}
+
+.admin-btn:hover {
+  background: #f2f1e9;
+}
+
+.admin-btn:active {
+  background: #dcdbd1;
+  border-color: #8e8d82;
+}
+
+/* Bouton actif */
+.admin-btn.active {
+  background: #D8E6F3;
+  border-color: #78B6E5;
+}
+
+/* Conteneur principal */
+#admin-content {
+  padding: 15px;
+  height: calc(100% - 50px);
+  overflow-y: auto;
+  background: #f5f5f5;
+}
+
+/* Titres */
+.admin-panel h3 {
+  color: #0058a8;
+  margin-top: 0;
+  border-bottom: 1px solid #ACA899;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.admin-panel h4 {
+  color: #333;
+  font-size: 12px;
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+/* Formulaires */
+.admin-panel form {
+  background: #fff;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+
+.admin-panel label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.admin-panel input[type="text"],
+.admin-panel input[type="url"],
+.admin-panel input[type="number"],
+.admin-panel input[type="password"],
+.admin-panel textarea,
+.admin-panel select {
+  width: 100%;
+  padding: 5px;
+  border: 1px solid #ACA899;
+  border-radius: 2px;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+.admin-panel input[type="number"] {
+  width: 60px;
+}
+
+.admin-panel textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+/* Boutons de formulaire */
+.admin-panel button[type="submit"] {
+  background: #0058a8;
+  color: white;
+  border: 1px solid #003f7d;
+  padding: 6px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 11px;
+}
+
+.admin-panel button[type="button"] {
+  padding: 6px 12px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 11px;
+}
+
+/* Listes */
+.admin-panel .list-container {
+  border: 1px solid #ACA899;
+  border-radius: 2px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.admin-panel .list-header {
+  background: #ECE9D8;
+  padding: 8px;
+  font-weight: bold;
+  display: grid;
+  border-bottom: 1px solid #ACA899;
+  font-size: 11px;
+}
+
+.admin-panel .list-item {
+  padding: 8px;
+  border-top: 1px solid #E5E3D7;
+  display: grid;
+  align-items: center;
+  font-size: 11px;
+}
+
+.admin-panel .list-item:hover {
+  background: #F2F5FC;
+}
+
+/* Boutons d'action */
+.admin-panel .action-btn {
+  padding: 3px 8px;
+  background: #ECE9D8;
+  border: 1px solid #ACA899;
+  cursor: pointer;
+  font-size: 11px;
+  border-radius: 2px;
+}
+
+.admin-panel .edit-btn {
+  background: #E0EBF5;
+  border-color: #ADD8E6;
+}
+
+.admin-panel .delete-btn {
+  background: #FED8D8;
+  border-color: #E7B9B9;
+  color: #8B0000;
+}
+
+/* Cards du dashboard */
+.admin-panel .dashboard-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.admin-panel .stat-card {
+  flex: 1;
+  min-width: 150px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.admin-panel .stat-card h4 {
+  margin-top: 0;
+  color: #333;
+  font-size: 12px;
+}
+
+.admin-panel .stat-card p {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 5px 0;
+  color: #0058a8;
+}
+
+/* Section d'aide */
+.admin-panel .help-section {
+  margin-top: 30px;
+  padding: 10px;
+  background: #f8f8f8;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 11px;
+}
+
+/* Aperçu d'image */
+.admin-panel .image-preview {
+  margin-top: 10px;
+  border: 1px solid #ACA899;
+  padding: 8px;
+  background: #fff;
+}
+
+.admin-panel .image-preview img {
+  max-width: 200px;
+  max-height: 120px;
+  display: block;
+  margin: 0 auto;
+}
+
+/* Indicateur de chargement */
+.admin-panel .loading-indicator {
+  text-align: center;
+  padding: 20px;
+}
+
+/* Animation de chargement */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.admin-panel .spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #0058a8;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 10px auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-panel .dashboard-stats {
+    flex-direction: column;
+  }
+  
+  .admin-panel .stat-card {
+    min-width: 100%;
+  }
+}
+
+/* Couleurs par état */
+.success-text { color: #4CAF50; }
+.warning-text { color: #FF9800; }
+.error-text { color: #F44336; }
+.info-text { color: #2196F3; }
+
+/* Badges */
+.admin-panel .badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.admin-panel .badge-success { background: #E6F4EA; color: #137333; }
+.admin-panel .badge-warning { background: #FEF7E0; color: #B06000; }
+.admin-panel .badge-error { background: #FCE8E6; color: #B31412; }
+.admin-panel .badge-info { background: #E8F0FE; color: #1A73E8; }
+
+/* Windows XP compatibilité */
+.xp-window .admin-panel button,
+.xp-window .admin-panel input,
+.xp-window .admin-panel select,
+.xp-window .admin-panel textarea {
+  font-family: 'Tahoma', 'Segoe UI', sans-serif;
+  font-size: 11px;
+}
+
+/* Tooltip */
+.admin-panel .tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+}
+
+.admin-panel .tooltip .tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 10px;
+}
+
+.admin-panel .tooltip:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}

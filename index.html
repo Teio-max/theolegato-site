@@ -8,10 +8,13 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="admin.css">
   <link rel="stylesheet" href="admin-styles.css">
+  <link rel="stylesheet" href="admin-panel.css">
+  <!-- Chargement du gestionnaire d'erreurs en premier -->
+  <script src="error-handler.js"></script>
 </head>
 <body>
   <!-- Au début du body, avant tout autre script -->
-<script src="fix-loading.js"></script>
+  <script src="fix-loading.js"></script>
   <!-- Écran de chargement -->
   <div id="loading-screen">
     <div class="loading-content">
@@ -67,10 +70,22 @@
   </template>
   
   <!-- À la fin du body, avant la balise </body> -->
+  <!-- Initialisation globale de l'application -->
+  <script src="app-initializer.js"></script>
+  <!-- Modules principaux -->
   <script src="script.js"></script>
+  <script src="window-manager.js"></script>
+  <script src="media-manager.js"></script>
+  <script src="data-manager.js"></script>
+  <script src="pdf-manager.js"></script>
+  <!-- Modules d'administration -->
   <script src="admin-functions.js"></script>
   <script src="admin-fix-window.js"></script>
   <script src="admin-fix-simple.js"></script>
+  <script src="admin-panel-enhanced.js"></script>
+  <!-- Modules de bureau -->
+  <script src="desktop-manager.js"></script>
+  <script src="admin-desktop-manager.js"></script>
 
 </body>
 </html>
