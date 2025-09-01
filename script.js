@@ -1108,7 +1108,6 @@ function showAdminLogin() {
     document.getElementById('admin-error').textContent = 'Mot de passe incorrect.';
   }
 }
-}
 
 function showAddFilmForm() {
   const adminContent = document.getElementById('admin-content');
