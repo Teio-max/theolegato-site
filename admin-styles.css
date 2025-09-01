@@ -1,0 +1,32 @@
+.admin-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f0f0f0;
+}
+
+.admin-toolbar {
+  background: #ECE9D8;
+  border-bottom: 1px solid #ACA899;
+  padding: 10px;
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.admin-toolbar button {
+  padding: 4px 10px;
+  background: #ECE9D8;
+  border: 1px solid #ACA899;
+  cursor: pointer;
+}
+
+.admin-toolbar button:hover {
+  background: #ddd;
+}
+
+#admin-content {
+  padding: 15px;
+  height: calc(100% - 50px);
+  overflow-y: auto;
+}
