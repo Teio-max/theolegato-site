@@ -31,6 +31,14 @@ const WindowManager = {
   // Initialisation du gestionnaire
   init() {
     console.log("🚀 Initialisation de WindowManager");
+    // Binder une seule fois les handlers pour préserver le contexte
+    if (!this._handlersBound) {
+      this.handleDragMove = this.handleDragMove.bind(this);
+      this.handleDragEnd = this.handleDragEnd.bind(this);
+      this.handleResizeMove = this.handleResizeMove.bind(this);
+      this.handleResizeEnd = this.handleResizeEnd.bind(this);
+      this._handlersBound = true;
+    }
     
     // Écouter les clics sur le document pour gérer la fenêtre active
     document.addEventListener('mousedown', this.handleDocumentClick.bind(this));
@@ -240,13 +248,9 @@ const WindowManager = {
       startTop: rect.top
     };
     
-    // Ajouter les gestionnaires d'événements temporaires
-    document.addEventListener('mousemove', this.handleDragMove);
-    document.addEventListener('mouseup', this.handleDragEnd);
-    
-    // Utiliser la fonction liée pour maintenir le contexte this
-    this.handleDragMove = this.handleDragMove.bind(this);
-    this.handleDragEnd = this.handleDragEnd.bind(this);
+  // Ajouter les gestionnaires d'événements temporaires (handlers déjà bind dans init)
+  document.addEventListener('mousemove', this.handleDragMove);
+  document.addEventListener('mouseup', this.handleDragEnd);
   },
   
   // Gestion du déplacement pendant le drag
@@ -297,13 +301,9 @@ const WindowManager = {
       minHeight
     };
     
-    // Ajouter les gestionnaires d'événements temporaires
-    document.addEventListener('mousemove', this.handleResizeMove);
-    document.addEventListener('mouseup', this.handleResizeEnd);
-    
-    // Utiliser la fonction liée pour maintenir le contexte this
-    this.handleResizeMove = this.handleResizeMove.bind(this);
-    this.handleResizeEnd = this.handleResizeEnd.bind(this);
+  // Ajouter les gestionnaires d'événements temporaires (handlers déjà bind dans init)
+  document.addEventListener('mousemove', this.handleResizeMove);
+  document.addEventListener('mouseup', this.handleResizeEnd);
     
     // Mettre la fenêtre en premier plan
     this.setActiveWindow(winId);
