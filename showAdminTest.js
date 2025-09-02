@@ -1,6 +1,16 @@
 // Utiliser cette fonction pour tester le panneau admin
 function showAdminTest() {
   console.log("Test du panneau admin");
+  
+  // Demander le mot de passe d'administration
+  const password = prompt("Veuillez entrer le mot de passe administrateur:", "");
+  
+  // Vérifier le mot de passe (remplacer par votre propre mot de passe)
+  if (password !== "admin123") {
+    alert("Mot de passe incorrect. Accès refusé.");
+    return;
+  }
+  
   if (typeof window.AdminManager !== "undefined") {
     window.AdminManager.createPanel();
   } else if (typeof window.createAdminPanelWindow === "function") {

@@ -369,6 +369,8 @@ const DesktopManager = {
     let isDragging = false;
     let offsetX = 0;
     let offsetY = 0;
+    let startTime = 0;
+    let hasMovedDuringDrag = false;
     
     // Gestionnaire pour commencer le déplacement
     const startDrag = (e) => {
@@ -378,8 +380,10 @@ const DesktopManager = {
       // Éviter le déplacement pendant un double-clic
       if (isDragging) return;
       
-      // Marquer comme en cours de déplacement
+      // Marquer comme en cours de déplacement et enregistrer l'heure
       isDragging = true;
+      startTime = Date.now();
+      hasMovedDuringDrag = false;
       
       // Calculer l'offset par rapport au coin supérieur gauche de l'icône
       const rect = icon.getBoundingClientRect();
@@ -400,6 +404,9 @@ const DesktopManager = {
     // Gestionnaire pour le déplacement
     const drag = (e) => {
       if (!isDragging) return;
+      
+      // Marquer comme ayant été déplacé
+      hasMovedDuringDrag = true;
       
       // Obtenir les dimensions du bureau
       const desktop = document.getElementById('desktop');
@@ -453,6 +460,15 @@ const DesktopManager = {
       // Supprimer les gestionnaires temporaires
       document.removeEventListener('mousemove', drag);
       document.removeEventListener('mouseup', stopDrag);
+      
+      // Si l'utilisateur n'a pas déplacé l'icône ou si le clic était très court (moins de 200ms),
+      // on considère qu'il veut ouvrir la fenêtre et non pas déplacer l'icône
+      const dragDuration = Date.now() - startTime;
+      if (!hasMovedDuringDrag || dragDuration < 200) {
+        const iconId = icon.dataset.id;
+        // Ouvrir la fenêtre associée à l'icône
+        DesktopManager.openDefaultWindow(iconId);
+      }
     };
     
     // Attacher le gestionnaire d'événement
