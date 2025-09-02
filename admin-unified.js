@@ -1158,10 +1158,13 @@ window.AdminManager = {
     // Stocker structure dans DataManager.data si dispo
     if(window.DataManager && window.DataManager.data){
       window.DataManager.data.desktopIcons = JSON.parse(JSON.stringify(window.desktopIcons));
-      if(typeof window.saveDataToGitHub === 'function'){
+      // Sauvegarde conditionnelle: GitHub seulement si token présent, sinon locale silencieuse
+      if(window.GITHUB_CONFIG?.token && typeof window.saveDataToGitHub === 'function'){
         window.saveDataToGitHub().catch(err=> console.warn('Erreur sauvegarde GitHub icônes:', err));
       } else if(typeof window.saveData==='function') {
         try{ window.saveData(); }catch(e){ console.warn('saveData erreur:', e); }
+      } else {
+        try{ localStorage.setItem('site_data', JSON.stringify(window.DataManager.data)); }catch(e){ console.warn('localStorage save fallback erreur:', e); }
       }
     } else {
       // fallback localStorage

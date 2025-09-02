@@ -709,8 +709,15 @@ WindowManager.createAdminPanelWindow = function() {
   }
 };
 
+// Exposer globalement pour les autres modules (DesktopManager, window-functions, etc.)
+if (!window.WindowManager) {
+  window.WindowManager = WindowManager;
+}
+
 // Initialiser le gestionnaire quand le DOM est chargé
 document.addEventListener('DOMContentLoaded', function() {
-  console.log("🚀 Initialisation de WindowManager");
-  WindowManager.init();
+  console.log("🚀 DOM prêt -> init WindowManager");
+  if (typeof window.WindowManager?.init === 'function') {
+    window.WindowManager.init();
+  }
 });
