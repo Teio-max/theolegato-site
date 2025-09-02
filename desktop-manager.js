@@ -4,8 +4,8 @@
 const DesktopManager = {
   // Configuration par défaut
   config: {
-    defaultIconSize: 64,
-    spacing: 20
+    defaultIconSize: 96,  // Icônes plus grandes
+    spacing: 30          // Espacement plus grand
   },
   
   // Initialisation du gestionnaire
@@ -18,6 +18,9 @@ const DesktopManager = {
     // Dessiner les icônes sur le bureau
     this.renderDesktopIcons();
     
+    // Rendre les icônes déplaçables
+    this.setupDraggableIcons();
+    
     // Attacher les gestionnaires d'événements globaux
     this.attachEvents();
   },
@@ -26,15 +29,14 @@ const DesktopManager = {
   loadDesktopIcons() {
     // Vérifier si les icônes sont déjà définies
     if (typeof window.desktopIcons === 'undefined') {
-      // Icônes par défaut
+      // Icônes par défaut - Suppression des icônes Admin et À propos, meilleures positions
       window.desktopIcons = {
         defaultIcons: [
-          { id: 'films', name: 'Films', icon: 'icons/film.png', x: 20, y: 20, visible: true },
-          { id: 'articles', name: 'Articles', icon: 'icons/article.png', x: 20, y: 100, visible: true },
-          { id: 'cv', name: 'CV', icon: 'icons/cv.png', x: 20, y: 180, visible: true },
-          { id: 'mangas', name: 'Mangas', icon: 'icons/portfolio.png', x: 20, y: 260, visible: false },
-          { id: 'info', name: 'À propos', icon: 'icons/info.png', x: 20, y: 340, visible: true },
-          { id: 'admin', name: 'Admin', icon: 'icons/key.png', x: 20, y: 420, visible: true }
+          { id: 'films', name: 'Films', icon: 'icons/film.png', x: 30, y: 30, visible: true },
+          { id: 'articles', name: 'Articles', icon: 'icons/article.png', x: 30, y: 160, visible: true },
+          { id: 'cv', name: 'CV', icon: 'icons/cv.png', x: 30, y: 290, visible: true },
+          { id: 'mangas', name: 'Mangas', icon: 'icons/portfolio.png', x: 30, y: 420, visible: false }
+          // Les icônes "Admin" et "À propos" ont été supprimées comme demandé
         ],
         customIcons: []
       };
@@ -85,17 +87,19 @@ const DesktopManager = {
     iconElement.style.position = 'absolute';
     iconElement.style.left = `${icon.x}px`;
     iconElement.style.top = `${icon.y}px`;
-    iconElement.style.width = '70px';
-    iconElement.style.height = '80px';
+    iconElement.style.width = '100px'; // Augmentation de la largeur
+    iconElement.style.height = '110px'; // Augmentation de la hauteur
     iconElement.style.display = 'flex';
     iconElement.style.flexDirection = 'column';
     iconElement.style.alignItems = 'center';
     iconElement.style.cursor = 'pointer';
+    iconElement.style.padding = '5px';
+    iconElement.style.boxSizing = 'border-box';
     
-    // Définir le contenu HTML
+    // Définir le contenu HTML avec des icônes plus grandes
     iconElement.innerHTML = `
-      <img src="${icon.icon}" alt="${icon.name}" style="width:32px;height:32px;margin-bottom:5px;">
-      <div class="icon-label" style="color:white;text-align:center;font-size:12px;text-shadow:1px 1px 2px rgba(0,0,0,0.8);white-space:nowrap;max-width:70px;overflow:hidden;text-overflow:ellipsis;">
+      <img src="${icon.icon}" alt="${icon.name}" style="width:48px;height:48px;margin-bottom:8px;">
+      <div class="icon-label" style="color:white;text-align:center;font-size:14px;text-shadow:1px 1px 3px rgba(0,0,0,0.9);white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;">
         ${icon.name}
       </div>
     `;
@@ -347,6 +351,112 @@ const DesktopManager = {
     this.renderDesktopIcons();
     
     return true;
+  },
+  
+  // Rendre les icônes déplaçables
+  setupDraggableIcons() {
+    const icons = document.querySelectorAll('.desktop-icon');
+    
+    icons.forEach(icon => {
+      this.makeIconDraggable(icon);
+    });
+    
+    console.log(`🖱️ ${icons.length} icônes rendues déplaçables`);
+  },
+  
+  // Fonction pour rendre une icône déplaçable
+  makeIconDraggable(icon) {
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+    
+    // Gestionnaire pour commencer le déplacement
+    const startDrag = (e) => {
+      // Seulement le clic gauche
+      if (e.button !== 0) return;
+      
+      // Éviter le déplacement pendant un double-clic
+      if (isDragging) return;
+      
+      // Marquer comme en cours de déplacement
+      isDragging = true;
+      
+      // Calculer l'offset par rapport au coin supérieur gauche de l'icône
+      const rect = icon.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      
+      // Ajouter une classe pour le style durant le déplacement
+      icon.classList.add('dragging');
+      
+      // Éviter que d'autres événements n'interfèrent
+      e.preventDefault();
+      
+      // Ajouter les gestionnaires temporaires
+      document.addEventListener('mousemove', drag);
+      document.addEventListener('mouseup', stopDrag);
+    };
+    
+    // Gestionnaire pour le déplacement
+    const drag = (e) => {
+      if (!isDragging) return;
+      
+      // Obtenir les dimensions du bureau
+      const desktop = document.getElementById('desktop');
+      const desktopRect = desktop.getBoundingClientRect();
+      
+      // Calculer la nouvelle position relative au bureau
+      let newX = e.clientX - desktopRect.left - offsetX;
+      let newY = e.clientY - desktopRect.top - offsetY;
+      
+      // Limiter dans les bords du bureau
+      const iconWidth = icon.offsetWidth;
+      const iconHeight = icon.offsetHeight;
+      
+      newX = Math.max(0, Math.min(desktopRect.width - iconWidth, newX));
+      newY = Math.max(0, Math.min(desktopRect.height - iconHeight, newY));
+      
+      // Appliquer la nouvelle position
+      icon.style.left = `${newX}px`;
+      icon.style.top = `${newY}px`;
+      
+      // Mettre à jour les coordonnées dans les données
+      const iconId = icon.dataset.id;
+      const iconType = icon.dataset.type;
+      
+      // Mettre à jour les coordonnées stockées
+      if (iconType === 'default') {
+        const iconObj = window.desktopIcons.defaultIcons.find(i => i.id === iconId);
+        if (iconObj) {
+          iconObj.x = newX;
+          iconObj.y = newY;
+        }
+      } else {
+        const iconObj = window.desktopIcons.customIcons.find(i => i.id === iconId);
+        if (iconObj) {
+          iconObj.x = newX;
+          iconObj.y = newY;
+        }
+      }
+    };
+    
+    // Gestionnaire pour arrêter le déplacement
+    const stopDrag = (e) => {
+      if (!isDragging) return;
+      
+      // Marquer comme plus en déplacement
+      isDragging = false;
+      
+      // Enlever la classe de style
+      icon.classList.remove('dragging');
+      
+      // Supprimer les gestionnaires temporaires
+      document.removeEventListener('mousemove', drag);
+      document.removeEventListener('mouseup', stopDrag);
+    };
+    
+    // Attacher le gestionnaire d'événement
+    icon.addEventListener('mousedown', startDrag);
   },
   
   // Obtenir toutes les icônes disponibles
