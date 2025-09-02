@@ -4,25 +4,15 @@
 // Création de la fenêtre Films
 WindowManager.createFilmsWindow = function() {
   console.log("🎬 Création de la fenêtre Films");
-  
-  // Générer le contenu HTML pour les films
-  let content = `
-    <div class="films-container" style="padding: 20px;">
-      <h2 style="margin-bottom: 20px; color: #003399;">Ma Collection de Films</h2>
-      <div id="films-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px;">
+  const content = `
+    <div class="films-container" style="padding: 12px;height:100%;display:flex;flex-direction:column;">
+      <h2 style="margin:0 0 10px;color:#003399;font-size:18px;">Films</h2>
+      <div style='font-size:11px;color:#555;margin-bottom:8px;'>Cliquez sur un film pour ouvrir la critique détaillée.</div>
+      <div id="films-grid" style="flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding:4px;">
         ${this.generateFilmsContent()}
       </div>
-    </div>
-  `;
-  
-  // Créer la fenêtre
-  return this.createWindow({
-    title: 'Films',
-    icon: 'icons/film.png',
-    width: 800,
-    height: 600,
-    content: content
-  });
+    </div>`;
+  return this.createWindow({ title:'Films', icon:'icons/film.png', width:860, height:560, content });
 };
 
 // Générer le contenu des films à partir des données
@@ -36,18 +26,18 @@ WindowManager.generateFilmsContent = function() {
   
   // Générer le HTML pour chaque film
   window.DataManager.data.films.forEach(film => {
-    const poster = film.poster || 'https://via.placeholder.com/150x200?text=No+Poster';
+    const poster = film.image || film.poster || 'https://via.placeholder.com/160x220?text=Film';
+    const note = film.note ? '⭐'.repeat(Math.min(5, film.note)) : '';
     content += `
-      <div class="film-card" style="border: 1px solid #ccc; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-        <div style="height: 220px; overflow: hidden;">
-          <img src="${poster}" alt="${film.title}" style="width: 100%; height: 100%; object-fit: cover;">
+      <div class="film-card" onclick="WindowManager.openFilmCritique(${film.id})" style="cursor:pointer;border:1px solid #888;border-radius:6px;overflow:hidden;background:#fff;display:flex;flex-direction:column;transition:box-shadow .2s,border-color .2s;">
+        <div style='height:200px;overflow:hidden;background:#000;'>
+          <img src='${poster}' alt='${(film.titre||'').replace(/'/g,"&#39;")}' style='width:100%;height:100%;object-fit:cover;filter:brightness(.94);'>
         </div>
-        <div style="padding: 12px;">
-          <h3 style="margin: 0 0 8px; font-size: 16px;">${film.title}</h3>
-          <p style="margin: 0; color: #666; font-size: 14px;">${film.year || 'Année inconnue'}</p>
+        <div style='padding:8px 9px 10px;'>
+          <div style='font-weight:bold;font-size:13px;line-height:1.2;margin-bottom:4px;'>${film.titre||film.title||'Sans titre'}</div>
+          <div style='font-size:11px;color:#444;display:flex;justify-content:space-between;'><span>${film.year||''}</span><span>${note}</span></div>
         </div>
-      </div>
-    `;
+      </div>`;
   });
   
   return content || '<p>Aucun film disponible pour le moment.</p>';
@@ -56,25 +46,15 @@ WindowManager.generateFilmsContent = function() {
 // Création de la fenêtre Articles
 WindowManager.createArticlesWindow = function() {
   console.log("📝 Création de la fenêtre Articles");
-  
-  // Générer le contenu HTML pour les articles
-  let content = `
-    <div class="articles-container" style="padding: 20px;">
-      <h2 style="margin-bottom: 20px; color: #003399;">Mes Articles</h2>
-      <div id="articles-list" style="display: flex; flex-direction: column; gap: 15px;">
+  const content = `
+    <div style='padding:12px;height:100%;display:flex;flex-direction:column;'>
+      <h2 style='margin:0 0 10px;color:#003399;font-size:18px;'>Articles</h2>
+      <div style='font-size:11px;color:#555;margin-bottom:8px;'>Cliquez pour ouvrir le lecteur double-page.</div>
+      <div id='articles-list' style='flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:4px;'>
         ${this.generateArticlesContent()}
       </div>
-    </div>
-  `;
-  
-  // Créer la fenêtre
-  return this.createWindow({
-    title: 'Articles',
-    icon: 'icons/article.png',
-    width: 700,
-    height: 500,
-    content: content
-  });
+    </div>`;
+  return this.createWindow({ title:'Articles', icon:'icons/article.png', width:780, height:540, content });
 };
 
 // Générer le contenu des articles à partir des données
@@ -88,18 +68,117 @@ WindowManager.generateArticlesContent = function() {
   
   // Générer le HTML pour chaque article
   window.DataManager.data.articles.forEach(article => {
+    const resume = (article.summary || article.contenu || '').slice(0,180).replace(/</g,'&lt;');
+    const date = article.date || '';
     content += `
-      <div class="article-item" style="border: 1px solid #ddd; border-radius: 6px; padding: 15px; background-color: #f9f9f9;">
-        <h3 style="margin: 0 0 10px; color: #444;">${article.title}</h3>
-        <p style="margin: 0 0 10px; color: #666; font-size: 14px;">Date: ${article.date || 'Non spécifiée'}</p>
-        <div style="color: #333; font-size: 15px; line-height: 1.5;">
-          ${article.summary || 'Aucun résumé disponible.'}
+      <div class='article-item' onclick="WindowManager.openArticleReader(${article.id})" style="cursor:pointer;border:1px solid #888;border-radius:6px;padding:10px 12px;background:#fff;transition:background .15s;">
+        <div style='display:flex;align-items:center;justify-content:space-between;gap:10px;'>
+          <h3 style='margin:0;font-size:15px;color:#222;line-height:1.2;'>${article.titre||article.title||'Sans titre'}</h3>
+          <span style='font-size:11px;color:#555;'>${date}</span>
         </div>
-      </div>
-    `;
+        <div style='font-size:11px;color:#444;margin-top:6px;'>${resume}${resume.length===180?'…':''}</div>
+      </div>`;
   });
   
   return content || '<p>Aucun article disponible pour le moment.</p>';
+};
+
+// --- Détails / Critiques Films ---
+WindowManager.openFilmCritique = function(filmId){
+  if(!window.DataManager?.data?.films) return alert('Pas de films');
+  const film = window.DataManager.data.films.find(f=> String(f.id)===String(filmId));
+  if(!film) return alert('Film introuvable');
+  const poster = film.image || film.poster || '';
+  const note = film.note ? '⭐'.repeat(Math.min(5, film.note)) : '—';
+  const critique = (film.critique||'Aucune critique.').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+  const content = `
+    <div style='display:flex;height:100%;'>
+      <div style='width:240px;border-right:1px solid #999;background:#f0f0f0;padding:10px;overflow:auto;'>
+        ${poster? `<div style='border:1px solid #777;padding:2px;background:#000;'><img src='${poster}' style='width:100%;height:auto;object-fit:cover;'></div>`:''}
+        <h2 style='font-size:16px;margin:10px 0 4px;color:#003399;'>${film.titre||'Sans titre'}</h2>
+        <div style='font-size:12px;color:#333;margin-bottom:6px;'>${film.year||''}</div>
+        <div style='font-size:12px;margin-bottom:8px;'>Note: ${note}</div>
+        ${film.bandeAnnonce? `<button onclick="window.open('${film.bandeAnnonce}','_blank')" style='font-size:11px;padding:4px 8px;'>Bande annonce</button>`:''}
+      </div>
+      <div style='flex:1;display:flex;flex-direction:column;'>
+        <div style='padding:10px 14px;flex:1;overflow:auto;background:#fff;'>
+          <h3 style='margin:0 0 10px;font-size:15px;color:#222;'>Critique</h3>
+          <div style='font-size:13px;line-height:1.5;'>${critique}</div>
+        </div>
+      </div>
+    </div>`;
+  this.createWindow({ title:`Film: ${film.titre||film.title||'Film'}`, icon:'icons/film.png', width:720, height:520, content });
+};
+
+// --- Lecteur double-page Articles ---
+window.ArticleReaders = window.ArticleReaders || {};
+WindowManager.openArticleReader = function(articleId){
+  if(!window.DataManager?.data?.articles) return alert('Pas d\u0027articles');
+  const article = window.DataManager.data.articles.find(a=> String(a.id)===String(articleId));
+  if(!article) return alert('Article introuvable');
+  if(article.pdfUrl){
+    const content = `
+      <div style='display:flex;flex-direction:column;height:100%;'>
+        <div style='padding:6px 10px;background:#ece9d8;border-bottom:1px solid #999;font-size:12px;display:flex;justify-content:space-between;align-items:center;'>
+          <strong>${(article.titre||'Article')}</strong>
+          <span style='font-size:11px;color:#555;'>PDF • ${article.date||''}</span>
+        </div>
+        <div style='flex:1;position:relative;'>
+          <iframe src='${article.pdfUrl}' style='width:100%;height:100%;border:0;background:#fff;'></iframe>
+        </div>
+      </div>`;
+    this.createWindow({ title:`Article: ${article.titre||'PDF'}`, icon:'icons/article.png', width:860, height:620, content });
+    return;
+  }
+  const raw = (article.contenu||'').replace(/\r/g,'');
+  const paragraphs = raw.split(/\n{2,}/).map(p=> p.trim()).filter(Boolean);
+  // Construire pages (regrouper paragraphes jusque ~900 caractères)
+  const pages=[]; let buf='';
+  paragraphs.forEach(p=>{ if((buf+('\n\n'+p)).length>900 && buf){ pages.push(buf); buf=p; } else { buf += (buf? '\n\n':'')+p; } });
+  if(buf) pages.push(buf);
+  if(!pages.length) pages.push('(Contenu vide)');
+  ArticleReaders[articleId]={ pages, index:0 };
+  const makePageHtml=(txt)=> txt.replace(/</g,'&lt;').replace(/\n/g,'<br>');
+  const renderPair=(id)=>{
+    const state=ArticleReaders[id]; if(!state) return {left:'',right:''};
+    return {left: makePageHtml(state.pages[state.index]||''), right: makePageHtml(state.pages[state.index+1]||'')};
+  };
+  const pair=renderPair(articleId);
+  const navHtml = pages.length>2 ? `<div style='display:flex;justify-content:center;gap:12px;padding:6px 0;'>
+      <button id='art-prev-btn' style='padding:4px 10px;'>&lt; Préc.</button>
+      <span style='font-size:11px;'>Page <span id='art-page-num'>${1}</span>/<span id='art-page-total'>${pages.length}</span></span>
+      <button id='art-next-btn' style='padding:4px 10px;'>Suiv. &gt;</button>
+    </div>` : '';
+  const content = `
+    <div style='display:flex;flex-direction:column;height:100%;'>
+      <div style='padding:6px 10px;background:#ece9d8;border-bottom:1px solid #999;font-size:12px;display:flex;justify-content:space-between;align-items:center;'>
+        <strong>${(article.titre||'Article')}</strong>
+        <span style='font-size:11px;color:#555;'>${article.date||''}</span>
+      </div>
+      ${navHtml}
+      <div id='double-page' style='flex:1;display:flex;gap:8px;padding:10px;overflow:auto;background:#f5f5f5;'>
+        <div id='page-left' style='flex:1;background:#fff;border:1px solid #aaa;padding:12px 14px;font-size:13px;line-height:1.5;'>${pair.left}</div>
+        <div id='page-right' style='flex:1;background:#fff;border:1px solid #aaa;padding:12px 14px;font-size:13px;line-height:1.5;'>${pair.right}</div>
+      </div>
+    </div>`;
+  const win = this.createWindow({ title:`Article: ${article.titre||'Lecture'}`, icon:'icons/article.png', width:820, height:600, content });
+  // Attacher navigation après insertion
+  setTimeout(()=>{
+    const prev = win.el.querySelector('#art-prev-btn');
+    const next = win.el.querySelector('#art-next-btn');
+    const pageNum = win.el.querySelector('#art-page-num');
+    const left = win.el.querySelector('#page-left');
+    const right = win.el.querySelector('#page-right');
+    const totalSpan = win.el.querySelector('#art-page-total');
+    function refresh(){
+      const st=ArticleReaders[articleId]; if(!st) return; const pair=renderPair(articleId); left.innerHTML=pair.left; right.innerHTML=pair.right; pageNum.textContent = (st.index+1).toString(); totalSpan.textContent = st.pages.length.toString();
+      if(prev) prev.disabled = st.index<=0;
+      if(next) next.disabled = st.index>=st.pages.length-1;
+    }
+    prev && prev.addEventListener('click', ()=>{ const st=ArticleReaders[articleId]; if(st.index>0){ st.index = Math.max(0, st.index-2); refresh(); } });
+    next && next.addEventListener('click', ()=>{ const st=ArticleReaders[articleId]; if(st.index < st.pages.length-1){ st.index = Math.min(st.pages.length-1, st.index+2); refresh(); } });
+    refresh();
+  },50);
 };
 
 // Création de la fenêtre CV
@@ -107,58 +186,42 @@ WindowManager.createCVWindow = function() {
   console.log("📄 Création de la fenêtre CV");
   
   // Générer le contenu HTML pour le CV
-  let content = `
-    <div class="cv-container" style="padding: 20px;">
-      <h2 style="margin-bottom: 20px; color: #003399;">Mon CV</h2>
-      
-      <div class="cv-section" style="margin-bottom: 25px;">
-        <h3 style="border-bottom: 2px solid #003399; padding-bottom: 5px; color: #003399;">Formation</h3>
-        <ul style="list-style-type: none; padding-left: 10px;">
-          <li style="margin: 10px 0;">
-            <strong>2023 - 2025</strong>: Master en Développement Web - École de l'Innovation Numérique
-          </li>
-          <li style="margin: 10px 0;">
-            <strong>2020 - 2023</strong>: Licence en Informatique - Université de Technologie
-          </li>
-        </ul>
-      </div>
-      
-      <div class="cv-section" style="margin-bottom: 25px;">
-        <h3 style="border-bottom: 2px solid #003399; padding-bottom: 5px; color: #003399;">Expérience Professionnelle</h3>
-        <ul style="list-style-type: none; padding-left: 10px;">
-          <li style="margin: 10px 0;">
-            <strong>2024 - Présent</strong>: Développeur Web Full Stack - TechCompany
-            <p style="margin: 5px 0 0 0; color: #555;">Développement d'applications web modernes avec React et Node.js</p>
-          </li>
-          <li style="margin: 10px 0;">
-            <strong>2022 - 2024</strong>: Développeur Front-End - StartupInnovante
-            <p style="margin: 5px 0 0 0; color: #555;">Conception et implémentation d'interfaces utilisateur réactives</p>
-          </li>
-        </ul>
-      </div>
-      
-      <div class="cv-section" style="margin-bottom: 25px;">
-        <h3 style="border-bottom: 2px solid #003399; padding-bottom: 5px; color: #003399;">Compétences</h3>
-        <div style="display: flex; flex-wrap: wrap; gap: 10px; padding-top: 10px;">
-          <span style="background-color: #e1e1e1; padding: 5px 10px; border-radius: 15px; font-size: 14px;">JavaScript</span>
-          <span style="background-color: #e1e1e1; padding: 5px 10px; border-radius: 15px; font-size: 14px;">HTML/CSS</span>
-          <span style="background-color: #e1e1e1; padding: 5px 10px; border-radius: 15px; font-size: 14px;">React</span>
-          <span style="background-color: #e1e1e1; padding: 5px 10px; border-radius: 15px; font-size: 14px;">Node.js</span>
-          <span style="background-color: #e1e1e1; padding: 5px 10px; border-radius: 15px; font-size: 14px;">SQL</span>
-          <span style="background-color: #e1e1e1; padding: 5px 10px; border-radius: 15px; font-size: 14px;">Git</span>
+    const hasPdf = !!window.cvData?.pdfUrl;
+    let content = document.createElement('div');
+    content.style.padding='0';
+    if(hasPdf){
+      content.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:#ece9d8;border-bottom:1px solid #999;font-size:11px;">
+          <div><strong>CV PDF</strong>${window.cvData.lastUpdated? ' - '+ new Date(window.cvData.lastUpdated).toLocaleDateString() : ''}</div>
+          <div>
+            <button style='margin-right:6px;' onclick="(function(u){ window.open(u,'_blank'); })(window.cvData.pdfUrl);">Nouvel Onglet</button>
+            <button onclick="(function(u){ const a=document.createElement('a'); a.href=u; a.download='cv.pdf'; a.click(); })(window.cvData.pdfUrl);">Télécharger</button>
+          </div>
         </div>
-      </div>
-      
-      <div class="cv-section">
-        <h3 style="border-bottom: 2px solid #003399; padding-bottom: 5px; color: #003399;">Langues</h3>
-        <ul style="list-style-type: none; padding-left: 10px;">
-          <li style="margin: 10px 0;"><strong>Français</strong>: Langue maternelle</li>
-          <li style="margin: 10px 0;"><strong>Anglais</strong>: Courant</li>
-          <li style="margin: 10px 0;"><strong>Espagnol</strong>: Intermédiaire</li>
-        </ul>
-      </div>
-    </div>
-  `;
+        <iframe src='${window.cvData.pdfUrl}' style="width:100%;height:calc(100% - 32px);border:0;background:white;"></iframe>
+      `;
+      WindowManager.createWindow('cv-window','CV',content, { width:700, height:500 });
+    } else {
+      content.style.padding='10px';
+      content.innerHTML = `
+        <h2 style="margin-top:0;color:#003399;font-size:18px;">Curriculum Vitae</h2>
+        <p style="font-size:12px;color:#333;">Aucun PDF n'est encore importé. Affichage des données textuelles.</p>
+        <div style="margin-top:10px;font-size:12px;line-height:1.4;">
+          <strong>Résumé:</strong>
+          <p>${(window.cvData?.summary||'').replace(/</g,'&lt;')||'--'}</p>
+          <strong>Expériences:</strong>
+          <ul style='padding-left:16px;'>
+            ${(window.cvData?.experiences||['']).map(e=> e?`<li>${e.replace(/</g,'&lt;')}</li>`:'').join('')}
+          </ul>
+          <strong>Formations:</strong>
+          <ul style='padding-left:16px;'>
+            ${(window.cvData?.education||['']).map(e=> e?`<li>${e.replace(/</g,'&lt;')}</li>`:'').join('')}
+          </ul>
+          <strong>Compétences:</strong>
+          <div>${(window.cvData?.skills||[]).map(s=>`<span style="display:inline-block;background:#d0dff0;border:1px solid #718da6;padding:2px 6px;margin:2px;border-radius:3px;font-size:11px;">${s.replace(/</g,'&lt;')}</span>`).join('')||'--'}</div>
+        </div>`;
+      WindowManager.createWindow('cv-window','CV',content, { width:500, height:420 });
+    }
   
   // Créer la fenêtre
   return this.createWindow({

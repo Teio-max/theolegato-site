@@ -822,6 +822,12 @@ window.AdminManager = {
           <label style='display:block;margin-bottom:5px;font-weight:bold;'>Titre</label>
           <input type='text' id='article-titre' value="${article? (article.titre||'').replace(/"/g,'&quot;'): ''}" style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;' required>
         </div>
+        <div style='margin-bottom:15px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>PDF (optionnel, ≤ 4 Mo)</label>
+          <input type='file' id='article-pdf' accept='application/pdf' style='display:block;margin-bottom:6px;'>
+          <div id='article-pdf-current' style='font-size:12px;${article?.pdfUrl? '':'display:none;'}'>Actuel: <a href='${article?.pdfUrl||'#'}' target='_blank'>Ouvrir PDF</a></div>
+          <progress id='article-pdf-progress' value='0' max='100' style='width:100%;display:none;'></progress>
+        </div>
         <div style='margin-bottom:15px;display:flex;gap:15px;flex-wrap:wrap;'>
           <div style='flex:1;min-width:200px;'>
             <label style='display:block;margin-bottom:5px;font-weight:bold;'>Date</label>
@@ -843,6 +849,23 @@ window.AdminManager = {
       </form>`;
     document.getElementById('article-cancel-btn')?.addEventListener('click', ()=> this.loadArticlesManager());
     document.getElementById('article-form')?.addEventListener('submit', (e)=> { e.preventDefault(); this.saveArticle(articleId); });
+    const pdfInput = document.getElementById('article-pdf');
+    pdfInput?.addEventListener('change', (e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      if(file.size > 4*1024*1024){ alert('PDF trop volumineux (>4Mo)'); e.target.value=''; return; }
+      const prog = document.getElementById('article-pdf-progress'); prog.style.display='block'; prog.value=0;
+      const reader = new FileReader();
+      reader.onprogress = ev=> { if(ev.lengthComputable) prog.value = (ev.loaded/ev.total)*100; };
+      reader.onload = ev=> {
+        if(article){ article.pdfUrl = ev.target.result; }
+        else { window._pendingArticlePdf = ev.target.result; }
+        prog.style.display='none';
+        const cur = document.getElementById('article-pdf-current'); if(cur){ cur.style.display='block'; cur.querySelector('a').href = ev.target.result; }
+        alert('PDF chargé (enregistrer pour sauvegarder)');
+      };
+      reader.onerror = ()=> { prog.style.display='none'; alert('Erreur lecture PDF'); };
+      reader.readAsDataURL(file);
+    });
   },
   saveArticle(articleId) {
     if (!window.articles || !Array.isArray(window.articles)) window.articles = [];
@@ -859,8 +882,11 @@ window.AdminManager = {
       Object.assign(article, {titre,date,tags,contenu,updatedAt:Date.now()});
     } else {
       article = { id: Date.now(), titre, date, tags, contenu, createdAt: Date.now() };
+      if(window._pendingArticlePdf){ article.pdfUrl = window._pendingArticlePdf; delete window._pendingArticlePdf; }
       window.articles.push(article);
     }
+    // Si modification & nouveau PDF en mémoire temporaire
+    if(window._pendingArticlePdf && article){ article.pdfUrl = window._pendingArticlePdf; delete window._pendingArticlePdf; }
     this.saveAllData();
     alert('Article sauvegardé');
     this.loadArticlesManager();
@@ -1246,11 +1272,18 @@ window.AdminManager = {
   // ====== CV MANAGER ======
   loadCVManager(){
     console.log('📄 Chargement gestionnaire CV');
-    if(!window.cvData) window.cvData = { summary:'', experiences:[], education:[], skills:[] };
+    if(!window.cvData) window.cvData = { summary:'', experiences:[], education:[], skills:[], pdfUrl:'', lastUpdated:null };
     this.state.activeTab='cv';
     const d=document.getElementById('admin-content'); if(!d) return;
     d.innerHTML=`<h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>CV</h3>
       <form id='cv-form'>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Fichier PDF du CV</label>
+          <input type='file' id='cv-pdf-file' accept='application/pdf' style='display:block;margin-bottom:6px;'>
+          <div style='font-size:12px;color:#555;margin-bottom:6px;'>Sélectionnez un PDF (<= 2 Mo) pour l'intégrer. Il sera stocké localement (data URL) et sauvegardé via GitHub.</div>
+          <div id='cv-pdf-current' style='font-size:12px;color:#333;${window.cvData.pdfUrl? '':'display:none;'}'>Actuel: <a href='${window.cvData.pdfUrl||'#'}' target='_blank'>Ouvrir PDF</a></div>
+          <progress id='cv-pdf-progress' value='0' max='100' style='width:100%;display:none;'></progress>
+        </div>
         <div style='margin-bottom:12px;'>
           <label style='display:block;margin-bottom:5px;font-weight:bold;'>Résumé</label>
           <textarea id='cv-summary' rows='4' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>${(window.cvData.summary||'').replace(/</g,'&lt;')}</textarea>
@@ -1272,17 +1305,37 @@ window.AdminManager = {
           <button type='button' id='cv-cancel-btn' style='margin-left:10px;padding:8px 16px;border-radius:3px;cursor:pointer;'>Tableau de bord</button>
         </div>
       </form>`;
+    const fileInput = d.querySelector('#cv-pdf-file');
+    fileInput?.addEventListener('change',(e)=>{
+      const file = e.target.files[0]; if(!file) return;
+      if(file.size > 2*1024*1024){ alert('Fichier trop volumineux (>2Mo)'); e.target.value=''; return; }
+      const progress = d.querySelector('#cv-pdf-progress');
+      progress.style.display='block'; progress.value=0;
+      const reader = new FileReader();
+      reader.onprogress = ev=> { if(ev.lengthComputable){ progress.value = (ev.loaded/ev.total)*100; } };
+      reader.onload = ev=> {
+        window.cvData.pdfUrl = ev.target.result; // data URL
+        window.cvData.lastUpdated = Date.now();
+        if(window.DataManager?.data){ window.DataManager.data.cvData = JSON.parse(JSON.stringify(window.cvData)); }
+        progress.style.display='none';
+        const cur = d.querySelector('#cv-pdf-current'); if(cur){ cur.style.display='block'; cur.querySelector('a').href = window.cvData.pdfUrl; }
+        UIManager?.showNotification('PDF chargé (non encore sauvegardé GitHub)', 'info');
+      };
+      reader.onerror = ()=> { progress.style.display='none'; alert('Erreur lecture fichier'); };
+      reader.readAsDataURL(file);
+    });
     document.getElementById('cv-cancel-btn')?.addEventListener('click',()=> this.loadDashboard());
-    document.getElementById('cv-form')?.addEventListener('submit',e=>{ e.preventDefault(); this.saveCV(); });
+    document.getElementById('cv-form')?.addEventListener('submit',e=>{ e.preventDefault(); this.saveCV(true); });
   },
-  saveCV(){
+  saveCV(triggerSave=false){
     if(!window.cvData) window.cvData={};
     window.cvData.summary=document.getElementById('cv-summary')?.value||'';
     window.cvData.experiences=(document.getElementById('cv-experiences')?.value||'').split(/\n+/).map(l=>l.trim()).filter(Boolean);
     window.cvData.education=(document.getElementById('cv-education')?.value||'').split(/\n+/).map(l=>l.trim()).filter(Boolean);
     window.cvData.skills=(document.getElementById('cv-skills')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
     if(window.DataManager?.data){ window.DataManager.data.cvData = JSON.parse(JSON.stringify(window.cvData)); }
-    this.saveAllData(); alert('CV sauvegardé');
+    if(triggerSave){ this.saveAllData(); }
+    alert('CV sauvegardé');
   },
   loadTagForm(tagId=null){
     console.log(`🏷️ Formulaire tag (id:${tagId})`);
