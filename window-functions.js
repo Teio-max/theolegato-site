@@ -164,12 +164,12 @@ WindowManager.openArticleReader = function(articleId){
   const win = this.createWindow({ title:`Article: ${article.titre||'Lecture'}`, icon:'icons/article.png', width:820, height:600, content });
   // Attacher navigation après insertion
   setTimeout(()=>{
-    const prev = win.el.querySelector('#art-prev-btn');
-    const next = win.el.querySelector('#art-next-btn');
-    const pageNum = win.el.querySelector('#art-page-num');
-    const left = win.el.querySelector('#page-left');
-    const right = win.el.querySelector('#page-right');
-    const totalSpan = win.el.querySelector('#art-page-total');
+    const prev = win.querySelector('#art-prev-btn');
+    const next = win.querySelector('#art-next-btn');
+    const pageNum = win.querySelector('#art-page-num');
+    const left = win.querySelector('#page-left');
+    const right = win.querySelector('#page-right');
+    const totalSpan = win.querySelector('#art-page-total');
     function refresh(){
       const st=ArticleReaders[articleId]; if(!st) return; const pair=renderPair(articleId); left.innerHTML=pair.left; right.innerHTML=pair.right; pageNum.textContent = (st.index+1).toString(); totalSpan.textContent = st.pages.length.toString();
       if(prev) prev.disabled = st.index<=0;
@@ -200,7 +200,7 @@ WindowManager.createCVWindow = function() {
         </div>
         <iframe src='${window.cvData.pdfUrl}' style="width:100%;height:calc(100% - 32px);border:0;background:white;"></iframe>
       `;
-      WindowManager.createWindow('cv-window','CV',content, { width:700, height:500 });
+  WindowManager.createWindow({ title:'CV', icon:'icons/cv.png', content, width:700, height:500 });
     } else {
       content.style.padding='10px';
       content.innerHTML = `
@@ -220,7 +220,7 @@ WindowManager.createCVWindow = function() {
           <strong>Compétences:</strong>
           <div>${(window.cvData?.skills||[]).map(s=>`<span style="display:inline-block;background:#d0dff0;border:1px solid #718da6;padding:2px 6px;margin:2px;border-radius:3px;font-size:11px;">${s.replace(/</g,'&lt;')}</span>`).join('')||'--'}</div>
         </div>`;
-      WindowManager.createWindow('cv-window','CV',content, { width:500, height:420 });
+  WindowManager.createWindow({ title:'CV', icon:'icons/cv.png', content, width:500, height:420 });
     }
   
   // Créer la fenêtre
