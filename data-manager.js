@@ -376,10 +376,30 @@ window.DataManager = {
     return this.saveDataLocally();
   }
 };
-        }, duration);
+// Utilitaire global pour définir / mémoriser le token GitHub de façon centralisée
+if (typeof window.setGitHubToken !== 'function') {
+  window.setGitHubToken = function(token, remember = true) {
+    if (!window.GITHUB_CONFIG) {
+      window.GITHUB_CONFIG = { owner:'Teio-max', repo:'theolegato-site', branch:'main', dataFile:'data.json', token:null };
+    }
+    window.GITHUB_CONFIG.token = token || null;
+    try {
+      if (token && remember) {
+        localStorage.setItem('github_token', token);
+      } else if (token) {
+        sessionStorage.setItem('github_token', token);
       }
-    };
-  }
+      if (!token) {
+        localStorage.removeItem('github_token');
+        sessionStorage.removeItem('github_token');
+      }
+      console.log('🔐 Token GitHub mis à jour (remember=' + remember + ')');
+    } catch(e) {
+      console.warn('⚠️ Impossible de stocker le token:', e.message);
+    }
+    return window.GITHUB_CONFIG.token;
+  };
+}
   
   // Exposer les fonctions de sauvegarde si elles n'existent pas
   if (typeof window.saveDataToGitHub !== 'function') {
@@ -514,4 +534,3 @@ window.DataManager = {
   }
   
   console.log("✅ Initialisation des données globales terminée");
-})();
