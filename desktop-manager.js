@@ -25,70 +25,29 @@ const DesktopManager = {
   // Attacher les événements globaux (dé-sélection clic sur bureau, resize, ...)
   this.attachEvents();
 
-    // Écouter le chargement des données pour intégrer des icônes dynamiques
-    document.addEventListener('data:loaded', (e)=>{
-      try {
-        const d = e.detail || {};
-        if (Array.isArray(d.desktopIcons) && d.desktopIcons.length) {
-          // Convertir format {id,name,icon,action,position} vers notre format (x,y,visible,window)
-          const converted = d.desktopIcons.map(ic=>({
-            id: ic.id.replace(/^icon-/,''),
-            name: ic.name || ic.id,
-            icon: ic.icon || 'icons/window.png',
-            x: ic.position?.x || 30,
-            y: ic.position?.y || 30,
-            visible: true,
-            window: (ic.action||'').replace(/^create/,'').replace(/Window$/,'').toLowerCase() || null
-          }));
-          // Préserver icônes existantes, ajouter celles qui n'existent pas
-          converted.forEach(c=>{
-            if(!(window.desktopIcons.defaultIcons.concat(window.desktopIcons.customIcons).some(i=>i.id===c.id))) {
-              window.desktopIcons.customIcons.push(c);
-            }
-          });
-          this.renderDesktopIcons();
-          this.setupDraggableIcons();
-          console.log(`🧩 Icônes fusionnées depuis DataManager: +${converted.length}`);
-        }
-      } catch(err){ console.warn('Fusion icônes DataManager échouée', err); }
-    }, { once:true });
+  // (Simplifié) On ignore pour l'instant toute fusion dynamique tant que le core est instable
   },
   
   // Chargement des icônes du bureau
   loadDesktopIcons() {
-    // Normaliser structure si DataManager a mis un simple tableau
-    if (Array.isArray(window.desktopIcons)) {
-      window.desktopIcons = { defaultIcons: [], customIcons: window.desktopIcons.map((ic,i)=>({
-        id: ic.id || ic.name || ('icon'+i),
-        name: ic.name || ic.id || ('Icône '+i),
-        icon: ic.icon || 'icons/window.png',
-        x: ic.position?.x || 30,
-        y: ic.position?.y || 30,
-        visible: ic.visible !== false,
-        window: (ic.action||'').replace(/^create/,'').replace(/Window$/,'').toLowerCase() || ic.window || null
-      })) };
-    }
-    if (typeof window.desktopIcons === 'undefined') {
-      window.desktopIcons = {
-        defaultIcons: [
-          { id: 'films', name: 'Films', icon: 'icons/film.png', x: 30, y: 30, visible: true, window: 'films' },
-          { id: 'articles', name: 'Articles', icon: 'icons/article.png', x: 30, y: 160, visible: true, window: 'articles' },
-          { id: 'cv', name: 'CV', icon: 'icons/cv.png', x: 30, y: 290, visible: true, window: 'cv' },
-          { id: 'mangas', name: 'Mangas', icon: 'icons/portfolio.png', x: 30, y: 420, visible: false, window: 'mangas' }
-        ],
-        customIcons: []
-      };
-    }
-    console.log(`📊 ${window.desktopIcons.defaultIcons.length + window.desktopIcons.customIcons.length} icônes chargées`);
+    window.desktopIcons = {
+      defaultIcons: [
+        { id: 'films', name: 'Films', icon: 'icons/film.png', x: 30, y: 30, visible: true, window: 'films' },
+        { id: 'articles', name: 'Articles', icon: 'icons/article.png', x: 30, y: 160, visible: true, window: 'articles' },
+        { id: 'cv', name: 'CV', icon: 'icons/cv.png', x: 30, y: 290, visible: true, window: 'cv' },
+        { id: 'mangas', name: 'Mangas', icon: 'icons/portfolio.png', x: 30, y: 420, visible: true, window: 'mangas' }
+      ],
+      customIcons: []
+    };
+    console.log(`📊 4 icônes chargées (jeu fixe)`);
   },
   
   // Rendu des icônes sur le bureau
   renderDesktopIcons() {
     // Vérifier que les icônes sont disponibles
-    if (!window.desktopIcons || (!window.desktopIcons.defaultIcons && !window.desktopIcons.customIcons)) {
+    if (!window.desktopIcons || !Array.isArray(window.desktopIcons.defaultIcons)) {
       this.loadDesktopIcons();
     }
-    if (!window.desktopIcons) return;
     
     // Obtenir l'élément desktop s'il existe
     const desktop = document.getElementById('desktop');
@@ -125,7 +84,8 @@ const DesktopManager = {
     iconElement.className = 'desktop-icon';
     iconElement.dataset.id = icon.id;
   // Correction : utilisation d'une recherche dans le tableau au lieu de l'opérateur "in" (qui ne fonctionne que sur les index numériques)
-  iconElement.dataset.type = window.desktopIcons.defaultIcons.some(i => i.id === icon.id) ? 'default' : 'custom';
+  const baseList = Array.isArray(window.desktopIcons?.defaultIcons) ? window.desktopIcons.defaultIcons : [];
+  iconElement.dataset.type = baseList.some(i => i.id === icon.id) ? 'default' : 'custom';
     
     // Définir la position
     iconElement.style.position = 'absolute';
@@ -190,6 +150,7 @@ const DesktopManager = {
       el.classList.add('double-open');
       setTimeout(() => el.classList.remove('double-open'), 260);
     }
+  console.log('🔍 Tentative ouverture fenêtre pour', icon.window || icon.id);
     
     // Déterminer l'action à effectuer
     if (icon.window) {
@@ -220,7 +181,8 @@ const DesktopManager = {
   openIconWindow(icon) {
     // Vérifier si WindowManager est disponible
     if (typeof window.WindowManager === 'undefined') {
-      console.warn("⚠️ WindowManager non disponible");
+      console.warn("⚠️ WindowManager non disponible (retry dans 300ms)");
+      setTimeout(()=> this.openIconWindow(icon), 300);
       return;
     }
     
@@ -261,8 +223,8 @@ const DesktopManager = {
   openDefaultWindow(iconId) {
     // Vérifier si WindowManager est disponible
     if (typeof window.WindowManager === 'undefined') {
-      console.warn("⚠️ WindowManager non disponible");
-      return;
+      console.warn("⚠️ WindowManager non disponible (retry dans 300ms)");
+      return setTimeout(()=> this.openDefaultWindow(iconId), 300);
     }
     
     // Chercher l'icône pour voir si elle a une propriété window explicite
@@ -279,12 +241,12 @@ const DesktopManager = {
 
     // Mappings d'ID vers les fonctions
     const windowMappings = {
-      'films': 'createFilmsWindow',
-      'articles': 'createArticlesWindow',
-      'mangas': 'createMangasWindow',
-      'cv': 'createCVWindow',
-      'info': 'createAboutWindow',
-      'admin': 'createAdminPanelWindow'
+      films: 'createFilmsWindow',
+      articles: 'createArticlesWindow',
+      mangas: 'createMangasWindow',
+      cv: 'createCVWindow',
+      info: 'createAboutWindow',
+      admin: 'createAdminPanelWindow'
     };
     
     // Appeler la fonction correspondante si elle existe
