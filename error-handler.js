@@ -54,19 +54,25 @@ const ErrorHandler = {
     });
     
     // Intercepter console.error
-    const originalConsoleError = console.error;
+    if (!this.originalConsoleError) {
+      this.originalConsoleError = console.error.bind(console);
+    }
     console.error = (...args) => {
-      // Appeler la fonction originale
-      originalConsoleError.apply(console, args);
-      
-      // Journaliser l'erreur
-      const errorMessage = args.map(arg => 
-        arg instanceof Error 
-          ? `${arg.name}: ${arg.message}\n${arg.stack || ''}` 
-          : String(arg)
-      ).join(' ');
-      
-      this.log(errorMessage, this.LOG_LEVELS.ERROR);
+      // Si déjà dans la chaîne d'erreur, éviter boucle
+      if (this._inErrorForward) {
+        this.originalConsoleError.apply(console, args);
+        return;
+      }
+      this.originalConsoleError.apply(console, args);
+      // Construire message lisible
+      const errorMessage = args.map(arg => arg instanceof Error ? `${arg.name}: ${arg.message}` : String(arg)).join(' ');
+      // Enregistrer sans repasser par console.error
+      this._inErrorForward = true;
+      try {
+        this._pushErrorLog(errorMessage);
+      } finally {
+        this._inErrorForward = false;
+      }
     };
   },
   
@@ -134,7 +140,12 @@ const ErrorHandler = {
           console.warn(`[WARN] ${message}`, data);
           break;
         case this.LOG_LEVELS.ERROR:
-          console.error(`[ERROR] ${message}`, data);
+          // Utiliser la version originale pour éviter ré-entrée
+          if (this.originalConsoleError) {
+            this.originalConsoleError(`[ERROR] ${message}`, data);
+          } else {
+            window.console && window.console.log && window.console.log(`[ERROR] ${message}`, data);
+          }
           break;
       }
     }
@@ -199,6 +210,14 @@ const ErrorHandler = {
     this.state.lastError = null;
     return true;
   }
+};
+
+// Méthode interne pour enregistrer une erreur sans reboucler
+ErrorHandler._pushErrorLog = function(message){
+  const entry = { timestamp:new Date().toISOString(), message, level:this.LOG_LEVELS.ERROR };
+  this.state.logs.unshift(entry);
+  if (this.state.logs.length > this.config.maxLogEntries) this.state.logs.pop();
+  return entry;
 };
 
 // Exposer le module globalement

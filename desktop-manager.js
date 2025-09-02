@@ -175,6 +175,10 @@ const DesktopManager = {
   handleIconClick(icon, event) {
     // Sélectionner l'icône
   this.selectIcon(icon.id);
+    if (location.search.includes('debugIcons=1')) {
+      // mode debug: ouverture sur simple clic
+      this.handleIconDblClick(icon, event);
+    }
   },
   
   // Gestion du double-clic sur une icône
