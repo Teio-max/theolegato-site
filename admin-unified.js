@@ -211,6 +211,24 @@ window.AdminManager = {
           <button id="btn-list-films" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
             Gérer Films
           </button>
+          <button id="btn-manage-articles" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Articles
+          </button>
+          <button id="btn-manage-tags" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Tags
+          </button>
+          <button id="btn-manage-mangas" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Mangas
+          </button>
+          <button id="btn-manage-icons" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Icônes
+          </button>
+          <button id="btn-manage-cv" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            CV
+          </button>
+          <button id="btn-import-export" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Import/Export
+          </button>
           <button id="btn-welcome-popup" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
             Popup Bienvenue
           </button>
@@ -232,6 +250,12 @@ window.AdminManager = {
     document.getElementById('btn-dashboard')?.addEventListener('click', () => this.loadDashboard());
     document.getElementById('btn-add-film')?.addEventListener('click', () => this.loadFilmForm());
     document.getElementById('btn-list-films')?.addEventListener('click', () => this.loadFilmsList());
+  document.getElementById('btn-manage-articles')?.addEventListener('click', () => this.loadArticlesManager());
+  document.getElementById('btn-manage-tags')?.addEventListener('click', () => this.loadTagsManager());
+  document.getElementById('btn-manage-mangas')?.addEventListener('click', () => this.loadMangasManager && this.loadMangasManager());
+  document.getElementById('btn-manage-icons')?.addEventListener('click', () => this.loadIconsManager());
+  document.getElementById('btn-manage-cv')?.addEventListener('click', () => this.loadCVManager && this.loadCVManager());
+  document.getElementById('btn-import-export')?.addEventListener('click', () => this.loadImportExportManager());
     document.getElementById('btn-welcome-popup')?.addEventListener('click', () => this.loadWelcomePopupConfig());
     document.getElementById('btn-github-token')?.addEventListener('click', () => this.loadTokenManager());
   },
@@ -245,7 +269,11 @@ window.AdminManager = {
     if (!contentDiv) return;
     
     // Obtenir les statistiques
-    const filmCount = typeof window.films !== 'undefined' ? window.films.length : 0;
+  const filmCount = Array.isArray(window.films) ? window.films.length : 0;
+  const articleCount = Array.isArray(window.articles) ? window.articles.length : 0;
+  const tagCount = Array.isArray(window.tags) ? window.tags.length : 0;
+  const mangaCount = Array.isArray(window.mangas) ? window.mangas.length : 0;
+  const customIconCount = window.desktopIcons?.customIcons?.length || 0;
     
     // Générer le HTML du tableau de bord
     contentDiv.innerHTML = `
@@ -254,9 +282,20 @@ window.AdminManager = {
       </h3>
       
       <div class="dashboard-stats" style="display:flex;flex-wrap:wrap;gap:15px;margin-bottom:20px;">
-        <div class="stat-card" style="flex:1;min-width:150px;background:#f5f5f5;border:1px solid #ddd;border-radius:5px;padding:15px;text-align:center;">
-          <h4 style="margin-top:0;color:#333;">Films</h4>
-          <p style="font-size:24px;font-weight:bold;margin:5px 0;">${filmCount}</p>
+        <div class="stat-card" style="flex:1;min-width:140px;background:#f5f5f5;border:1px solid #ddd;border-radius:5px;padding:15px;text-align:center;">
+          <h4 style="margin-top:0;color:#333;">Films</h4><p style="font-size:24px;font-weight:bold;margin:5px 0;">${filmCount}</p>
+        </div>
+        <div class="stat-card" style="flex:1;min-width:140px;background:#f5f5f5;border:1px solid #ddd;border-radius:5px;padding:15px;text-align:center;">
+          <h4 style="margin-top:0;color:#333;">Articles</h4><p style="font-size:24px;font-weight:bold;margin:5px 0;">${articleCount}</p>
+        </div>
+        <div class="stat-card" style="flex:1;min-width:140px;background:#f5f5f5;border:1px solid #ddd;border-radius:5px;padding:15px;text-align:center;">
+          <h4 style="margin-top:0;color:#333;">Tags</h4><p style="font-size:24px;font-weight:bold;margin:5px 0;">${tagCount}</p>
+        </div>
+        <div class="stat-card" style="flex:1;min-width:140px;background:#f5f5f5;border:1px solid #ddd;border-radius:5px;padding:15px;text-align:center;">
+          <h4 style="margin-top:0;color:#333;">Mangas</h4><p style="font-size:24px;font-weight:bold;margin:5px 0;">${mangaCount}</p>
+        </div>
+        <div class="stat-card" style="flex:1;min-width:140px;background:#f5f5f5;border:1px solid #ddd;border-radius:5px;padding:15px;text-align:center;">
+          <h4 style="margin-top:0;color:#333;">Icônes+</h4><p style="font-size:24px;font-weight:bold;margin:5px 0;">${customIconCount}</p>
         </div>
       </div>
       
@@ -729,6 +768,646 @@ window.AdminManager = {
       console.error('Aucune fonction de sauvegarde disponible');
       alert('Erreur: Aucune fonction de sauvegarde disponible');
     }
+  }
+  ,
+  // === Placeholders supplémentaires ===
+  // === ARTICLES (CRUD) ===
+  loadArticlesManager() {
+    console.log('� Chargement du gestionnaire d\'articles');
+    this.state.activeTab = 'articles-list';
+    if (!window.articles || !Array.isArray(window.articles)) window.articles = [];
+    const contentDiv = document.getElementById('admin-content'); if(!contentDiv) return;
+    const articles = [...window.articles].sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+    contentDiv.innerHTML = `
+      <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">Gestion des articles (${articles.length})</h3>
+      <div style='margin-bottom:15px;display:flex;gap:10px;flex-wrap:wrap;'>
+        <button id='add-article-btn' style="background:#0058a8;color:#fff;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">+ Nouvel article</button>
+        <button id='refresh-articles-btn' style="padding:6px 12px;border-radius:3px;cursor:pointer;">Rafraîchir</button>
+        <input id='article-search' type='text' placeholder='Recherche titre...' style='flex:1;min-width:200px;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+      </div>
+      <div class='articles-list' style='border:1px solid #ACA899;border-radius:3px;overflow:hidden;'>
+        <div style='background:#ECE9D8;padding:8px;font-weight:bold;display:grid;grid-template-columns:auto 140px 80px 120px;'>
+          <div>Titre</div><div>Date</div><div>Tags</div><div>Actions</div>
+        </div>
+        <div id='articles-container'>
+          ${articles.length ? articles.map(a=>`<div class='article-row' data-id='${a.id}' style="padding:8px;border-top:1px solid #ACA899;display:grid;grid-template-columns:auto 140px 80px 120px;align-items:center;">
+            <div style='overflow:hidden;text-overflow:ellipsis;'>${a.titre || 'Sans titre'}</div>
+            <div>${a.date || '-'}</div>
+            <div style='font-size:11px;'>${(a.tags||[]).slice(0,2).join(', ') + ((a.tags||[]).length>2?'…':'') || '-'}</div>
+            <div>
+              <button class='edit-article-btn' data-id='${a.id}' style="padding:3px 6px;margin-right:5px;border:1px solid #ACA899;background:#ECE9D8;cursor:pointer;">Éditer</button>
+              <button class='delete-article-btn' data-id='${a.id}' style="padding:3px 6px;border:1px solid #c62828;background:#f44336;color:#fff;cursor:pointer;">Suppr.</button>
+            </div>
+          </div>`).join('') : `<div style='padding:15px;text-align:center;'>Aucun article</div>`}
+        </div>
+      </div>`;
+    // Events
+    document.getElementById('add-article-btn')?.addEventListener('click', ()=> this.loadArticleForm());
+    document.getElementById('refresh-articles-btn')?.addEventListener('click', ()=> this.loadArticlesManager());
+    document.getElementById('article-search')?.addEventListener('input', (e)=> this.filterArticlesList(e.target.value.toLowerCase()));
+    document.querySelectorAll('.edit-article-btn').forEach(btn=> btn.addEventListener('click', e=> this.loadArticleForm(parseInt(e.target.dataset.id))));
+    document.querySelectorAll('.delete-article-btn').forEach(btn=> btn.addEventListener('click', e=> this.confirmDeleteArticle(parseInt(e.target.dataset.id))));
+  },
+  loadArticleForm(articleId = null) {
+    console.log(`📝 Formulaire article (id: ${articleId})`);
+    this.state.activeTab = 'article-form';
+    if (!window.articles || !Array.isArray(window.articles)) window.articles = [];
+    const article = articleId ? window.articles.find(a=> a.id === articleId) : null;
+    const contentDiv = document.getElementById('admin-content'); if(!contentDiv) return;
+    const today = new Date().toISOString().slice(0,10);
+    contentDiv.innerHTML = `
+      <h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>${article? 'Modifier':'Nouvel'} article</h3>
+      <form id='article-form'>
+        <div style='margin-bottom:15px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Titre</label>
+          <input type='text' id='article-titre' value="${article? (article.titre||'').replace(/"/g,'&quot;'): ''}" style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;' required>
+        </div>
+        <div style='margin-bottom:15px;display:flex;gap:15px;flex-wrap:wrap;'>
+          <div style='flex:1;min-width:200px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Date</label>
+            <input type='date' id='article-date' value='${article? (article.date||today): today}' style='padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+          <div style='flex:2;min-width:220px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Tags (séparés par des virgules)</label>
+            <input type='text' id='article-tags' value='${article? (article.tags||[]).join(', '): ''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+        </div>
+        <div style='margin-bottom:15px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Contenu / Markdown</label>
+          <textarea id='article-contenu' rows='12' style='width:100%;padding:8px;border:1px solid #ACA899;border-radius:3px;font-family:monospace;'>${article? (article.contenu||'').replace(/</g,'&lt;') : ''}</textarea>
+        </div>
+        <div style='margin-top:15px;'>
+          <button type='submit' style='background:#0058a8;color:#fff;border:1px solid #003f7d;padding:8px 16px;border-radius:3px;cursor:pointer;'>${article? 'Enregistrer':'Créer'}</button>
+          <button type='button' id='article-cancel-btn' style='margin-left:10px;padding:8px 16px;border-radius:3px;cursor:pointer;'>Annuler</button>
+        </div>
+      </form>`;
+    document.getElementById('article-cancel-btn')?.addEventListener('click', ()=> this.loadArticlesManager());
+    document.getElementById('article-form')?.addEventListener('submit', (e)=> { e.preventDefault(); this.saveArticle(articleId); });
+  },
+  saveArticle(articleId) {
+    if (!window.articles || !Array.isArray(window.articles)) window.articles = [];
+    const titre = document.getElementById('article-titre')?.value.trim() || '';
+    if (!titre) { alert('Titre requis'); return; }
+    const date = document.getElementById('article-date')?.value || new Date().toISOString().slice(0,10);
+    const tagsRaw = document.getElementById('article-tags')?.value || '';
+    const contenu = document.getElementById('article-contenu')?.value || '';
+    const tags = tagsRaw.split(',').map(t=>t.trim()).filter(Boolean);
+    let article;
+    if (articleId) {
+      article = window.articles.find(a=> a.id === articleId);
+      if (!article) { alert('Article introuvable'); return; }
+      Object.assign(article, {titre,date,tags,contenu,updatedAt:Date.now()});
+    } else {
+      article = { id: Date.now(), titre, date, tags, contenu, createdAt: Date.now() };
+      window.articles.push(article);
+    }
+    this.saveAllData();
+    alert('Article sauvegardé');
+    this.loadArticlesManager();
+  },
+  filterArticlesList(search) {
+    if (!window.articles || !Array.isArray(window.articles)) return;
+    const container = document.getElementById('articles-container'); if(!container) return;
+    if (!search) { this.loadArticlesManager(); return; }
+    const filtered = window.articles.filter(a=> (a.titre||'').toLowerCase().includes(search));
+    if (!filtered.length){ container.innerHTML = `<div style='padding:15px;text-align:center;'>Aucun article</div>`; return; }
+    const sorted = filtered.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+    container.innerHTML = sorted.map(a=>`<div class='article-row' data-id='${a.id}' style="padding:8px;border-top:1px solid #ACA899;display:grid;grid-template-columns:auto 140px 80px 120px;align-items:center;">
+      <div style='overflow:hidden;text-overflow:ellipsis;'>${a.titre||'Sans titre'}</div>
+      <div>${a.date||'-'}</div>
+      <div style='font-size:11px;'>${(a.tags||[]).slice(0,2).join(', ') + ((a.tags||[]).length>2?'…':'') || '-'}</div>
+      <div>
+        <button class='edit-article-btn' data-id='${a.id}' style="padding:3px 6px;margin-right:5px;border:1px solid #ACA899;background:#ECE9D8;cursor:pointer;">Éditer</button>
+        <button class='delete-article-btn' data-id='${a.id}' style="padding:3px 6px;border:1px solid #c62828;background:#f44336;color:#fff;cursor:pointer;">Suppr.</button>
+      </div>
+    </div>`).join('');
+    container.querySelectorAll('.edit-article-btn').forEach(btn=> btn.addEventListener('click', e=> this.loadArticleForm(parseInt(e.target.dataset.id))));
+    container.querySelectorAll('.delete-article-btn').forEach(btn=> btn.addEventListener('click', e=> this.confirmDeleteArticle(parseInt(e.target.dataset.id))));
+  },
+  confirmDeleteArticle(articleId) {
+    if (!window.articles || !Array.isArray(window.articles)) return;
+    const article = window.articles.find(a=> a.id === articleId); if(!article) return;
+    if (confirm(`Supprimer l'article "${article.titre||'Sans titre'}" ?`)) {
+      window.articles = window.articles.filter(a=> a.id !== articleId);
+      this.saveAllData();
+      alert('Article supprimé');
+      this.loadArticlesManager();
+    }
+  },
+  // ================= TAGS (CRUD) =================
+  loadTagsManager() {
+    console.log('🏷️ Chargement gestionnaire tags');
+    if (!window.tags || !Array.isArray(window.tags)) window.tags = [];
+    this.state.activeTab='tags-list';
+    const contentDiv = document.getElementById('admin-content'); if(!contentDiv) return;
+    const tags=[...window.tags].sort((a,b)=> (a.name||'').localeCompare(b.name||''));
+    const usageMap={};
+    const addUsage=(tag)=>{ if(!usageMap[tag]) usageMap[tag]=0; usageMap[tag]++; };
+    (window.films||[]).forEach(f=> (f.tags||[]).forEach(addUsage));
+    (window.articles||[]).forEach(a=> (a.tags||[]).forEach(addUsage));
+    (window.mangas||[]).forEach(m=> (m.tags||[]).forEach(addUsage));
+    contentDiv.innerHTML=`
+      <h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>Gestion des tags (${tags.length})</h3>
+      <div style='display:flex;flex-wrap:wrap;gap:10px;margin-bottom:15px;'>
+        <button id='add-tag-btn' style="background:#0058a8;color:#fff;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">+ Nouveau tag</button>
+        <input id='tag-search' type='text' placeholder='Recherche...' style='flex:1;min-width:200px;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+      </div>
+      <div class='tags-list' style='border:1px solid #ACA899;border-radius:3px;overflow:hidden;'>
+        <div style='background:#ECE9D8;padding:8px;font-weight:bold;display:grid;grid-template-columns:160px auto 80px 130px;'>
+          <div>Nom</div><div>Description</div><div>Usage</div><div>Actions</div>
+        </div>
+        <div id='tags-container'>
+          ${tags.length ? tags.map(t=>`<div class='tag-row' data-id='${t.id}' style="padding:6px 8px;border-top:1px solid #ACA899;display:grid;grid-template-columns:160px auto 80px 130px;align-items:center;">
+            <div style='display:flex;align-items:center;gap:6px;'><span style='display:inline-block;width:16px;height:16px;background:${t.color||'#777'};border:1px solid #555;border-radius:3px;'></span><span>${t.name}</span></div>
+            <div style='font-size:12px;color:#333;overflow:hidden;text-overflow:ellipsis;'>${t.description? t.description.replace(/</g,'&lt;') : '<em style="color:#777;">—</em>'}</div>
+            <div>${usageMap[t.name]||0}</div>
+            <div>
+              <button class='edit-tag-btn' data-id='${t.id}' style="padding:3px 6px;margin-right:4px;border:1px solid #ACA899;background:#ECE9D8;cursor:pointer;">Éditer</button>
+              <button class='delete-tag-btn' data-id='${t.id}' style="padding:3px 6px;border:1px solid #c62828;background:#f44336;color:#fff;cursor:pointer;">Suppr.</button>
+            </div>
+          </div>`).join('') : `<div style='padding:15px;text-align:center;'>Aucun tag</div>`}
+        </div>
+      </div>`;
+    document.getElementById('add-tag-btn')?.addEventListener('click',()=> this.loadTagForm());
+    document.getElementById('tag-search')?.addEventListener('input',(e)=> this.filterTagsList(e.target.value.toLowerCase()));
+    contentDiv.querySelectorAll('.edit-tag-btn').forEach(btn=> btn.addEventListener('click', e=> this.loadTagForm(parseInt(e.target.dataset.id))));
+    contentDiv.querySelectorAll('.delete-tag-btn').forEach(btn=> btn.addEventListener('click', e=> this.confirmDeleteTag(parseInt(e.target.dataset.id))));
+  },
+  loadTagForm(tagId=null){
+    console.log(`🏷️ Formulaire tag (id:${tagId})`);
+    if(!window.tags||!Array.isArray(window.tags)) window.tags=[];
+    const tag = tagId? window.tags.find(t=> t.id===tagId): null;
+    this.state.activeTab='tag-form';
+    const contentDiv=document.getElementById('admin-content'); if(!contentDiv) return;
+    contentDiv.innerHTML=`
+      <h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>${tag? 'Modifier':'Nouveau'} tag</h3>
+      <form id='tag-form'>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Nom</label>
+          <input type='text' id='tag-name' value='${tag? (tag.name||'').replace(/"/g,'&quot;'):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;' required>
+        </div>
+        <div style='margin-bottom:12px;display:flex;gap:15px;flex-wrap:wrap;'>
+          <div style='flex:1;min-width:140px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Couleur</label>
+            <input type='color' id='tag-color' value='${tag? (tag.color||'#777777'):'#777777'}' style='width:70px;height:36px;padding:0;border:1px solid #ACA899;border-radius:4px;'>
+          </div>
+          <div style='flex:3;min-width:220px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Description (optionnelle)</label>
+            <input type='text' id='tag-description' value='${tag? (tag.description||'').replace(/"/g,'&quot;'):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+        </div>
+        <div style='margin-top:15px;'>
+          <button type='submit' style='background:#0058a8;color:#fff;border:1px solid #003f7d;padding:8px 16px;border-radius:3px;cursor:pointer;'>${tag? 'Enregistrer':'Créer'}</button>
+          <button type='button' id='tag-cancel-btn' style='margin-left:10px;padding:8px 16px;border-radius:3px;cursor:pointer;'>Annuler</button>
+        </div>
+      </form>`;
+    document.getElementById('tag-cancel-btn')?.addEventListener('click', ()=> this.loadTagsManager());
+    document.getElementById('tag-form')?.addEventListener('submit', (e)=> { e.preventDefault(); this.saveTag(tagId); });
+  },
+  saveTag(tagId){
+    if(!window.tags||!Array.isArray(window.tags)) window.tags=[];
+    const name = (document.getElementById('tag-name')?.value||'').trim();
+    if(!name){ alert('Nom requis'); return; }
+    const color = document.getElementById('tag-color')?.value || '#777777';
+    const description = document.getElementById('tag-description')?.value || '';
+    const exists = window.tags.some(t=> t.id!==tagId && t.name.toLowerCase()===name.toLowerCase());
+    if(exists){ alert('Un tag avec ce nom existe déjà'); return; }
+    if(tagId){
+      const tag = window.tags.find(t=> t.id===tagId); if(!tag){ alert('Tag introuvable'); return; }
+      Object.assign(tag,{ name, color, description, updatedAt:Date.now() });
+    } else {
+      window.tags.push({ id: Date.now(), name, color, description, createdAt:Date.now() });
+    }
+    this.saveAllData();
+    alert('Tag sauvegardé');
+    this.loadTagsManager();
+  },
+  confirmDeleteTag(tagId){
+    if(!window.tags||!Array.isArray(window.tags)) return;
+    const tag = window.tags.find(t=> t.id===tagId); if(!tag) return;
+    let usage=0; (window.films||[]).forEach(f=> (f.tags||[]).includes(tag.name)&&usage++); (window.articles||[]).forEach(a=> (a.tags||[]).includes(tag.name)&&usage++); (window.mangas||[]).forEach(m=> (m.tags||[]).includes(tag.name)&&usage++);
+    if(!confirm(`Supprimer le tag "${tag.name}"${usage? ` (utilisé ${usage} fois)`:''} ?`)) return;
+    window.tags = window.tags.filter(t=> t.id!==tagId);
+    this.saveAllData();
+    alert('Tag supprimé');
+    this.loadTagsManager();
+  },
+  filterTagsList(search){
+    if(!window.tags||!Array.isArray(window.tags)) return; const container=document.getElementById('tags-container'); if(!container) return;
+    if(!search){ this.loadTagsManager(); return; }
+    const tags=window.tags.filter(t=> (t.name||'').toLowerCase().includes(search));
+    const usageMap={}; const addUsage=(tg)=>{ if(!usageMap[tg]) usageMap[tg]=0; usageMap[tg]++; };
+    (window.films||[]).forEach(f=> (f.tags||[]).forEach(addUsage)); (window.articles||[]).forEach(a=> (a.tags||[]).forEach(addUsage)); (window.mangas||[]).forEach(m=> (m.tags||[]).forEach(addUsage));
+    if(!tags.length){ container.innerHTML=`<div style='padding:15px;text-align:center;'>Aucun tag</div>`; return; }
+    container.innerHTML = tags.sort((a,b)=> (a.name||'').localeCompare(b.name||'')).map(t=>`<div class='tag-row' data-id='${t.id}' style="padding:6px 8px;border-top:1px solid #ACA899;display:grid;grid-template-columns:160px auto 80px 130px;align-items:center;">
+      <div style='display:flex;align-items:center;gap:6px;'><span style='display:inline-block;width:16px;height:16px;background:${t.color||'#777'};border:1px solid #555;border-radius:3px;'></span><span>${t.name}</span></div>
+      <div style='font-size:12px;color:#333;overflow:hidden;text-overflow:ellipsis;'>${t.description? t.description.replace(/</g,'&lt;') : '<em style="color:#777;">—</em>'}</div>
+      <div>${usageMap[t.name]||0}</div>
+      <div>
+        <button class='edit-tag-btn' data-id='${t.id}' style="padding:3px 6px;margin-right:4px;border:1px solid #ACA899;background:#ECE9D8;cursor:pointer;">Éditer</button>
+        <button class='delete-tag-btn' data-id='${t.id}' style="padding:3px 6px;border:1px solid #c62828;background:#f44336;color:#fff;cursor:pointer;">Suppr.</button>
+      </div>
+    </div>`).join('');
+    container.querySelectorAll('.edit-tag-btn').forEach(btn=> btn.addEventListener('click', e=> this.loadTagForm(parseInt(e.target.dataset.id))));
+    container.querySelectorAll('.delete-tag-btn').forEach(btn=> btn.addEventListener('click', e=> this.confirmDeleteTag(parseInt(e.target.dataset.id))));
+  },
+  loadIconForm(iconId=null, iconType='custom') {
+    console.log(`🖥️ Formulaire icône (id:${iconId||'nouvelle'}, type:${iconType})`);
+    this.state.activeTab='icon-form';
+    if (typeof window.desktopIcons === 'undefined') window.desktopIcons={defaultIcons:[],customIcons:[]};
+    let icon=null;
+    if(iconId){
+      icon = iconType==='default' ? (window.desktopIcons.defaultIcons||[]).find(i=> i.id===iconId) : (window.desktopIcons.customIcons||[]).find(i=> i.id===iconId);
+    }
+    const contentDiv=document.getElementById('admin-content'); if(!contentDiv) return;
+    contentDiv.innerHTML=`
+      <h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>${icon? 'Modifier':'Nouvelle'} icône</h3>
+      <form id='icon-form'>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Nom</label>
+          <input type='text' id='icon-name' value='${icon? (icon.name||'').replace(/"/g,'&quot;'):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;' required>
+        </div>
+        <div style='margin-bottom:12px;display:flex;flex-wrap:wrap;gap:15px;'>
+          <div style='flex:1;min-width:160px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>ID</label>
+            <input type='text' id='icon-id' ${icon? 'disabled':''} value='${icon? icon.id.replace(/"/g,'&quot;'):''}' placeholder='auto' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+          <div style='flex:1;min-width:160px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Type fenêtre (option)</label>
+            <select id='icon-window' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+              <option value=''>Aucune</option>
+              <option value='films' ${icon?.window==='films'?'selected':''}>Films</option>
+              <option value='articles' ${icon?.window==='articles'?'selected':''}>Articles</option>
+              <option value='mangas' ${icon?.window==='mangas'?'selected':''}>Mangas</option>
+              <option value='cv' ${icon?.window==='cv'?'selected':''}>CV</option>
+              <option value='custom' ${icon?.window==='custom'?'selected':''}>Custom</option>
+            </select>
+          </div>
+          <div style='flex:1;min-width:160px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Lien URL (si pas fenêtre)</label>
+            <input type='text' id='icon-link' value='${icon? (icon.link||'').replace(/"/g,'&quot;'):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+        </div>
+        <div style='margin-bottom:12px;display:flex;flex-wrap:wrap;gap:15px;'>
+          <div style='flex:1;min-width:160px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Position X</label>
+            <input type='number' id='icon-x' value='${icon? Math.round(icon.x):20}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+          <div style='flex:1;min-width:160px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Position Y</label>
+            <input type='number' id='icon-y' value='${icon? Math.round(icon.y):20}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+          <div style='flex:1;min-width:160px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Icône (chemin)</label>
+            <input type='text' id='icon-src' value='${icon? (icon.icon||'').replace(/"/g,'&quot;'):'icons/window.png'}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+        </div>
+        <div style='margin-bottom:12px;'>
+          <label style='display:flex;align-items:center;gap:6px;cursor:pointer;'>
+            <input type='checkbox' id='icon-visible' ${icon? (icon.visible!==false?'checked':''):'checked'}> Visible
+          </label>
+        </div>
+        <div style='margin-top:15px;'>
+          <button type='submit' style='background:#0058a8;color:#fff;border:1px solid #003f7d;padding:8px 16px;border-radius:3px;cursor:pointer;'>${icon? 'Enregistrer':'Créer'}</button>
+          <button type='button' id='icon-cancel-btn' style='margin-left:10px;padding:8px 16px;border-radius:3px;cursor:pointer;'>Annuler</button>
+        </div>
+      </form>`;
+    document.getElementById('icon-cancel-btn')?.addEventListener('click', ()=> this.loadIconsManager());
+    document.getElementById('icon-form')?.addEventListener('submit', (e)=>{ e.preventDefault(); this.saveIcon(iconId, iconType); });
+  },
+  saveIcon(iconId, iconType){
+    if (typeof window.desktopIcons === 'undefined') window.desktopIcons={defaultIcons:[],customIcons:[]};
+    const name = (document.getElementById('icon-name')?.value||'').trim(); if(!name){ alert('Nom requis'); return; }
+    let id = document.getElementById('icon-id')?.value.trim();
+    if(!iconId){ // création
+      if(!id) id = 'icon_'+Date.now();
+      // Unicité
+      const exists = (window.desktopIcons.defaultIcons.concat(window.desktopIcons.customIcons)).some(i=> i.id===id);
+      if(exists){ alert('ID déjà utilisé'); return; }
+    } else {
+      id = iconId; // pas de changement
+    }
+    const data = {
+      id,
+      name,
+      window: document.getElementById('icon-window')?.value || '',
+      link: document.getElementById('icon-link')?.value.trim() || '',
+      x: parseInt(document.getElementById('icon-x')?.value)||20,
+      y: parseInt(document.getElementById('icon-y')?.value)||20,
+      icon: document.getElementById('icon-src')?.value || 'icons/window.png',
+      visible: document.getElementById('icon-visible')?.checked
+    };
+    if(iconId){ // update
+      if(iconType==='default'){
+        const idx = window.desktopIcons.defaultIcons.findIndex(i=> i.id===iconId); if(idx>-1) window.desktopIcons.defaultIcons[idx] = {...window.desktopIcons.defaultIcons[idx], ...data};
+      } else {
+        const idx = window.desktopIcons.customIcons.findIndex(i=> i.id===iconId); if(idx>-1) window.desktopIcons.customIcons[idx] = {...window.desktopIcons.customIcons[idx], ...data};
+      }
+    } else { // create
+      window.desktopIcons.customIcons.push(data);
+    }
+    // Re-render bureau si possible
+    if(window.DesktopManager && typeof window.DesktopManager.renderDesktopIcons==='function') window.DesktopManager.renderDesktopIcons();
+    this.saveIconsToData();
+    alert('Icône sauvegardée');
+    this.loadIconsManager();
+  },
+  confirmDeleteIcon(iconId){
+    if(typeof window.desktopIcons==='undefined') return;
+    const idx = (window.desktopIcons.customIcons||[]).findIndex(i=> i.id===iconId);
+    if(idx===-1){ alert('Icône introuvable (seules les personnalisées sont supprimables)'); return; }
+    if(!confirm('Supprimer cette icône ?')) return;
+    window.desktopIcons.customIcons.splice(idx,1);
+    if(window.DesktopManager) window.DesktopManager.renderDesktopIcons();
+    this.saveIconsToData();
+    alert('Icône supprimée');
+    this.loadIconsManager();
+  },
+  saveIconsLayout(){
+    // Juste persister les positions actuelles (déjà mises à jour en temps réel)
+    this.saveIconsToData();
+    alert('Positions sauvegardées');
+  },
+  saveIconsToData(){
+    // Stocker structure dans DataManager.data si dispo
+    if(window.DataManager && window.DataManager.data){
+      window.DataManager.data.desktopIcons = JSON.parse(JSON.stringify(window.desktopIcons));
+      if(typeof window.saveDataToGitHub === 'function'){
+        window.saveDataToGitHub().catch(err=> console.warn('Erreur sauvegarde GitHub icônes:', err));
+      } else if(typeof window.saveData==='function') {
+        try{ window.saveData(); }catch(e){ console.warn('saveData erreur:', e); }
+      }
+    } else {
+      // fallback localStorage
+      try{ localStorage.setItem('desktopIconsBackup', JSON.stringify(window.desktopIcons)); }catch(e){ console.warn('localStorage échec:', e); }
+    }
+  },
+  // ====== MANGAS (CRUD) ======
+  loadMangasManager(){
+    console.log('📚 Chargement gestionnaire mangas');
+    if(!Array.isArray(window.mangas)) window.mangas = [];
+    this.state.activeTab='mangas-list';
+    const contentDiv=document.getElementById('admin-content'); if(!contentDiv) return;
+    const mangas=[...window.mangas].sort((a,b)=> (a.titre||'').localeCompare(b.titre||''));
+    contentDiv.innerHTML=`<h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>Gestion des mangas (${mangas.length})</h3>
+      <div style='margin-bottom:15px;display:flex;flex-wrap:wrap;gap:10px;'>
+        <button id='add-manga-btn' style="background:#0058a8;color:#fff;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">+ Nouveau manga</button>
+        <input id='manga-search' type='text' placeholder='Recherche titre...' style='flex:1;min-width:200px;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+      </div>
+      <div style='border:1px solid #ACA899;border-radius:3px;overflow:hidden;'>
+        <div style='background:#ECE9D8;padding:8px;font-weight:bold;display:grid;grid-template-columns:auto 120px 100px 140px;'>
+          <div>Titre</div><div>Chapitres</div><div>Tags</div><div>Actions</div>
+        </div>
+        <div id='mangas-container'>${mangas.length? mangas.map(m=>`<div class='manga-row' data-id='${m.id}' style="padding:8px;border-top:1px solid #ACA899;display:grid;grid-template-columns:auto 120px 100px 140px;align-items:center;">
+              <div style='overflow:hidden;text-overflow:ellipsis;'>${m.titre||'Sans titre'}</div>
+              <div>${m.chapitres||'-'}</div>
+              <div style='font-size:11px;'>${(m.tags||[]).slice(0,2).join(', ') + ((m.tags||[]).length>2?'…':'') || '-'}</div>
+              <div>
+                <button class='edit-manga-btn' data-id='${m.id}' style="padding:3px 6px;margin-right:4px;border:1px solid #ACA899;background:#ECE9D8;cursor:pointer;">Éditer</button>
+                <button class='delete-manga-btn' data-id='${m.id}' style="padding:3px 6px;border:1px solid #c62828;background:#f44336;color:#fff;cursor:pointer;">Suppr.</button>
+              </div>
+            </div>`).join('') : `<div style='padding:15px;text-align:center;'>Aucun manga</div>`}</div>
+      </div>`;
+    document.getElementById('add-manga-btn')?.addEventListener('click',()=> this.loadMangaForm());
+    document.getElementById('manga-search')?.addEventListener('input',e=> this.filterMangasList(e.target.value.toLowerCase()));
+    contentDiv.querySelectorAll('.edit-manga-btn').forEach(btn=> btn.addEventListener('click',e=> this.loadMangaForm(parseInt(e.target.dataset.id))));
+    contentDiv.querySelectorAll('.delete-manga-btn').forEach(btn=> btn.addEventListener('click',e=> this.confirmDeleteManga(parseInt(e.target.dataset.id))));
+  },
+  loadMangaForm(mangaId=null){
+    console.log(`📘 Formulaire manga (id:${mangaId})`);
+    if(!Array.isArray(window.mangas)) window.mangas=[];
+    const manga = mangaId? window.mangas.find(m=> m.id===mangaId): null;
+    this.state.activeTab='manga-form';
+    const contentDiv=document.getElementById('admin-content'); if(!contentDiv) return;
+    contentDiv.innerHTML=`<h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>${manga? 'Modifier':'Nouveau'} manga</h3>
+      <form id='manga-form'>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Titre</label>
+          <input type='text' id='manga-titre' value='${manga? (manga.titre||'').replace(/"/g,'&quot;'):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;' required>
+        </div>
+        <div style='margin-bottom:12px;display:flex;flex-wrap:wrap;gap:15px;'>
+          <div style='flex:1;min-width:120px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Chapitres</label>
+            <input type='number' id='manga-chapitres' value='${manga? (manga.chapitres||0):0}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+          <div style='flex:2;min-width:200px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Tags (virgules)</label>
+            <input type='text' id='manga-tags' value='${manga? (manga.tags||[]).join(', '):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+        </div>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Description / Notes</label>
+          <textarea id='manga-notes' rows='6' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>${manga? (manga.notes||'').replace(/</g,'&lt;'):''}</textarea>
+        </div>
+        <div style='margin-top:15px;'>
+          <button type='submit' style='background:#0058a8;color:#fff;border:1px solid #003f7d;padding:8px 16px;border-radius:3px;cursor:pointer;'>${manga? 'Enregistrer':'Créer'}</button>
+          <button type='button' id='manga-cancel-btn' style='margin-left:10px;padding:8px 16px;border-radius:3px;cursor:pointer;'>Annuler</button>
+        </div>
+      </form>`;
+    document.getElementById('manga-cancel-btn')?.addEventListener('click',()=> this.loadMangasManager());
+    document.getElementById('manga-form')?.addEventListener('submit',e=>{ e.preventDefault(); this.saveManga(mangaId); });
+  },
+  saveManga(mangaId){
+    if(!Array.isArray(window.mangas)) window.mangas=[];
+    const titre=(document.getElementById('manga-titre')?.value||'').trim(); if(!titre){ alert('Titre requis'); return; }
+    const chapitres=parseInt(document.getElementById('manga-chapitres')?.value)||0;
+    const tagsRaw=document.getElementById('manga-tags')?.value||''; const tags=tagsRaw.split(',').map(t=>t.trim()).filter(Boolean);
+    const notes=document.getElementById('manga-notes')?.value||'';
+    if(mangaId){
+      const m=window.mangas.find(mm=> mm.id===mangaId); if(!m){ alert('Manga introuvable'); return; }
+      Object.assign(m,{ titre, chapitres, tags, notes, updatedAt:Date.now() });
+    } else {
+      window.mangas.push({ id:Date.now(), titre, chapitres, tags, notes, createdAt:Date.now() });
+    }
+    this.saveAllData(); alert('Manga sauvegardé'); this.loadMangasManager();
+  },
+  filterMangasList(search){
+    if(!Array.isArray(window.mangas)) return; const container=document.getElementById('mangas-container'); if(!container) return;
+    if(!search){ this.loadMangasManager(); return; }
+    const filtered=window.mangas.filter(m=> (m.titre||'').toLowerCase().includes(search));
+    if(!filtered.length){ container.innerHTML='<div style="padding:15px;text-align:center;">Aucun manga</div>'; return; }
+    container.innerHTML = filtered.sort((a,b)=> (a.titre||'').localeCompare(b.titre||'')).map(m=>`<div class='manga-row' data-id='${m.id}' style="padding:8px;border-top:1px solid #ACA899;display:grid;grid-template-columns:auto 120px 100px 140px;align-items:center;">
+      <div style='overflow:hidden;text-overflow:ellipsis;'>${m.titre||'Sans titre'}</div>
+      <div>${m.chapitres||'-'}</div>
+      <div style='font-size:11px;'>${(m.tags||[]).slice(0,2).join(', ') + ((m.tags||[]).length>2?'…':'') || '-'}</div>
+      <div>
+        <button class='edit-manga-btn' data-id='${m.id}' style="padding:3px 6px;margin-right:4px;border:1px solid #ACA899;background:#ECE9D8;cursor:pointer;">Éditer</button>
+        <button class='delete-manga-btn' data-id='${m.id}' style="padding:3px 6px;border:1px solid #c62828;background:#f44336;color:#fff;cursor:pointer;">Suppr.</button>
+      </div>
+    </div>`).join('');
+    container.querySelectorAll('.edit-manga-btn').forEach(btn=> btn.addEventListener('click',e=> this.loadMangaForm(parseInt(e.target.dataset.id))));
+    container.querySelectorAll('.delete-manga-btn').forEach(btn=> btn.addEventListener('click',e=> this.confirmDeleteManga(parseInt(e.target.dataset.id))));
+  },
+  confirmDeleteManga(mangaId){
+    if(!Array.isArray(window.mangas)) return; const m=window.mangas.find(mm=> mm.id===mangaId); if(!m) return;
+    if(!confirm(`Supprimer le manga "${m.titre||'Sans titre'}" ?`)) return;
+    window.mangas = window.mangas.filter(mm=> mm.id!==mangaId); this.saveAllData(); alert('Manga supprimé'); this.loadMangasManager();
+  },
+  // ====== CV MANAGER ======
+  loadCVManager(){
+    console.log('📄 Chargement gestionnaire CV');
+    if(!window.cvData) window.cvData = { summary:'', experiences:[], education:[], skills:[] };
+    this.state.activeTab='cv';
+    const d=document.getElementById('admin-content'); if(!d) return;
+    d.innerHTML=`<h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>CV</h3>
+      <form id='cv-form'>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Résumé</label>
+          <textarea id='cv-summary' rows='4' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>${(window.cvData.summary||'').replace(/</g,'&lt;')}</textarea>
+        </div>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Expériences (une par ligne)</label>
+          <textarea id='cv-experiences' rows='6' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>${(window.cvData.experiences||[]).join('\n').replace(/</g,'&lt;')}</textarea>
+        </div>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Formations (une par ligne)</label>
+          <textarea id='cv-education' rows='4' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>${(window.cvData.education||[]).join('\n').replace(/</g,'&lt;')}</textarea>
+        </div>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Compétences (séparées par des virgules)</label>
+          <input id='cv-skills' type='text' value='${(window.cvData.skills||[]).join(', ').replace(/"/g,'&quot;')}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+        </div>
+        <div style='margin-top:15px;'>
+          <button type='submit' style='background:#0058a8;color:#fff;border:1px solid #003f7d;padding:8px 16px;border-radius:3px;cursor:pointer;'>Enregistrer</button>
+          <button type='button' id='cv-cancel-btn' style='margin-left:10px;padding:8px 16px;border-radius:3px;cursor:pointer;'>Tableau de bord</button>
+        </div>
+      </form>`;
+    document.getElementById('cv-cancel-btn')?.addEventListener('click',()=> this.loadDashboard());
+    document.getElementById('cv-form')?.addEventListener('submit',e=>{ e.preventDefault(); this.saveCV(); });
+  },
+  saveCV(){
+    if(!window.cvData) window.cvData={};
+    window.cvData.summary=document.getElementById('cv-summary')?.value||'';
+    window.cvData.experiences=(document.getElementById('cv-experiences')?.value||'').split(/\n+/).map(l=>l.trim()).filter(Boolean);
+    window.cvData.education=(document.getElementById('cv-education')?.value||'').split(/\n+/).map(l=>l.trim()).filter(Boolean);
+    window.cvData.skills=(document.getElementById('cv-skills')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    if(window.DataManager?.data){ window.DataManager.data.cvData = JSON.parse(JSON.stringify(window.cvData)); }
+    this.saveAllData(); alert('CV sauvegardé');
+  },
+  loadTagForm(tagId=null){
+    console.log(`🏷️ Formulaire tag (id:${tagId})`);
+    if(!window.tags||!Array.isArray(window.tags)) window.tags=[];
+    const tag = tagId? window.tags.find(t=> t.id===tagId): null;
+    this.state.activeTab='tag-form';
+    const contentDiv=document.getElementById('admin-content'); if(!contentDiv) return;
+    contentDiv.innerHTML=`
+      <h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>${tag? 'Modifier':'Nouveau'} tag</h3>
+      <form id='tag-form'>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Nom</label>
+          <input type='text' id='tag-name' value='${tag? (tag.name||'').replace(/"/g,'&quot;'):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;' required>
+        </div>
+        <div style='margin-bottom:12px;display:flex;gap:15px;flex-wrap:wrap;'>
+          <div style='flex:1;min-width:140px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Couleur</label>
+            <input type='color' id='tag-color' value='${tag? (tag.color||'#777777'):'#777777'}' style='width:70px;height:36px;padding:0;border:1px solid #ACA899;border-radius:4px;'>
+          </div>
+          <div style='flex:3;min-width:220px;'>
+            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Description (optionnelle)</label>
+            <input type='text' id='tag-description' value='${tag? (tag.description||'').replace(/"/g,'&quot;'):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          </div>
+        </div>
+        <div style='margin-top:15px;'>
+          <button type='submit' style='background:#0058a8;color:#fff;border:1px solid #003f7d;padding:8px 16px;border-radius:3px;cursor:pointer;'>${tag? 'Enregistrer':'Créer'}</button>
+          <button type='button' id='tag-cancel-btn' style='margin-left:10px;padding:8px 16px;border-radius:3px;cursor:pointer;'>Annuler</button>
+        </div>
+      </form>`;
+    document.getElementById('tag-cancel-btn')?.addEventListener('click', ()=> this.loadTagsManager());
+    document.getElementById('tag-form')?.addEventListener('submit', (e)=> { e.preventDefault(); this.saveTag(tagId); });
+  },
+  saveTag(tagId){
+    if(!window.tags||!Array.isArray(window.tags)) window.tags=[];
+    const name = (document.getElementById('tag-name')?.value||'').trim();
+    if(!name){ alert('Nom requis'); return; }
+    const color = document.getElementById('tag-color')?.value || '#777777';
+    const description = document.getElementById('tag-description')?.value || '';
+    // Unicité nom (case insensitive)
+    const exists = window.tags.some(t=> t.id!==tagId && t.name.toLowerCase()===name.toLowerCase());
+    if(exists){ alert('Un tag avec ce nom existe déjà'); return; }
+    if(tagId){
+      const tag = window.tags.find(t=> t.id===tagId); if(!tag){ alert('Tag introuvable'); return; }
+      Object.assign(tag,{ name, color, description, updatedAt:Date.now() });
+    } else {
+      window.tags.push({ id: Date.now(), name, color, description, createdAt:Date.now() });
+    }
+    this.saveAllData();
+    alert('Tag sauvegardé');
+    this.loadTagsManager();
+  },
+  confirmDeleteTag(tagId){
+    if(!window.tags||!Array.isArray(window.tags)) return;
+    const tag = window.tags.find(t=> t.id===tagId); if(!tag) return;
+    // Calcul usage
+    let usage=0; (window.films||[]).forEach(f=> (f.tags||[]).includes(tag.name)&&usage++); (window.articles||[]).forEach(a=> (a.tags||[]).includes(tag.name)&&usage++); (window.mangas||[]).forEach(m=> (m.tags||[]).includes(tag.name)&&usage++);
+    if(!confirm(`Supprimer le tag "${tag.name}"${usage? ` (utilisé ${usage} fois)`:''} ?`)) return;
+    window.tags = window.tags.filter(t=> t.id!==tagId);
+    this.saveAllData();
+    alert('Tag supprimé');
+    this.loadTagsManager();
+  },
+  filterTagsList(search){
+    if(!window.tags||!Array.isArray(window.tags)) return; const container=document.getElementById('tags-container'); if(!container) return;
+    if(!search){ this.loadTagsManager(); return; }
+    const tags=window.tags.filter(t=> (t.name||'').toLowerCase().includes(search));
+    // Rebuild usage
+    const usageMap={}; const addUsage=(tg)=>{ if(!usageMap[tg]) usageMap[tg]=0; usageMap[tg]++; };
+    (window.films||[]).forEach(f=> (f.tags||[]).forEach(addUsage)); (window.articles||[]).forEach(a=> (a.tags||[]).forEach(addUsage)); (window.mangas||[]).forEach(m=> (m.tags||[]).forEach(addUsage));
+    if(!tags.length){ container.innerHTML=`<div style='padding:15px;text-align:center;'>Aucun tag</div>`; return; }
+    container.innerHTML = tags.sort((a,b)=> (a.name||'').localeCompare(b.name||'')).map(t=>`<div class='tag-row' data-id='${t.id}' style="padding:6px 8px;border-top:1px solid #ACA899;display:grid;grid-template-columns:160px auto 80px 130px;align-items:center;">
+      <div style='display:flex;align-items:center;gap:6px;'><span style='display:inline-block;width:16px;height:16px;background:${t.color||'#777'};border:1px solid #555;border-radius:3px;'></span><span>${t.name}</span></div>
+      <div style='font-size:12px;color:#333;overflow:hidden;text-overflow:ellipsis;'>${t.description? t.description.replace(/</g,'&lt;') : '<em style="color:#777;">—</em>'}</div>
+      <div>${usageMap[t.name]||0}</div>
+      <div>
+        <button class='edit-tag-btn' data-id='${t.id}' style="padding:3px 6px;margin-right:4px;border:1px solid #ACA899;background:#ECE9D8;cursor:pointer;">Éditer</button>
+        <button class='delete-tag-btn' data-id='${t.id}' style="padding:3px 6px;border:1px solid #c62828;background:#f44336;color:#fff;cursor:pointer;">Suppr.</button>
+      </div>
+    </div>`).join('');
+    container.querySelectorAll('.edit-tag-btn').forEach(btn=> btn.addEventListener('click', e=> this.loadTagForm(parseInt(e.target.dataset.id))));
+    container.querySelectorAll('.delete-tag-btn').forEach(btn=> btn.addEventListener('click', e=> this.confirmDeleteTag(parseInt(e.target.dataset.id))));
+  },
+  loadIconsManager() {
+    console.log('🖥️ Chargement gestionnaire icônes');
+    const contentDiv = document.getElementById('admin-content'); if(!contentDiv) return; this.state.activeTab='icons';
+    const all = window.DesktopManager ? window.DesktopManager.getAllIcons() : {defaultIcons:[],customIcons:[]};
+    contentDiv.innerHTML = `
+      <h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>Gestion des icônes</h3>
+      <p>Déplacement direct sur le bureau. (Éditeur complet à venir)</p>
+      <h4>Icônes par défaut</h4>
+      <ul style='margin:0 0 15px 18px;'>${all.defaultIcons.map(i=>`<li>${i.name} (id: ${i.id})</li>`).join('')}</ul>
+      <h4>Icônes personnalisées</h4>
+      <ul style='margin:0 0 15px 18px;'>${all.customIcons.length?all.customIcons.map(i=>`<li>${i.name} (id: ${i.id})</li>`).join(''):'<li>Aucune</li>'}</ul>`;
+  },
+  loadImportExportManager() {
+    console.log('📦 Import/Export');
+    const contentDiv = document.getElementById('admin-content'); if(!contentDiv) return; this.state.activeTab='import-export';
+    const current = {
+      films: window.films || [],
+      articles: window.articles || [],
+      mangas: window.mangas || [],
+      tags: window.tags || [],
+      welcomePopupConfig: window.DataManager?.data?.welcomePopupConfig || {}
+  ,desktopIcons: window.DataManager?.data?.desktopIcons || window.desktopIcons || {}
+  ,cvData: window.DataManager?.data?.cvData || window.cvData || {}
+    };
+    contentDiv.innerHTML = `
+      <h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>Import / Export</h3>
+      <p>Copiez / collez les données JSON ou exportez un fichier.</p>
+      <textarea id='export-json' style='width:100%;height:180px;border:1px solid #ACA899;padding:8px;'>${JSON.stringify(current,null,2)}</textarea>
+      <div style='margin-top:10px;'>
+        <button id='btn-download-json' style='background:#0058a8;color:#fff;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;'>Télécharger</button>
+        <button id='btn-import-json' style='margin-left:8px;background:#4CAF50;color:#fff;border:1px solid #2e7d32;padding:6px 12px;border-radius:3px;cursor:pointer;'>Importer</button>
+        <input type='file' id='file-import' accept='application/json' style='margin-left:12px;'>
+      </div>`;
+    // Events basiques
+    document.getElementById('btn-download-json')?.addEventListener('click',()=>{
+      const blob=new Blob([document.getElementById('export-json').value],{type:'application/json'});
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup.json';a.click();
+    });
+    document.getElementById('btn-import-json')?.addEventListener('click',()=>{
+      try { const parsed=JSON.parse(document.getElementById('export-json').value); Object.assign(window.DataManager.data, parsed); alert('Import appliqué (non sauvegardé)'); } catch(e){ alert('JSON invalide'); }
+    });
+    document.getElementById('file-import')?.addEventListener('change',(e)=>{
+      const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>{ try{ const parsed=JSON.parse(ev.target.result); Object.assign(window.DataManager.data, parsed); document.getElementById('export-json').value=JSON.stringify(parsed,null,2); alert('Import fichier appliqué (non sauvegardé)'); } catch(err){ alert('Fichier invalide'); } }; reader.readAsText(file); });
   }
 };
 

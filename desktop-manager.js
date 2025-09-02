@@ -32,10 +32,11 @@ const DesktopManager = {
       // Icônes par défaut - Suppression des icônes Admin et À propos, meilleures positions
       window.desktopIcons = {
         defaultIcons: [
-          { id: 'films', name: 'Films', icon: 'icons/film.png', x: 30, y: 30, visible: true },
-          { id: 'articles', name: 'Articles', icon: 'icons/article.png', x: 30, y: 160, visible: true },
-          { id: 'cv', name: 'CV', icon: 'icons/cv.png', x: 30, y: 290, visible: true },
-          { id: 'mangas', name: 'Mangas', icon: 'icons/portfolio.png', x: 30, y: 420, visible: false }
+          // Ajout de la propriété "window" pour un mapping explicite
+          { id: 'films', name: 'Films', icon: 'icons/film.png', x: 30, y: 30, visible: true, window: 'films' },
+          { id: 'articles', name: 'Articles', icon: 'icons/article.png', x: 30, y: 160, visible: true, window: 'articles' },
+          { id: 'cv', name: 'CV', icon: 'icons/cv.png', x: 30, y: 290, visible: true, window: 'cv' },
+          { id: 'mangas', name: 'Mangas', icon: 'icons/portfolio.png', x: 30, y: 420, visible: false, window: 'mangas' }
           // Les icônes "Admin" et "À propos" ont été supprimées comme demandé
         ],
         customIcons: []
@@ -81,7 +82,8 @@ const DesktopManager = {
     const iconElement = document.createElement('div');
     iconElement.className = 'desktop-icon';
     iconElement.dataset.id = icon.id;
-    iconElement.dataset.type = icon.id in window.desktopIcons.defaultIcons ? 'default' : 'custom';
+  // Correction : utilisation d'une recherche dans le tableau au lieu de l'opérateur "in" (qui ne fonctionne que sur les index numériques)
+  iconElement.dataset.type = window.desktopIcons.defaultIcons.some(i => i.id === icon.id) ? 'default' : 'custom';
     
     // Définir la position
     iconElement.style.position = 'absolute';
@@ -209,6 +211,18 @@ const DesktopManager = {
       return;
     }
     
+    // Chercher l'icône pour voir si elle a une propriété window explicite
+    let iconObj = (window.desktopIcons.defaultIcons || []).concat(window.desktopIcons.customIcons || []).find(i => i.id === iconId);
+    if (iconObj && iconObj.window) {
+      console.log(`🔗 Ouverture via propriété window='${iconObj.window}' pour l'icône ${iconId}`);
+      switch(iconObj.window) {
+        case 'films': return window.WindowManager.createFilmsWindow();
+        case 'articles': return window.WindowManager.createArticlesWindow();
+        case 'mangas': return window.WindowManager.createMangasWindow();
+        case 'cv': return window.WindowManager.createCVWindow();
+      }
+    }
+
     // Mappings d'ID vers les fonctions
     const windowMappings = {
       'films': 'createFilmsWindow',
