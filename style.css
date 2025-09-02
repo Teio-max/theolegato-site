@@ -65,9 +65,10 @@ body {
   left: 0;
   width: 100%;
   height: calc(100% - 30px); /* Hauteur moins la barre des tâches */
-  background-image: url('https://i.imgur.com/Zk6TR5k.jpg');
+  background-image: url('fond.jpg'); /* Image locale */
   background-size: cover;
-  background-position: center;
+  background-position: center center;
+  background-repeat: no-repeat;
   overflow: hidden;
 }
 
