@@ -11,6 +11,8 @@ const DesktopManager = {
   // Initialisation du gestionnaire
   init() {
     console.log("🖥️ Initialisation du gestionnaire de bureau");
+  if (this._initialized) { console.log('ℹ️ DesktopManager déjà initialisé'); return; }
+  this._initialized = true;
     
     // Initialiser les icônes
     this.loadDesktopIcons();
@@ -54,6 +56,18 @@ const DesktopManager = {
   
   // Chargement des icônes du bureau
   loadDesktopIcons() {
+    // Normaliser structure si DataManager a mis un simple tableau
+    if (Array.isArray(window.desktopIcons)) {
+      window.desktopIcons = { defaultIcons: [], customIcons: window.desktopIcons.map((ic,i)=>({
+        id: ic.id || ic.name || ('icon'+i),
+        name: ic.name || ic.id || ('Icône '+i),
+        icon: ic.icon || 'icons/window.png',
+        x: ic.position?.x || 30,
+        y: ic.position?.y || 30,
+        visible: ic.visible !== false,
+        window: (ic.action||'').replace(/^create/,'').replace(/Window$/,'').toLowerCase() || ic.window || null
+      })) };
+    }
     if (typeof window.desktopIcons === 'undefined') {
       window.desktopIcons = {
         defaultIcons: [
@@ -71,9 +85,10 @@ const DesktopManager = {
   // Rendu des icônes sur le bureau
   renderDesktopIcons() {
     // Vérifier que les icônes sont disponibles
-    if (typeof window.desktopIcons === 'undefined') {
+    if (!window.desktopIcons || (!window.desktopIcons.defaultIcons && !window.desktopIcons.customIcons)) {
       this.loadDesktopIcons();
     }
+    if (!window.desktopIcons) return;
     
     // Obtenir l'élément desktop s'il existe
     const desktop = document.getElementById('desktop');
@@ -87,10 +102,15 @@ const DesktopManager = {
     existingIcons.forEach(icon => icon.remove());
     
     // Obtenir toutes les icônes visibles
-    const allIcons = [
-      ...(window.desktopIcons.defaultIcons || []),
-      ...(window.desktopIcons.customIcons || [])
-    ].filter(icon => icon.visible);
+    let defaults = window.desktopIcons.defaultIcons || [];
+    let customs = window.desktopIcons.customIcons || [];
+    if (Array.isArray(window.desktopIcons) && !defaults.length && !customs.length) {
+      customs = window.desktopIcons; // fallback brut
+    }
+    const allIcons = [...defaults, ...customs].filter(icon => icon && icon.visible !== false);
+    if(!allIcons.length) {
+      console.warn('⚠️ Aucune icône à afficher (liste vide)');
+    }
     
     // Créer les éléments d'icône
     allIcons.forEach(icon => {
