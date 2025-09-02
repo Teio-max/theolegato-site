@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Admin Simple</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    button {
+      background: linear-gradient(to bottom, #2586e7, #0058a8);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    
+    #log {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      min-height: 200px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test Admin Panel (Version simplifiée)</h1>
+  
+  <button id="btnTest">Tester Admin Panel</button>
+  <button id="btnShowScripts">Lister les scripts chargés</button>
+  
+  <div id="log"></div>
+  
+  <!-- Chargement minimal des scripts nécessaires -->
+  <script>
+    // Fonction de log
+    function log(message) {
+      const logEl = document.getElementById('log');
+      const logItem = document.createElement('div');
+      logItem.textContent = message;
+      logEl.appendChild(logItem);
+      console.log(message);
+    }
+    
+    // Fonction pour charger un script
+    function loadScript(url) {
+      return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = url;
+        script.onload = () => {
+          log(`✅ Chargé: ${url}`);
+          resolve();
+        };
+        script.onerror = () => {
+          log(`❌ Erreur de chargement: ${url}`);
+          reject();
+        };
+        document.body.appendChild(script);
+      });
+    }
+    
+    // Fonction de test admin
+    function testAdmin() {
+      log("--- Test du panneau admin ---");
+      
+      // Tester window.AdminManager
+      if (typeof window.AdminManager !== 'undefined') {
+        log("AdminManager est disponible");
+        try {
+          window.AdminManager.createPanel();
+          log("✅ AdminManager.createPanel() appelé avec succès");
+        } catch (e) {
+          log(`❌ Erreur: ${e.message}`);
+        }
+      } else {
+        log("❌ AdminManager n'est pas disponible");
+      }
+      
+      // Tester showAdminTest
+      if (typeof window.showAdminTest === 'function') {
+        log("showAdminTest est disponible");
+        try {
+          window.showAdminTest();
+          log("✅ showAdminTest() appelé avec succès");
+        } catch (e) {
+          log(`❌ Erreur: ${e.message}`);
+        }
+      } else {
+        log("❌ showAdminTest n'est pas disponible");
+      }
+    }
+    
+    // Fonction pour lister les scripts chargés
+    function listLoadedScripts() {
+      log("--- Scripts chargés ---");
+      const scripts = document.querySelectorAll('script');
+      scripts.forEach(script => {
+        if (script.src) {
+          log(script.src);
+        }
+      });
+    }
+    
+    // Charger les scripts nécessaires dans l'ordre
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        log("Chargement des scripts...");
+        
+        // Charger les scripts dans l'ordre
+        await loadScript('error-handler.js');
+        await loadScript('data-manager.js');
+        await loadScript('window-manager.js');
+        await loadScript('desktop-manager.js');
+        await loadScript('admin-functions.js');
+        await loadScript('admin-unified.js');
+        await loadScript('showAdminTest.js');
+        
+        log("✅ Tous les scripts ont été chargés");
+        
+        // Ajouter les événements
+        document.getElementById('btnTest').addEventListener('click', testAdmin);
+        document.getElementById('btnShowScripts').addEventListener('click', listLoadedScripts);
+      } catch (e) {
+        log(`❌ Erreur de chargement: ${e}`);
+      }
+    });
+  </script>
+</body>
+</html>

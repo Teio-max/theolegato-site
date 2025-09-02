@@ -1097,29 +1097,36 @@ function showAdminLogin() {
   
   window.checkAdminPass = function(winId) {
   const pass = document.getElementById('admin-pass').value;
+  console.log("Vérification du mot de passe:", pass);
   if (pass === 'sitethéi') { // Mot de passe personnalisé
     document.getElementById(winId).remove();
-    createAdminPanelWindow(); // Utilisez la nouvelle fonction d'administration
+    console.log("Mot de passe correct, ouverture du panneau d'administration...");
+    // Vérifier que la fonction est disponible
+    if (typeof createAdminPanelWindow === 'function') {
+      console.log("Fonction createAdminPanelWindow trouvée, appel en cours...");
+      createAdminPanelWindow(); // Utilisez la nouvelle fonction d'administration
+    } else {
+      console.error("ERREUR: La fonction createAdminPanelWindow n'est pas définie!");
+      alert("Erreur: Le panneau d'administration n'a pas pu être chargé. Vérifiez la console pour plus de détails.");
+    }
   } else {
     document.getElementById('admin-error').textContent = 'Mot de passe incorrect.';
   }
 }
 
 function showAddFilmForm() {
-  const adminContent = document.getElementById('admin-content');
-  if (!adminContent) return;
-  
-  adminContent.innerHTML = `
-    <h2>Ajouter un nouveau film</h2>
-    <form id="add-film-form">
-      <div class="form-group">
-        <label for="film-title">Titre</label>
-        <input type="text" id="film-title" required>
-      </div>
-      <div class="form-group">
-        <label for="film-note">Note (1-5)</label>
-        <input type="number" id="film-note" min="0" max="5" value="0">
-      </div>
+  // Utiliser le nouveau système d'administration unifié
+  if (typeof window.AdminManager !== 'undefined' && typeof window.AdminManager.createPanel === 'function') {
+    console.log("Utilisation directe d'AdminManager");
+    window.AdminManager.createPanel(null, 'film');
+  } else if (typeof window.createAdminPanelWindow === 'function') {
+    console.log("Utilisation de createAdminPanelWindow");
+    window.createAdminPanelWindow(null, 'film');
+  } else {
+    console.error("Aucune fonction d'administration n'est disponible");
+    alert("Erreur: Le système d'administration n'est pas disponible. Vérifiez que les scripts sont correctement chargés.");
+  }
+}
       <div class="form-group">
         <label for="film-critique">Critique</label>
         <textarea id="film-critique" rows="4"></textarea>
@@ -1166,30 +1173,18 @@ function showAddFilmForm() {
 }
 
 function showAddMangaForm() {
-  const adminContent = document.getElementById('admin-content');
-  if (!adminContent) return;
-  
-  adminContent.innerHTML = `
-    <h2>Ajouter un nouveau manga</h2>
-    <form id="add-manga-form">
-      <div class="form-group">
-        <label for="manga-title">Titre</label>
-        <input type="text" id="manga-title" required>
-      </div>
-      <div class="form-group">
-        <label for="manga-note">Note (1-5)</label>
-        <input type="number" id="manga-note" min="0" max="5" value="0">
-      </div>
-      <div class="form-group">
-        <label for="manga-auteur">Auteur</label>
-        <input type="text" id="manga-auteur">
-      </div>
-      <div class="form-group">
-        <label for="manga-statut">Statut</label>
-        <select id="manga-statut">
-          <option value="En cours">En cours</option>
-          <option value="Terminé">Terminé</option>
-          <option value="En pause">En pause</option>
+  // Utiliser le nouveau système d'administration unifié
+  if (typeof window.AdminManager !== 'undefined' && typeof window.AdminManager.createPanel === 'function') {
+    console.log("Utilisation directe d'AdminManager");
+    window.AdminManager.createPanel(null, 'manga');
+  } else if (typeof window.createAdminPanelWindow === 'function') {
+    console.log("Utilisation de createAdminPanelWindow");
+    window.createAdminPanelWindow(null, 'manga');
+  } else {
+    console.error("Aucune fonction d'administration n'est disponible");
+    alert("Erreur: Le système d'administration n'est pas disponible. Vérifiez que les scripts sont correctement chargés.");
+  }
+}
         </select>
       </div>
       <div class="form-group">
@@ -1238,16 +1233,19 @@ function showAddMangaForm() {
 }
 
 function showManageTagsForm() {
-  const adminContent = document.getElementById('admin-content');
-  if (!adminContent) return;
-  
-  // Préparer l'affichage des tags
-  let tagsHTML = '<ul class="tags-list">';
-  
-  if (DataManager.data.tags && DataManager.data.tags.length) {
-    DataManager.data.tags.forEach(tag => {
-      tagsHTML += `
-        <li data-id="${tag.id}">
+  // Utiliser le nouveau système d'administration unifié
+  if (typeof window.AdminManager !== 'undefined' && typeof window.AdminManager.loadTagsManager === 'function') {
+    console.log("Utilisation directe d'AdminManager.loadTagsManager");
+    window.AdminManager.loadTagsManager();
+  } else if (typeof window.showManageTagsForm === 'function' && window.showManageTagsForm !== showManageTagsForm) {
+    // Si une autre implémentation de showManageTagsForm a été définie (par admin-unified.js)
+    console.log("Utilisation de l'implémentation alternative de showManageTagsForm");
+    window.showManageTagsForm();
+  } else {
+    console.error("Aucune fonction de gestion des tags n'est disponible");
+    alert("Erreur: Le système de gestion des tags n'est pas disponible. Vérifiez que les scripts sont correctement chargés.");
+  }
+}
           <span style="background-color: ${tag.color};" class="tag-color"></span>
           <span class="tag-name">${tag.name}</span>
           <span class="tag-category">(${tag.category})</span>
@@ -1388,7 +1386,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ctrl+Shift+A pour ouvrir le panneau d'administration
     if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
       e.preventDefault();
-      showAdminLogin();
+      if (typeof window.showAdminTest === 'function') {
+        window.showAdminTest();
+      } else {
+        alert("Le test du panneau d'administration n'est pas disponible");
+      }
     }
   });
 });

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Diagnostic Admin</title>
+</head>
+<body>
+  <h1>Diagnostic Admin Panel</h1>
+  <button onclick="testAdmin()">Tester AdminManager</button>
+  <pre id="output" style="background:#f5f5f5; padding:10px; margin-top:20px; border:1px solid #ddd;"></pre>
+
+  <script>
+    function log(text) {
+      document.getElementById('output').textContent += text + '\n';
+      console.log(text);
+    }
+
+    function testAdmin() {
+      log('Test de diagnostic du panneau admin');
+      log('------------------------------');
+      
+      // Vérifier si AdminManager existe
+      if (window.AdminManager) {
+        log('✓ AdminManager est disponible');
+        
+        // Vérifier la méthode createPanel
+        if (typeof window.AdminManager.createPanel === 'function') {
+          log('✓ AdminManager.createPanel() est disponible');
+          try {
+            log('Tentative d\'appel de AdminManager.createPanel()...');
+            window.AdminManager.createPanel();
+            log('✓ AdminManager.createPanel() a été appelé');
+          } catch (e) {
+            log('✗ Erreur lors de l\'appel à AdminManager.createPanel(): ' + e.message);
+          }
+        } else {
+          log('✗ AdminManager.createPanel() n\'est pas disponible');
+        }
+      } else {
+        log('✗ AdminManager n\'est pas disponible');
+      }
+      
+      // Vérifier WindowManager
+      if (window.WindowManager) {
+        log('✓ WindowManager est disponible');
+        
+        // Vérifier createAdminPanelWindow
+        if (typeof window.WindowManager.createAdminPanelWindow === 'function') {
+          log('✓ WindowManager.createAdminPanelWindow() est disponible');
+          try {
+            log('Tentative d\'appel de WindowManager.createAdminPanelWindow()...');
+            window.WindowManager.createAdminPanelWindow();
+            log('✓ WindowManager.createAdminPanelWindow() a été appelé');
+          } catch (e) {
+            log('✗ Erreur lors de l\'appel à WindowManager.createAdminPanelWindow(): ' + e.message);
+          }
+        } else {
+          log('✗ WindowManager.createAdminPanelWindow() n\'est pas disponible');
+        }
+      } else {
+        log('✗ WindowManager n\'est pas disponible');
+      }
+      
+      // Vérifier showAdminTest
+      if (typeof window.showAdminTest === 'function') {
+        log('✓ showAdminTest() est disponible');
+        try {
+          log('Tentative d\'appel de showAdminTest()...');
+          window.showAdminTest();
+          log('✓ showAdminTest() a été appelé');
+        } catch (e) {
+          log('✗ Erreur lors de l\'appel à showAdminTest(): ' + e.message);
+        }
+      } else {
+        log('✗ showAdminTest() n\'est pas disponible');
+      }
+    }
+  </script>
+  
+  <!-- Chargement des scripts dans un ordre spécifique -->
+  <script src="error-handler.js"></script>
+  <script src="data-manager.js"></script>
+  <script src="window-manager.js"></script>
+  <script src="desktop-manager.js"></script>
+  <script src="admin-functions.js"></script>
+  <script src="admin-unified.js"></script>
+  <script src="showAdminTest.js"></script>
+</body>
+</html>

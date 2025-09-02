@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Admin - Collection Films & Manga</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="admin-styles.css">
+  <link rel="stylesheet" href="admin-panel.css">
+  <script src="error-handler.js"></script>
+</head>
+<body>
+  <h1>Page de test du panneau d'administration</h1>
+  <button id="testAdminBtn" style="padding:10px 20px;background:#0058a8;color:white;border:none;cursor:pointer;">
+    Tester le panneau d'administration
+  </button>
+  
+  <div id="container" style="margin-top:20px;"></div>
+  
+  <!-- Scripts de base nécessaires -->
+  <script src="script.js"></script>
+  <script src="window-manager.js"></script>
+  <script src="data-manager.js"></script>
+  
+  <!-- Scripts d'administration simplifiés -->
+  <script src="admin-panel-enhanced.js"></script>
+
+  <script>
+    // Script de test
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("Page de test chargée");
+      
+      // Initialiser AdminPanelManager manuellement
+      if (typeof AdminPanelManager !== 'undefined' && typeof AdminPanelManager.init === 'function') {
+        console.log("Initialisation manuelle de AdminPanelManager");
+        AdminPanelManager.init();
+      }
+      
+      // Gestionnaire pour le bouton de test
+      document.getElementById('testAdminBtn').addEventListener('click', function() {
+        console.log("Bouton de test cliqué");
+        
+        if (typeof AdminPanelManager !== 'undefined' && typeof AdminPanelManager.createPanel === 'function') {
+          console.log("Création du panneau via AdminPanelManager.createPanel");
+          AdminPanelManager.createPanel();
+        } else if (typeof createAdminPanelWindow === 'function') {
+          console.log("Création du panneau via createAdminPanelWindow");
+          createAdminPanelWindow();
+        } else {
+          console.error("Aucune fonction de création de panneau d'administration n'est disponible");
+          alert("Erreur: Impossible de créer le panneau d'administration");
+        }
+      });
+    });
+  </script>
+</body>
+</html>

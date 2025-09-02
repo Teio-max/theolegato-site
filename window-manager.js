@@ -569,6 +569,36 @@ const WindowManager = {
   }
 };
 
+// Ajouter la fonction createAdminPanelWindow
+WindowManager.createAdminPanelWindow = function() {
+  console.log("🔧 Création de la fenêtre du panneau d'administration");
+  
+  if (typeof window.AdminManager !== 'undefined') {
+    // Utiliser AdminManager si disponible
+    return window.AdminManager.createPanel();
+  } else if (typeof window.createAdminPanelWindow === 'function' && window.createAdminPanelWindow !== WindowManager.createAdminPanelWindow) {
+    // Utiliser la fonction originale si disponible
+    return window.createAdminPanelWindow();
+  } else {
+    // Créer une fenêtre simple avec un message d'erreur
+    const errorContent = `
+      <div style="padding:20px;text-align:center;">
+        <h3 style="color:#cc0000;">Erreur de chargement</h3>
+        <p>Le module d'administration n'est pas disponible.</p>
+        <p>Veuillez vérifier que le fichier admin-unified.js est correctement chargé.</p>
+      </div>
+    `;
+    
+    return this.createWindow({
+      title: 'Panneau d\'administration',
+      icon: 'icons/key.png',
+      width: 500,
+      height: 300,
+      content: errorContent
+    });
+  }
+};
+
 // Initialiser le gestionnaire quand le DOM est chargé
 document.addEventListener('DOMContentLoaded', function() {
   console.log("🚀 Initialisation de WindowManager");

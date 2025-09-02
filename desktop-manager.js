@@ -33,7 +33,8 @@ const DesktopManager = {
           { id: 'articles', name: 'Articles', icon: 'icons/article.png', x: 20, y: 100, visible: true },
           { id: 'cv', name: 'CV', icon: 'icons/cv.png', x: 20, y: 180, visible: true },
           { id: 'mangas', name: 'Mangas', icon: 'icons/portfolio.png', x: 20, y: 260, visible: false },
-          { id: 'info', name: 'À propos', icon: 'icons/info.png', x: 20, y: 340, visible: true }
+          { id: 'info', name: 'À propos', icon: 'icons/info.png', x: 20, y: 340, visible: true },
+          { id: 'admin', name: 'Admin', icon: 'icons/key.png', x: 20, y: 420, visible: true }
         ],
         customIcons: []
       };

@@ -2,7 +2,7 @@
 // Intégration améliorée avec WindowManager
 
 // Gestionnaire du panneau d'administration avec API moderne
-const AdminPanelManager = {
+window.AdminPanelManager = {
   // Configuration
   config: {
     defaultWidth: 750,
@@ -26,14 +26,7 @@ const AdminPanelManager = {
     // Vérifier le token GitHub
     this.checkGitHubToken();
     
-    // Stocker la fonction originale si elle existe
-    if (typeof window.originalCreateAdminPanelWindow === 'undefined' && typeof window.createAdminPanelWindow === 'function') {
-      window.originalCreateAdminPanelWindow = window.createAdminPanelWindow;
-      console.log("📝 Fonction originale sauvegardée");
-    }
-    
-    // Remplacer la fonction globale par notre implémentation
-    window.createAdminPanelWindow = this.createPanel.bind(this);
+    // IMPORTANT: NE PAS remplacer createAdminPanelWindow ici pour éviter la récursion infinie
   },
   
   // Vérification du token GitHub
@@ -146,6 +139,9 @@ const AdminPanelManager = {
           <button id="btn-manage-tags" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
             Gérer Tags (${window.tags?.length || 0})
           </button>
+          <button id="btn-manage-icons" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Gérer Icônes
+          </button>
           <button id="btn-manage-articles" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
             Gérer Articles
           </button>
@@ -176,8 +172,10 @@ const AdminPanelManager = {
     document.getElementById('btn-add-manga')?.addEventListener('click', () => this.loadMangaForm());
     document.getElementById('btn-list-mangas')?.addEventListener('click', () => this.loadMangasList());
     document.getElementById('btn-manage-tags')?.addEventListener('click', () => this.loadTagsManager());
+    document.getElementById('btn-manage-icons')?.addEventListener('click', () => this.loadIconsManager());
     document.getElementById('btn-manage-articles')?.addEventListener('click', () => this.loadArticlesManager());
     document.getElementById('btn-github-token')?.addEventListener('click', () => this.loadTokenManager());
+    document.getElementById('btn-manage-cv')?.addEventListener('click', () => this.loadCVManager());
     document.getElementById('btn-manage-cv')?.addEventListener('click', () => this.loadCVManager());
   },
   
@@ -2343,6 +2341,234 @@ const AdminPanelManager = {
     }
   },
   
+  // Gestion des icônes du bureau
+  loadIconsManager() {
+    console.log('🖼️ Chargement du gestionnaire d\'icônes');
+    this.state.activeTab = 'icons-manager';
+    
+    const contentDiv = document.getElementById('admin-content');
+    if (!contentDiv) return;
+    
+    // Vérifier si les icônes sont disponibles
+    if (typeof window.desktopIcons === 'undefined' && typeof window.DesktopManagerAdmin !== 'undefined' && typeof window.DesktopManagerAdmin.getIcons === 'function') {
+      window.desktopIcons = window.DesktopManagerAdmin.getIcons();
+    } else if (typeof window.desktopIcons === 'undefined') {
+      window.desktopIcons = [];
+    }
+    
+    // Générer le HTML
+    contentDiv.innerHTML = `
+      <h3 style="color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;">
+        Gestionnaire d'icônes du bureau
+      </h3>
+      
+      <div class="actions-bar" style="margin-bottom:15px;display:flex;gap:10px;">
+        <button id="refresh-icons-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+          Rafraîchir
+        </button>
+        <button id="add-icon-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+          Ajouter une icône
+        </button>
+        <button id="save-icons-btn" style="padding:4px 10px;background:#4CAF50;color:white;border:1px solid #388E3C;cursor:pointer;">
+          Sauvegarder
+        </button>
+      </div>
+      
+      <div id="icons-list" style="margin-top:15px;">
+        <table style="width:100%;border-collapse:collapse;">
+          <thead>
+            <tr style="background:#ECE9D8;">
+              <th style="padding:8px;text-align:left;border:1px solid #ACA899;">Nom</th>
+              <th style="padding:8px;text-align:left;border:1px solid #ACA899;">Icône</th>
+              <th style="padding:8px;text-align:left;border:1px solid #ACA899;">Action</th>
+              <th style="padding:8px;text-align:center;border:1px solid #ACA899;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="icons-table-body">
+            ${this.generateIconsTableRows()}
+          </tbody>
+        </table>
+      </div>
+      
+      <div id="icon-form-container" style="margin-top:20px;display:none;padding:15px;border:1px solid #ACA899;background:#f5f5f5;">
+        <h4 style="margin-top:0;">Ajouter/Modifier une icône</h4>
+        <form id="icon-form">
+          <div style="margin-bottom:10px;">
+            <label for="icon-name" style="display:block;margin-bottom:5px;">Nom de l'icône</label>
+            <input type="text" id="icon-name" style="width:100%;padding:5px;border:1px solid #ACA899;">
+          </div>
+          
+          <div style="margin-bottom:10px;">
+            <label for="icon-path" style="display:block;margin-bottom:5px;">Chemin de l'icône</label>
+            <input type="text" id="icon-path" style="width:100%;padding:5px;border:1px solid #ACA899;">
+          </div>
+          
+          <div style="margin-bottom:10px;">
+            <label for="icon-action" style="display:block;margin-bottom:5px;">Action (fonction JavaScript)</label>
+            <input type="text" id="icon-action" style="width:100%;padding:5px;border:1px solid #ACA899;">
+          </div>
+          
+          <div style="display:flex;gap:10px;margin-top:15px;">
+            <button type="submit" style="padding:4px 10px;background:#4CAF50;color:white;border:1px solid #388E3C;cursor:pointer;">
+              Enregistrer
+            </button>
+            <button type="button" id="cancel-icon-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+              Annuler
+            </button>
+          </div>
+        </form>
+      </div>
+    `;
+    
+    // Ajouter les gestionnaires d'événements
+    document.getElementById('refresh-icons-btn')?.addEventListener('click', () => this.loadIconsManager());
+    document.getElementById('add-icon-btn')?.addEventListener('click', () => this.showIconForm());
+    document.getElementById('save-icons-btn')?.addEventListener('click', () => this.saveIcons());
+    document.getElementById('cancel-icon-btn')?.addEventListener('click', () => this.hideIconForm());
+    document.getElementById('icon-form')?.addEventListener('submit', (e) => this.handleIconFormSubmit(e));
+    
+    // Ajouter les gestionnaires pour les boutons d'édition et de suppression
+    const editButtons = document.querySelectorAll('.edit-icon-btn');
+    editButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const iconId = btn.getAttribute('data-id');
+        if (iconId) this.editIcon(iconId);
+      });
+    });
+    
+    const deleteButtons = document.querySelectorAll('.delete-icon-btn');
+    deleteButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const iconId = btn.getAttribute('data-id');
+        if (iconId) this.deleteIcon(iconId);
+      });
+    });
+  },
+  
+  // Générer les lignes du tableau d'icônes
+  generateIconsTableRows() {
+    if (!window.desktopIcons || window.desktopIcons.length === 0) {
+      return '<tr><td colspan="4" style="padding:8px;text-align:center;">Aucune icône disponible</td></tr>';
+    }
+    
+    return window.desktopIcons.map((icon, index) => `
+      <tr>
+        <td style="padding:8px;border:1px solid #ACA899;">${icon.name || 'Sans nom'}</td>
+        <td style="padding:8px;border:1px solid #ACA899;">
+          ${icon.icon ? `<img src="${icon.icon}" alt="${icon.name}" style="width:24px;height:24px;">` : 'Aucune icône'}
+        </td>
+        <td style="padding:8px;border:1px solid #ACA899;">${icon.action || 'Aucune action'}</td>
+        <td style="padding:8px;border:1px solid #ACA899;text-align:center;">
+          <button class="edit-icon-btn" data-id="${index}" style="padding:3px 8px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;margin-right:5px;">
+            Éditer
+          </button>
+          <button class="delete-icon-btn" data-id="${index}" style="padding:3px 8px;background:#f44336;color:white;border:1px solid #d32f2f;cursor:pointer;">
+            Supprimer
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  },
+  
+  // Afficher le formulaire d'icône pour l'ajout
+  showIconForm() {
+    const formContainer = document.getElementById('icon-form-container');
+    if (formContainer) {
+      formContainer.style.display = 'block';
+      
+      // Réinitialiser le formulaire
+      document.getElementById('icon-name')?.value = '';
+      document.getElementById('icon-path')?.value = '';
+      document.getElementById('icon-action')?.value = '';
+      
+      // Supprimer l'attribut data-id s'il existe
+      const form = document.getElementById('icon-form');
+      if (form) form.removeAttribute('data-id');
+    }
+  },
+  
+  // Cacher le formulaire d'icône
+  hideIconForm() {
+    const formContainer = document.getElementById('icon-form-container');
+    if (formContainer) {
+      formContainer.style.display = 'none';
+    }
+  },
+  
+  // Éditer une icône existante
+  editIcon(iconId) {
+    const index = parseInt(iconId);
+    if (isNaN(index) || !window.desktopIcons || index >= window.desktopIcons.length) return;
+    
+    const icon = window.desktopIcons[index];
+    const formContainer = document.getElementById('icon-form-container');
+    if (formContainer) {
+      formContainer.style.display = 'block';
+      
+      // Remplir le formulaire avec les données de l'icône
+      document.getElementById('icon-name')?.value = icon.name || '';
+      document.getElementById('icon-path')?.value = icon.icon || '';
+      document.getElementById('icon-action')?.value = icon.action || '';
+      
+      // Stocker l'ID pour la mise à jour
+      const form = document.getElementById('icon-form');
+      if (form) form.setAttribute('data-id', iconId);
+    }
+  },
+  
+  // Supprimer une icône
+  deleteIcon(iconId) {
+    const index = parseInt(iconId);
+    if (isNaN(index) || !window.desktopIcons || index >= window.desktopIcons.length) return;
+    
+    if (confirm('Êtes-vous sûr de vouloir supprimer cette icône ?')) {
+      window.desktopIcons.splice(index, 1);
+      this.loadIconsManager(); // Recharger pour mettre à jour l'affichage
+      this.showNotification('Icône supprimée', 'success');
+    }
+  },
+  
+  // Gérer la soumission du formulaire d'icône
+  handleIconFormSubmit(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('icon-name')?.value || '';
+    const icon = document.getElementById('icon-path')?.value || '';
+    const action = document.getElementById('icon-action')?.value || '';
+    
+    const form = document.getElementById('icon-form');
+    const iconId = form?.getAttribute('data-id');
+    
+    if (iconId) {
+      // Mise à jour
+      const index = parseInt(iconId);
+      if (!isNaN(index) && window.desktopIcons && index < window.desktopIcons.length) {
+        window.desktopIcons[index] = { name, icon, action };
+        this.showNotification('Icône mise à jour', 'success');
+      }
+    } else {
+      // Ajout
+      if (!window.desktopIcons) window.desktopIcons = [];
+      window.desktopIcons.push({ name, icon, action });
+      this.showNotification('Icône ajoutée', 'success');
+    }
+    
+    this.hideIconForm();
+    this.loadIconsManager(); // Recharger pour mettre à jour l'affichage
+  },
+  
+  // Sauvegarder les icônes
+  saveIcons() {
+    if (typeof window.DesktopManagerAdmin !== 'undefined' && typeof window.DesktopManagerAdmin.saveIcons === 'function') {
+      window.DesktopManagerAdmin.saveIcons(window.desktopIcons);
+      this.showNotification('Icônes sauvegardées', 'success');
+    } else {
+      // Fallback si DesktopManagerAdmin n'est pas disponible
+      localStorage.setItem('desktop_icons', JSON.stringify(window.desktopIcons));
+      this.showNotification('Icônes sauvegardées localement', 'success');
+    }
+  },
+  
   // Gestion du CV avec visualisation PDF
   loadCVManager() {
     console.log('📄 Chargement du gestionnaire de CV');
@@ -2570,6 +2796,35 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log("🚀 Initialisation du gestionnaire de panneau d'administration amélioré");
   // Délai pour s'assurer que toutes les dépendances sont chargées
   setTimeout(() => {
-    AdminPanelManager.init();
+    if (window.AdminPanelManager && typeof window.AdminPanelManager.init === 'function') {
+      window.AdminPanelManager.init();
+    } else {
+      console.error("❌ AdminPanelManager n'est pas correctement défini ou sa méthode init n'existe pas");
+    }
   }, 300);
 });
+
+// Définir une implémentation sécurisée de createAdminPanelWindow dans la portée globale
+// qui ne créera pas de boucle de récursion infinie
+if (typeof window.createAdminPanelWindow !== 'function') {
+  window.createAdminPanelWindow = function(editItemId = null, itemType = 'film') {
+    console.log("📝 Appel global à createAdminPanelWindow");
+    
+    // Vérifier si AdminPanelManager existe et a la méthode createPanel
+    if (window.AdminPanelManager && typeof window.AdminPanelManager.createPanel === 'function') {
+      console.log("✅ Appel direct à AdminPanelManager.createPanel");
+      try {
+        // Utiliser apply pour préserver le contexte this et transmettre les arguments
+        return window.AdminPanelManager.createPanel(editItemId, itemType);
+      } catch (error) {
+        console.error("❌ Erreur lors de l'appel à AdminPanelManager.createPanel:", error);
+        alert("Erreur lors de l'ouverture du panneau d'administration: " + error.message);
+        return null;
+      }
+    } else {
+      console.error("❌ AdminPanelManager n'est pas disponible ou sa méthode createPanel n'existe pas");
+      alert("Le panneau d'administration n'est pas disponible. Veuillez rafraîchir la page.");
+      return null;
+    }
+  };
+}

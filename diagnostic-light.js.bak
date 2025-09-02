@@ -1,0 +1,114 @@
+// Script de diagnostic léger
+(function() {
+  console.log("=== DIAGNOSTIC LÉGER ===");
+  
+  // Ne pas intercepter les fonctions pour éviter les boucles de récursion
+  // Au lieu de cela, surveiller les fonctions et fournir des diagnostics
+  
+  // Attendre que la page soit chargée pour vérifier l'état des objets clés
+  window.addEventListener('load', function() {
+    console.log("🔍 Diagnostic de chargement");
+    
+    // Vérification de l'état des objets clés
+    console.log("État AdminPanelManager:", typeof window.AdminPanelManager !== 'undefined' ? "Défini" : "Non défini");
+    console.log("État WindowManager:", typeof window.WindowManager !== 'undefined' ? "Défini" : "Non défini");
+    console.log("État createAdminPanelWindow:", typeof window.createAdminPanelWindow === 'function' ? "Défini" : "Non défini");
+    
+    // Créer un écouteur pour les erreurs
+    window.addEventListener('error', function(e) {
+      console.error("� ERREUR GLOBALE:", e.message, "dans", e.filename, "ligne", e.lineno);
+    });
+  });
+  
+  console.log("✅ Diagnostic-light.js initialisé avec succès");
+})();
+      
+      // Solution de secours - utiliser directement AdminPanelManager si disponible
+      if (typeof AdminPanelManager !== 'undefined' && typeof AdminPanelManager.createPanel === 'function') {
+        console.log("⚠️ Tentative d'utilisation directe d'AdminPanelManager.createPanel");
+        try {
+          return AdminPanelManager.createPanel();
+        } catch (err) {
+          console.error("❌ Erreur lors de l'utilisation d'AdminPanelManager.createPanel:", err);
+        }
+      }
+      
+      // Solution de dernier recours
+      console.log("⚠️ Création d'une fenêtre d'administration de secours");
+      if (typeof WindowManager !== 'undefined') {
+        try {
+          const fallbackWindow = WindowManager.createWindow({
+            title: "Administration (Secours)",
+            width: 600,
+            height: 400,
+            content: "<div style='padding: 20px;'><h2>Panneau d'administration (Mode Secours)</h2><p>Le panneau d'administration normal n'a pas pu être chargé.</p><p>Veuillez vérifier la console pour plus d'informations.</p></div>"
+          });
+          return fallbackWindow;
+        } catch (error) {
+          console.error("❌ Erreur lors de la création de la fenêtre de secours:", error);
+        }
+      }
+      
+      return false;
+    }
+  };
+  
+  // Intercepte checkAdminPass pour vérifier son exécution
+  window.checkAdminPass = function(password) {
+    console.log("� Appel à checkAdminPass détecté avec mot de passe:", password ? "***" : "vide");
+    
+    if (typeof originalCheckAdminPass === 'function') {
+      console.log("🔧 Exécution de la fonction checkAdminPass originale");
+      try {
+        return originalCheckAdminPass.apply(this, arguments);
+      } catch (error) {
+        console.error("❌ Erreur dans checkAdminPass:", error);
+        return false;
+      }
+    } else {
+      console.error("❌ La fonction checkAdminPass originale n'existe pas");
+      
+      // Implémentation de secours basique pour checkAdminPass
+      if (password === "admin") {
+        console.log("✅ Mot de passe correct (implémentation de secours)");
+        setTimeout(function() {
+          window.createAdminPanelWindow();
+        }, 100);
+        return true;
+      } else {
+        console.log("❌ Mot de passe incorrect (implémentation de secours)");
+        return false;
+      }
+    }
+  };
+  
+  // Après que la page est entièrement chargée
+  window.addEventListener('load', function() {
+    console.log("📋 Diagnostic au chargement de la page:");
+    console.log("- createAdminPanelWindow existe:", typeof window.createAdminPanelWindow === 'function');
+    console.log("- checkAdminPass existe:", typeof window.checkAdminPass === 'function');
+    console.log("- AdminPanelManager existe:", typeof window.AdminPanelManager !== 'undefined');
+    console.log("- WindowManager existe:", typeof window.WindowManager !== 'undefined');
+    
+    // Vérifier les conflits potentiels dans les implémentations admin
+    const adminFiles = [
+      'admin-fix-window.js',
+      'admin-fix-simple.js',
+      'admin-panel-enhanced.js',
+      'admin-fix.js'
+    ];
+    
+    console.log("📊 Analyse des fichiers admin chargés:");
+    adminFiles.forEach(file => {
+      const script = document.querySelector(`script[src="${file}"]`);
+      console.log(`- ${file}: ${script ? "Chargé" : "Non chargé"}`);
+    });
+  });
+  
+  // Intercepter les erreurs globales
+  window.addEventListener('error', function(event) {
+    console.error("🚨 Erreur globale détectée:", event.message, "dans", event.filename, "ligne", event.lineno);
+  });
+  
+  console.log("✅ Diagnostic-light.js initialisé avec succès");
+})();

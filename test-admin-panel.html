@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Admin Panel</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    
+    .test-container {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      width: 100%;
+      max-width: 600px;
+    }
+    
+    h1 {
+      color: #0058a8;
+      margin-top: 0;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 15px;
+    }
+    
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    
+    button {
+      background: linear-gradient(to bottom, #2586e7, #0058a8);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 15px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    button:hover {
+      background: linear-gradient(to bottom, #3a97f8, #0069c9);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+    
+    .results {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #f8f8f8;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      min-height: 100px;
+    }
+    
+    .log {
+      font-family: monospace;
+      margin-bottom: 5px;
+      padding: 5px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .success {
+      color: #4CAF50;
+    }
+    
+    .error {
+      color: #F44336;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>Test du Panneau d'Administration</h1>
+    
+    <div class="button-group">
+      <button id="testAdminDesktop">Tester l'icône Admin du bureau</button>
+      <button id="testAdminPanel">Tester AdminManager.createPanel()</button>
+      <button id="testWindowManager">Tester WindowManager.createAdminPanelWindow()</button>
+      <button id="testShowAdminTest">Tester showAdminTest()</button>
+    </div>
+    
+    <div class="results">
+      <h3>Résultats:</h3>
+      <div id="log-container"></div>
+    </div>
+  </div>
+  
+  <!-- Chargement des scripts nécessaires -->
+  <script src="error-handler.js"></script>
+  <!-- Charger d'abord les gestionnaires de base -->
+  <script src="data-manager.js"></script>
+  <script src="window-manager.js"></script>
+  <script src="desktop-manager.js"></script>
+  <!-- Puis les scripts d'administration -->
+  <script src="admin-functions.js"></script>
+  <script src="admin-unified.js"></script>
+  <script src="showAdminTest.js"></script>
+  
+  <script>
+    // Fonction pour ajouter des logs à l'interface
+    function addLog(message, type = 'info') {
+      const logContainer = document.getElementById('log-container');
+      const logElement = document.createElement('div');
+      logElement.className = `log ${type}`;
+      logElement.textContent = message;
+      logContainer.appendChild(logElement);
+    }
+    
+    // Remplacer console.log pour capturer les logs
+    const originalConsoleLog = console.log;
+    console.log = function(...args) {
+      originalConsoleLog.apply(console, args);
+      addLog(args.join(' '));
+    };
+    
+    // Remplacer console.error pour capturer les erreurs
+    const originalConsoleError = console.error;
+    console.error = function(...args) {
+      originalConsoleError.apply(console, args);
+      addLog(args.join(' '), 'error');
+    };
+    
+    // Initialiser les modules nécessaires
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialiser WindowManager
+      if (typeof WindowManager !== 'undefined') {
+        WindowManager.init();
+        addLog('✅ WindowManager initialisé', 'success');
+      } else {
+        addLog('❌ WindowManager non disponible', 'error');
+      }
+      
+      // Initialiser AdminManager
+      if (typeof AdminManager !== 'undefined') {
+        AdminManager.init();
+        addLog('✅ AdminManager initialisé', 'success');
+      } else {
+        addLog('❌ AdminManager non disponible', 'error');
+      }
+      
+      // Configurer les événements de bouton
+      document.getElementById('testAdminDesktop').addEventListener('click', () => {
+        addLog('Test de l\'icône Admin du bureau...');
+        
+        // Simuler un double-clic sur l'icône admin
+        if (typeof DesktopManager !== 'undefined') {
+          DesktopManager.openDefaultWindow('admin');
+        } else {
+          addLog('❌ DesktopManager non disponible', 'error');
+        }
+      });
+      
+      document.getElementById('testAdminPanel').addEventListener('click', () => {
+        addLog('Test de AdminManager.createPanel()...');
+        
+        try {
+          if (typeof AdminManager !== 'undefined') {
+            AdminManager.createPanel();
+            addLog('✅ AdminManager.createPanel() exécuté', 'success');
+          } else {
+            addLog('❌ AdminManager non disponible', 'error');
+          }
+        } catch (error) {
+          addLog(`❌ Erreur: ${error.message}`, 'error');
+        }
+      });
+      
+      document.getElementById('testWindowManager').addEventListener('click', () => {
+        addLog('Test de WindowManager.createAdminPanelWindow()...');
+        
+        try {
+          if (typeof WindowManager !== 'undefined' && typeof WindowManager.createAdminPanelWindow === 'function') {
+            WindowManager.createAdminPanelWindow();
+            addLog('✅ WindowManager.createAdminPanelWindow() exécuté', 'success');
+          } else {
+            addLog('❌ WindowManager.createAdminPanelWindow non disponible', 'error');
+          }
+        } catch (error) {
+          addLog(`❌ Erreur: ${error.message}`, 'error');
+        }
+      });
+      
+      document.getElementById('testShowAdminTest').addEventListener('click', () => {
+        addLog('Test de showAdminTest()...');
+        
+        try {
+          if (typeof showAdminTest === 'function') {
+            showAdminTest();
+            addLog('✅ showAdminTest() exécuté', 'success');
+          } else {
+            addLog('❌ showAdminTest non disponible', 'error');
+          }
+        } catch (error) {
+          addLog(`❌ Erreur: ${error.message}`, 'error');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

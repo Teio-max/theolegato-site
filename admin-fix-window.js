@@ -33,6 +33,21 @@ function showManageTagsForm() {
   }
 }
 
+function showManageIconsForm() {
+  if (typeof AdminPanelManager !== 'undefined' && typeof AdminPanelManager.loadIconsManager === 'function') {
+    AdminPanelManager.loadIconsManager();
+  } else {
+    console.error("AdminPanelManager.loadIconsManager n'est pas disponible");
+    const adminContent = document.getElementById('admin-content');
+    if (adminContent) {
+      adminContent.innerHTML = `
+        <h3 style="color:#0058a8;">Gestionnaire d'icônes</h3>
+        <p>Le gestionnaire d'icônes moderne n'est pas disponible. Veuillez vérifier que le fichier admin-panel-enhanced.js est bien chargé.</p>
+      `;
+    }
+  }
+}
+
 function showManageCVForm() {
   if (typeof AdminPanelManager !== 'undefined' && typeof AdminPanelManager.loadCVManager === 'function') {
     AdminPanelManager.loadCVManager();
