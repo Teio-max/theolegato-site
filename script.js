@@ -1365,30 +1365,78 @@ function showBSOD(error = null) {
 
 // Code d'initialisation - UN SEUL BLOC
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialiser les données
-  DataManager.initData();
+  try {
+    console.log("🔄 Initialisation des données");
+    // Initialiser les données avec gestion d'erreur
+    if (typeof DataManager !== 'undefined' && DataManager && typeof DataManager.initData === 'function') {
+      DataManager.initData();
+    } else {
+      console.warn("⚠️ DataManager non disponible, initialisation ignorée");
+    }
   
-  // Simuler le chargement Windows XP
-  setTimeout(() => {
-    document.getElementById('loading-screen').style.display = 'none';
-    document.getElementById('desktop').style.display = 'block';
-    
-    // Initialiser l'interface
-    DesktopManager.renderDesktopIcons();
-    DesktopManager.setupDraggableIcons();
-    
-    // Jouer le son de démarrage
-    WindowManager.playSound('startup');
-    
-    // Afficher la popup de bienvenue après un court délai
+    // Simuler le chargement Windows XP avec gestion d'erreur
+    console.log("⏳ Simulation du chargement Windows XP");
     setTimeout(() => {
-      if (typeof window.showWelcomePopup === 'function') {
-        window.showWelcomePopup();
-      } else {
-        console.error("La fonction showWelcomePopup n'est pas disponible");
+      try {
+        const loadingScreen = document.getElementById('loading-screen');
+        const desktop = document.getElementById('desktop');
+        
+        if (loadingScreen) loadingScreen.style.display = 'none';
+        if (desktop) desktop.style.display = 'block';
+        
+        console.log("🖥️ Affichage du bureau");
+        
+        // Initialiser l'interface avec gestion d'erreur
+        if (typeof DesktopManager !== 'undefined' && DesktopManager) {
+          console.log("🖱️ Initialisation des icônes du bureau");
+          if (typeof DesktopManager.renderDesktopIcons === 'function') {
+            DesktopManager.renderDesktopIcons();
+          }
+          
+          if (typeof DesktopManager.setupDraggableIcons === 'function') {
+            DesktopManager.setupDraggableIcons();
+          }
+        } else {
+          console.warn("⚠️ DesktopManager non disponible");
+        }
+        
+        // Jouer le son de démarrage avec gestion d'erreur
+        if (typeof WindowManager !== 'undefined' && WindowManager && typeof WindowManager.playSound === 'function') {
+          console.log("🔊 Lecture du son de démarrage");
+          WindowManager.playSound('startup');
+        }
+        
+        // Afficher la popup de bienvenue après un court délai
+        console.log("🔔 Préparation de la popup de bienvenue");
+        setTimeout(() => {
+          try {
+            if (typeof window.showWelcomePopup === 'function') {
+              console.log("👋 Affichage de la popup de bienvenue");
+              window.showWelcomePopup();
+            } else {
+              console.warn("⚠️ La fonction showWelcomePopup n'est pas disponible");
+            }
+          } catch (welcomeError) {
+            console.error("❌ Erreur lors de l'affichage de la popup de bienvenue:", welcomeError);
+          }
+        }, 1500); // Délai pour laisser le bureau s'afficher correctement
+      } catch (desktopError) {
+        console.error("❌ Erreur lors de l'initialisation du bureau:", desktopError);
+        // Secours : forcer l'affichage du bureau
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('desktop').style.display = 'block';
       }
-    }, 1500); // Délai pour laisser le bureau s'afficher correctement
-  }, 3000);
+    }, 3000);
+  } catch (initError) {
+    console.error("❌ Erreur critique lors de l'initialisation:", initError);
+    // Secours ultime : forcer l'affichage du bureau
+    try {
+      document.getElementById('loading-screen').style.display = 'none';
+      document.getElementById('desktop').style.display = 'block';
+    } catch (e) {
+      console.error("💥 Impossible de récupérer de l'erreur critique");
+    }
+  }
   
   // Ajouter un raccourci clavier pour l'administration
   document.addEventListener('keydown', function(e) {
