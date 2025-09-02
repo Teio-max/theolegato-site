@@ -5,8 +5,8 @@ function showAdminTest() {
   // Demander le mot de passe d'administration
   const password = prompt("Veuillez entrer le mot de passe administrateur:", "");
   
-  // Vérifier le mot de passe (remplacer par votre propre mot de passe)
-  if (password !== "admin123") {
+  // Vérifier le mot de passe
+  if (password !== "sitethéi") {
     alert("Mot de passe incorrect. Accès refusé.");
     return;
   }
