@@ -1371,11 +1371,41 @@ window.AdminManager = {
     const all = window.DesktopManager ? window.DesktopManager.getAllIcons() : {defaultIcons:[],customIcons:[]};
     contentDiv.innerHTML = `
       <h3 style='color:#0058a8;margin-top:0;border-bottom:1px solid #ACA899;padding-bottom:5px;margin-bottom:15px;'>Gestion des icônes</h3>
-      <p>Déplacement direct sur le bureau. (Éditeur complet à venir)</p>
-      <h4>Icônes par défaut</h4>
-      <ul style='margin:0 0 15px 18px;'>${all.defaultIcons.map(i=>`<li>${i.name} (id: ${i.id})</li>`).join('')}</ul>
-      <h4>Icônes personnalisées</h4>
-      <ul style='margin:0 0 15px 18px;'>${all.customIcons.length?all.customIcons.map(i=>`<li>${i.name} (id: ${i.id})</li>`).join(''):'<li>Aucune</li>'}</ul>`;
+      <div style='margin-bottom:12px;display:flex;flex-wrap:wrap;gap:8px;'>
+        <button id='add-custom-icon' style="background:#0058a8;color:#fff;border:1px solid #003f7d;padding:6px 12px;border-radius:3px;cursor:pointer;">+ Nouvelle icône</button>
+        <button id='refresh-icons' style="padding:6px 12px;border:1px solid #ACA899;border-radius:3px;cursor:pointer;">Rafraîchir</button>
+        <button id='save-icon-positions' style="background:#4CAF50;color:#fff;border:1px solid #2e7d32;padding:6px 12px;border-radius:3px;cursor:pointer;">Sauver positions</button>
+      </div>
+      <div style='display:grid;grid-template-columns:1fr 1fr;gap:20px;'>
+        <div>
+          <h4 style='margin:0 0 8px;'>Icônes par défaut (${all.defaultIcons.length})</h4>
+          <div style='border:1px solid #ACA899;border-radius:4px;max-height:260px;overflow:auto;'>
+            ${all.defaultIcons.map(i=>`<div class='icon-row' data-id='${i.id}' data-type='default' style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-top:1px solid #ddd;">
+              <span style='display:flex;align-items:center;gap:6px;'><img src='${i.icon}' style='width:18px;height:18px;'> ${i.name}</span>
+              <span style='font-size:11px;color:#666;'>${i.window||'-'}</span>
+            </div>`).join('')}
+          </div>
+        </div>
+        <div>
+          <h4 style='margin:0 0 8px;'>Icônes personnalisées (${all.customIcons.length})</h4>
+          <div id='custom-icons-box' style='border:1px solid #ACA899;border-radius:4px;max-height:260px;overflow:auto;'>
+            ${all.customIcons.length? all.customIcons.map(i=>`<div class='icon-row' data-id='${i.id}' data-type='custom' style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-top:1px solid #ddd;">
+              <span style='display:flex;align-items:center;gap:6px;'><img src='${i.icon}' style='width:18px;height:18px;'> ${i.name}</span>
+              <span>
+                <button class='edit-icon-btn' data-id='${i.id}' style="padding:2px 6px;font-size:11px;border:1px solid #ACA899;background:#ECE9D8;cursor:pointer;">Éditer</button>
+                <button class='delete-icon-btn' data-id='${i.id}' style="padding:2px 6px;font-size:11px;border:1px solid #c62828;background:#f44336;color:#fff;cursor:pointer;">✕</button>
+              </span>
+            </div>`).join('') : `<div style='padding:10px;text-align:center;font-size:12px;color:#666;'>Aucune icône</div>`}
+          </div>
+        </div>
+      </div>
+      <p style='margin-top:15px;font-size:12px;color:#555;'>Astuce: déplacez les icônes directement sur le bureau puis cliquez sur "Sauver positions".</p>`;
+    // Actions
+    document.getElementById('add-custom-icon')?.addEventListener('click',()=> this.loadIconForm());
+    document.getElementById('refresh-icons')?.addEventListener('click',()=> this.loadIconsManager());
+    document.getElementById('save-icon-positions')?.addEventListener('click',()=> this.saveIconsLayout());
+    contentDiv.querySelectorAll('.edit-icon-btn').forEach(btn=> btn.addEventListener('click',e=> this.loadIconForm(e.target.dataset.id,'custom')));
+    contentDiv.querySelectorAll('.delete-icon-btn').forEach(btn=> btn.addEventListener('click',e=> this.confirmDeleteIcon(e.target.dataset.id)));
   },
   loadImportExportManager() {
     console.log('📦 Import/Export');

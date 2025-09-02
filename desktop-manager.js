@@ -475,14 +475,16 @@ const DesktopManager = {
       document.removeEventListener('mousemove', drag);
       document.removeEventListener('mouseup', stopDrag);
       
-      // Si l'utilisateur n'a pas déplacé l'icône ou si le clic était très court (moins de 200ms),
-      // on considère qu'il veut ouvrir la fenêtre et non pas déplacer l'icône
-      const dragDuration = Date.now() - startTime;
-      if (!hasMovedDuringDrag || dragDuration < 200) {
-        const iconId = icon.dataset.id;
-        // Ouvrir la fenêtre associée à l'icône
-        DesktopManager.openDefaultWindow(iconId);
+      // Si l'icône a été déplacée, on persiste immédiatement la position
+      if (hasMovedDuringDrag) {
+        if (window.AdminManager && typeof window.AdminManager.saveIconsToData === 'function') {
+          window.AdminManager.saveIconsToData();
+        } else {
+          // Fallback simple localStorage
+          try { localStorage.setItem('desktopIconsBackup', JSON.stringify(window.desktopIcons)); } catch(_) {}
+        }
       }
+      // Ouverture désormais uniquement via double-clic (comportement Windows classique)
     };
     
     // Attacher le gestionnaire d'événement
