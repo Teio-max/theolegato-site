@@ -1379,6 +1379,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Jouer le son de démarrage
     WindowManager.playSound('startup');
+    
+    // Afficher la popup de bienvenue après un court délai
+    setTimeout(() => {
+      if (typeof window.showWelcomePopup === 'function') {
+        window.showWelcomePopup();
+      } else {
+        console.error("La fonction showWelcomePopup n'est pas disponible");
+      }
+    }, 1500); // Délai pour laisser le bureau s'afficher correctement
   }, 3000);
   
   // Ajouter un raccourci clavier pour l'administration
