@@ -3,10 +3,12 @@
 
 console.log("🔄 Initialisation du gestionnaire de popup de bienvenue");
 
-(function() {
-  // Vérifier si DataManager est disponible
+(function initWhenReady(attempt=0) {
   if (typeof window.DataManager === 'undefined') {
-    console.error("❌ DataManager n'est pas défini, impossible d'initialiser le gestionnaire de popup");
+    if (attempt < 20) { // réessayer rapidement (~20 * 100ms = 2s)
+      return setTimeout(()=>initWhenReady(attempt+1), 100);
+    }
+    console.error("❌ DataManager toujours indisponible après attente, abandon initialisation popup");
     return;
   }
   

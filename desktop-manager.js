@@ -22,6 +22,34 @@ const DesktopManager = {
   this.setupDraggableIcons();
   // Attacher les événements globaux (dé-sélection clic sur bureau, resize, ...)
   this.attachEvents();
+
+    // Écouter le chargement des données pour intégrer des icônes dynamiques
+    document.addEventListener('data:loaded', (e)=>{
+      try {
+        const d = e.detail || {};
+        if (Array.isArray(d.desktopIcons) && d.desktopIcons.length) {
+          // Convertir format {id,name,icon,action,position} vers notre format (x,y,visible,window)
+          const converted = d.desktopIcons.map(ic=>({
+            id: ic.id.replace(/^icon-/,''),
+            name: ic.name || ic.id,
+            icon: ic.icon || 'icons/window.png',
+            x: ic.position?.x || 30,
+            y: ic.position?.y || 30,
+            visible: true,
+            window: (ic.action||'').replace(/^create/,'').replace(/Window$/,'').toLowerCase() || null
+          }));
+          // Préserver icônes existantes, ajouter celles qui n'existent pas
+          converted.forEach(c=>{
+            if(!(window.desktopIcons.defaultIcons.concat(window.desktopIcons.customIcons).some(i=>i.id===c.id))) {
+              window.desktopIcons.customIcons.push(c);
+            }
+          });
+          this.renderDesktopIcons();
+          this.setupDraggableIcons();
+          console.log(`🧩 Icônes fusionnées depuis DataManager: +${converted.length}`);
+        }
+      } catch(err){ console.warn('Fusion icônes DataManager échouée', err); }
+    }, { once:true });
   },
   
   // Chargement des icônes du bureau

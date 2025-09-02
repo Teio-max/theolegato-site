@@ -70,15 +70,15 @@
   </template>
   
   <!-- À la fin du body, avant la balise </body> -->
-  <!-- Pop-up de bienvenue -->
-  <script src="welcome-popup.js"></script>
-  <script src="welcome-popup-handler.js"></script>
-  <!-- Modules principaux -->
+  <!-- Core data + managers en premier -->
+  <script src="data-manager.js"></script>
   <script src="window-manager.js"></script>
   <script src="window-functions.js"></script>
   <script src="media-manager.js"></script>
-  <script src="data-manager.js"></script>
   <script src="pdf-manager.js"></script>
+  <!-- Pop-up de bienvenue (dépend de DataManager) -->
+  <script src="welcome-popup.js"></script>
+  <script src="welcome-popup-handler.js"></script>
   <!-- Initialisation d'urgence -->
   <script src="emergency-init.js"></script>
   <!-- Modules d'administration -->
