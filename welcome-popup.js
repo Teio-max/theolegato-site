@@ -12,6 +12,26 @@ function showWelcomePopup() {
   
   console.log("👋 Affichage de la pop-up de bienvenue");
   
+  // Récupérer la configuration
+  let config = {
+    title: "Bienvenue sur mon site",
+    name: "Théo Legato",
+    description: "Développeur web et cinéaste passionné. Bienvenue sur mon portfolio où vous découvrirez mes projets, films et articles.",
+    buttonText: "Découvrir le site",
+    avatarImage: "avatar.jpg",
+    socialLinks: [
+      { name: 'Letterboxd', icon: 'letterboxd.png', url: 'https://letterboxd.com/theolegato/' },
+      { name: 'GitHub', icon: 'icons/github.png', url: 'https://github.com/theolegato' },
+      { name: 'LinkedIn', icon: 'icons/linkedin.png', url: 'https://linkedin.com/in/theolegato' },
+      { name: 'Twitter', icon: 'icons/twitter.png', url: 'https://twitter.com/theolegato' }
+    ]
+  };
+  
+  // Utiliser la configuration depuis DataManager si disponible
+  if (window.DataManager && window.DataManager.data && window.DataManager.data.welcomePopupConfig) {
+    config = window.DataManager.data.welcomePopupConfig;
+  }
+  
   // Créer la fenêtre modale
   const welcomeWindow = document.createElement('div');
   welcomeWindow.className = 'xp-window welcome-window';
@@ -39,7 +59,7 @@ function showWelcomePopup() {
       justify-content: space-between;
       align-items: center;
     ">
-      <span style="color: white; font-weight: bold;">Bienvenue sur mon site</span>
+      <span style="color: white; font-weight: bold;">${config.title}</span>
       <div style="display: flex; gap: 4px;">
         <button class="xp-btn min-btn" style="
           background: #ffbd44;
@@ -74,14 +94,14 @@ function showWelcomePopup() {
     
     <div style="padding: 20px; display: flex; gap: 20px;">
       <div style="flex: 1;">
-        <img src="avatar.jpg" alt="Théo Legato" style="width: 100%; border: 1px solid #999; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+        <img src="${config.avatarImage}" alt="${config.name}" style="width: 100%; border: 1px solid #999; border-radius: 4px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
       </div>
       
       <div style="flex: 2;">
-        <h2 style="margin-top: 0; color: #0058a8; font-size: 18px; border-bottom: 1px solid #ACA899; padding-bottom: 5px;">Théo Legato</h2>
+        <h2 style="margin-top: 0; color: #0058a8; font-size: 18px; border-bottom: 1px solid #ACA899; padding-bottom: 5px;">${config.name}</h2>
         
         <p style="margin-bottom: 15px; line-height: 1.5;">
-          Développeur web et cinéaste passionné. Bienvenue sur mon portfolio où vous découvrirez mes projets, films et articles.
+          ${config.description}
         </p>
         
         <div style="margin-bottom: 20px;">
@@ -100,7 +120,7 @@ function showWelcomePopup() {
             border-radius: 3px;
             cursor: pointer;
             font-size: 13px;
-          ">Découvrir le site</button>
+          ">${config.buttonText}</button>
         </div>
       </div>
     </div>
@@ -112,13 +132,8 @@ function showWelcomePopup() {
   // Rendre la fenêtre draggable
   makeDraggable(welcomeWindow);
   
-  // Ajouter les liens sociaux
-  const socialLinks = [
-    { name: 'Letterboxd', icon: 'letterboxd.png', url: 'https://letterboxd.com/theolegato/' },
-    { name: 'GitHub', icon: 'icons/github.png', url: 'https://github.com/theolegato' },
-    { name: 'LinkedIn', icon: 'icons/linkedin.png', url: 'https://linkedin.com/in/theolegato' },
-    { name: 'Twitter', icon: 'icons/twitter.png', url: 'https://twitter.com/theolegato' }
-  ];
+  // Récupérer les liens sociaux
+  const socialLinks = config.socialLinks;
   
   const socialLinksContainer = welcomeWindow.querySelector('#social-links');
   

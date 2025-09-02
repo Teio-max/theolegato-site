@@ -211,6 +211,9 @@ window.AdminManager = {
           <button id="btn-list-films" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
             Gérer Films
           </button>
+          <button id="btn-welcome-popup" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
+            Popup Bienvenue
+          </button>
           <button id="btn-github-token" class="admin-btn" style="padding:4px 10px;background:#ECE9D8;border:1px solid #ACA899;cursor:pointer;">
             Token GitHub
           </button>
@@ -229,6 +232,7 @@ window.AdminManager = {
     document.getElementById('btn-dashboard')?.addEventListener('click', () => this.loadDashboard());
     document.getElementById('btn-add-film')?.addEventListener('click', () => this.loadFilmForm());
     document.getElementById('btn-list-films')?.addEventListener('click', () => this.loadFilmsList());
+    document.getElementById('btn-welcome-popup')?.addEventListener('click', () => this.loadWelcomePopupConfig());
     document.getElementById('btn-github-token')?.addEventListener('click', () => this.loadTokenManager());
   },
   
