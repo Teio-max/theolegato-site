@@ -8,11 +8,16 @@ const WindowManager = {
     defaultHeight: 400,
     defaultZIndex: 9000,
     titleBarHeight: 30,
+    accessibility: {
+      autoFocus: true
+    },
     sounds: {
       open: 'sounds/open.wav',
       close: 'sounds/close.wav',
       error: 'sounds/error.wav'
-    }
+    },
+    uiSoundsEnabled: true,       // sons principaux (open/close)
+    microSoundsEnabled: false    // petits sons (hover)
   },
   
   // État du gestionnaire
@@ -29,6 +34,15 @@ const WindowManager = {
     
     // Écouter les clics sur le document pour gérer la fenêtre active
     document.addEventListener('mousedown', this.handleDocumentClick.bind(this));
+
+    // Micro-son au survol (optionnel)
+    document.addEventListener('mouseover', (e) => {
+      if (!this.config.microSoundsEnabled) return;
+      const target = e.target;
+      if (target.closest('.xp-btn, button, .taskbar-tab')) {
+        this.playHoverTick();
+      }
+    });
     
     // Exposer les fonctions utiles globalement
     window.getNextZIndex = this.getNextZIndex.bind(this);
@@ -61,10 +75,13 @@ const WindowManager = {
     // Générer un ID unique pour la fenêtre
     const winId = 'win_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
     
-    // Créer l'élément de fenêtre
+  // Créer l'élément de fenêtre
     const win = document.createElement('div');
     win.id = winId;
     win.className = 'xp-window';
+  win.setAttribute('role', 'dialog');
+  win.setAttribute('aria-label', title);
+  win.setAttribute('aria-modal', 'false');
     win.style.position = 'absolute';
     win.style.width = width;
     win.style.height = height;
@@ -125,6 +142,14 @@ const WindowManager = {
     
     // Jouer le son d'ouverture
     this.playSound('open');
+
+  // Créer / mettre à jour l'onglet de barre des tâches
+  this.createOrActivateTaskbarTab(winId, { title, icon });
+
+    // Focus management
+    if (this.config.accessibility.autoFocus) {
+      setTimeout(() => this.focusFirstElement(win), 30);
+    }
     
     return win;
   },
@@ -323,6 +348,10 @@ const WindowManager = {
     
     // Supprimer la fenêtre du DOM
     win.remove();
+
+  // Supprimer l'onglet de taskbar associé
+  const tab = document.querySelector(`.taskbar-tab[data-win-id="${winId}"]`);
+  if (tab) tab.remove();
     
     // Supprimer la fenêtre de l'état
     delete this.state.windows[winId];
@@ -352,6 +381,10 @@ const WindowManager = {
     
     // Cacher la fenêtre
     win.style.display = 'none';
+
+  // Marquer l'onglet comme inactif
+  const tab = document.querySelector(`.taskbar-tab[data-win-id="${winId}"]`);
+  if (tab) tab.classList.remove('active');
     
     // Ajouter à la barre des tâches si elle existe
     const taskbar = document.getElementById('minimized-windows');
@@ -389,6 +422,9 @@ const WindowManager = {
     
     // Afficher la fenêtre
     win.style.display = 'block';
+
+  // Réactiver l'onglet
+  this.activateTaskbarTab(winId);
     
     // Retirer de la barre des tâches si elle existe
     const taskbar = document.getElementById('minimized-windows');
@@ -479,6 +515,9 @@ const WindowManager = {
         }
       }
     });
+
+  // Activer l'onglet correspondant
+  this.activateTaskbarTab(winId);
   },
   
   // Obtenir le prochain z-index
@@ -502,9 +541,53 @@ const WindowManager = {
   hasTaskbar() {
     return !!document.getElementById('taskbar');
   },
+
+  // Création / activation d'un onglet de barre des tâches
+  createOrActivateTaskbarTab(winId, { title, icon }) {
+    const taskbar = document.getElementById('taskbar');
+    if (!taskbar) return;
+    // Conteneur des onglets (réutiliser minimized-windows si présent)
+    let tabsContainer = document.getElementById('taskbar-tabs');
+    if (!tabsContainer) {
+      tabsContainer = document.createElement('div');
+      tabsContainer.id = 'taskbar-tabs';
+      taskbar.insertBefore(tabsContainer, document.getElementById('minimized-windows'));
+    }
+    let tab = tabsContainer.querySelector(`.taskbar-tab[data-win-id="${winId}"]`);
+    if (!tab) {
+      tab = document.createElement('div');
+      tab.className = 'taskbar-tab';
+      tab.dataset.winId = winId;
+      tab.innerHTML = `<img src="${icon}" alt=""><span>${title}</span>`;
+      tab.addEventListener('click', () => {
+        const info = this.state.windows[winId];
+        if (!info) return;
+        const element = info.element;
+        if (info.options.isMinimized) {
+          this.restoreWindow(winId);
+        } else if (this.state.activeWindow === winId) {
+          // Minimiser si déjà active (toggle)
+          this.minimizeWindow(winId);
+        } else {
+          // Activer sinon
+            element.style.display = 'block';
+            this.setActiveWindow(winId);
+        }
+      });
+      tabsContainer.appendChild(tab);
+    }
+    this.activateTaskbarTab(winId);
+  },
+
+  activateTaskbarTab(winId) {
+    document.querySelectorAll('.taskbar-tab').forEach(t => t.classList.remove('active'));
+    const tab = document.querySelector(`.taskbar-tab[data-win-id="${winId}"]`);
+    if (tab) tab.classList.add('active');
+  },
   
   // Jouer un son
   playSound(soundName) {
+  if (!this.config.uiSoundsEnabled) return; // sons désactivés
     const soundUrl = this.config.sounds[soundName];
     if (!soundUrl) return;
     
@@ -525,6 +608,33 @@ const WindowManager = {
       }
     }
   },
+  // Petit tick de hover (Web Audio minimal)
+  playHoverTick() {
+    try {
+      const ctx = window.__wmAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      window.__wmAudioCtx = ctx;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.frequency.value = 880; // La
+      g.gain.value = 0.05;
+      o.connect(g).connect(ctx.destination);
+      o.start();
+      setTimeout(() => {
+        o.stop();
+      }, 40);
+    } catch(_) {}
+  },
+
+  // Focus premier élément interactif
+  focusFirstElement(win) {
+    if (!win) return;
+    const first = win.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (first) first.focus({ preventScroll: true });
+  },
+
+  // API publique pour toggles
+  toggleUISounds(enabled) { this.config.uiSoundsEnabled = !!enabled; },
+  toggleMicroSounds(enabled) { this.config.microSoundsEnabled = !!enabled; },
   
   // Rendre une fenêtre draggable (compatibilité avec l'ancien système)
   makeDraggable(element, id) {

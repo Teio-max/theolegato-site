@@ -1,16 +1,18 @@
-/* --- Reset & Base Styles --- */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Tahoma', 'Arial', sans-serif;
-}
+/* === THEME VARIABLES & BASE === */
+:root { --xp-blue:#0058a8; --xp-blue-light:#2586e7; --xp-accent:#f8a100; --xp-bevel-light:#ECE9D8; --xp-border:#003f7d; --text-base:#111; --text-dim:#555; --shadow-strong:rgba(0,0,0,.55); --shadow-soft:rgba(0,0,0,.25); }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { overflow:hidden; background:#000; color:var(--text-base); font-family:'Tahoma','Arial',sans-serif; font-size:13px; line-height:1.45; -webkit-font-smoothing:antialiased; }
+h1,h2,h3,h4 { font-variant:small-caps; letter-spacing:.5px; }
 
-body {
-  overflow: hidden;
-  background-color: #000;
-  color: #000;
-}
+/* --- Window open animation & accessibility focus --- */
+.xp-window { opacity:0; transform:translateY(6px) scale(.96); animation:winPop .28s cubic-bezier(.32,.72,.28,1.12) forwards; will-change:transform,opacity; }
+@keyframes winPop { 0%{opacity:0;transform:translateY(10px) scale(.94);filter:blur(1px);}70%{opacity:1;transform:translateY(-1px) scale(1.01);}100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0);} }
+:focus-visible { outline:2px solid var(--xp-accent); outline-offset:2px; }
+
+/* --- Optional Sparkle Layer (hidden by default) --- */
+#sparkle-layer { position:fixed; inset:0; pointer-events:none; mix-blend-mode:screen; z-index:5; display:none; }
+.sparkle { position:absolute; width:3px; height:3px; background:radial-gradient(circle,#fff,#7ecbff00); opacity:.15; animation:spark 6s linear infinite; }
+@keyframes spark { 0%{transform:translateY(0) scale(.4);opacity:0;}10%{opacity:.25;}50%{opacity:.15;}100%{transform:translateY(-120vh) scale(.9);opacity:0;} }
 
 /* --- Loading Screen --- */
 #loading-screen {
@@ -30,23 +32,10 @@ body {
   text-align: center;
 }
 
-.loading-bar {
-  width: 280px;
-  height: 20px;
-  background-color: #065ac1;
-  border-radius: 3px;
-  margin: 20px auto;
-  position: relative;
-  overflow: hidden;
-}
-
-.loading-progress {
-  height: 100%;
-  background-color: #6eb8ff;
-  width: 0;
-  position: absolute;
-  animation: loading 3s ease-in-out forwards;
-}
+.loading-bar { width:280px;height:20px;background:#065ac1;border-radius:3px;margin:20px auto;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),0 2px 4px rgba(0,0,0,.4); }
+.loading-progress { height:100%; background:linear-gradient(90deg,#6eb8ff,#b6dcff); width:0; position:absolute; animation:loading 3s ease-in-out forwards; }
+.loading-bar::after { content:""; position:absolute; inset:0; background:linear-gradient(60deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.35) 40%,rgba(255,255,255,0) 70%); animation:shine 1.8s linear infinite; mix-blend-mode:screen; }
+@keyframes shine {0%{transform:translateX(-60%);}100%{transform:translateX(160%);} }
 
 @keyframes loading {
   0% { width: 0; }
@@ -59,18 +48,8 @@ body {
 }
 
 /* --- Desktop --- */
-#desktop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: calc(100% - 30px); /* Hauteur moins la barre des tâches */
-  background-image: url('fond.jpg'); /* Image locale */
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-  overflow: hidden;
-}
+#desktop { position:fixed; top:0; left:0; width:100%; height:calc(100% - 30px); background:url('fond.jpg') center/cover no-repeat; overflow:hidden; }
+#desktop::after { content:""; position:absolute; inset:0; background:linear-gradient(rgba(0,0,0,.25), rgba(0,0,0,.35)); pointer-events:none; }
 
 #bg-overlay {
   position: absolute;
@@ -88,28 +67,11 @@ body {
   padding: 10px;
 }
 
-.desktop-icon {
-  width: 80px;
-  height: 90px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 5px;
-  cursor: pointer;
-  position: absolute;
-  text-align: center;
-  color: white;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 5px rgba(0, 0, 0, 0.5);
-  border: 1px solid transparent;
-  border-radius: 3px;
-  padding: 5px;
-}
-
-.desktop-icon:hover {
-  background-color: rgba(49, 106, 197, 0.2);
-  border: 1px solid rgba(49, 106, 197, 0.4);
-}
+.desktop-icon { width:80px;height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:5px;cursor:pointer;position:absolute;text-align:center;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.9),0 0 5px rgba(0,0,0,.5);border:1px solid transparent;border-radius:4px;padding:5px;transition:background .15s,border-color .15s,transform .08s; }
+.desktop-icon:hover { background:rgba(49,106,197,.25); border:1px solid rgba(49,106,197,.55); }
+.desktop-icon.selected { background:linear-gradient(135deg,rgba(49,106,197,.55),rgba(49,106,197,.35)); border:1px solid rgba(255,255,255,.7); box-shadow:0 0 0 1px rgba(0,0,0,.25); }
+.desktop-icon.double-open { animation:icon-pop .25s ease; }
+@keyframes icon-pop {0%{transform:scale(1);}50%{transform:scale(1.08);}100%{transform:scale(1);} }
 
 .desktop-icon.dragging {
   opacity: 0.7;
@@ -131,22 +93,8 @@ body {
 }
 
 /* --- Windows XP Window --- */
-.xp-window {
-  position: absolute;
-  min-width: 280px;
-  min-height: 180px;
-  background-color: #ECE9D8;
-  border: 1px solid #0058a8;
-  box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  border-radius: 5px 5px 3px 3px;
-  overflow: hidden;
-}
-
-.window-focused {
-  box-shadow: 4px 4px 15px rgba(0, 0, 0, 0.7);
-}
+.xp-window { position:absolute; min-width:280px; min-height:180px; background:var(--xp-bevel-light); border:1px solid var(--xp-blue); display:flex; flex-direction:column; border-radius:5px 5px 3px 3px; overflow:hidden; box-shadow:0 3px 6px rgba(0,0,0,.45),0 12px 28px -6px rgba(0,0,0,.35); }
+.window-focused { box-shadow:0 0 0 1px rgba(255,255,255,.4),0 3px 6px rgba(0,0,0,.5),0 18px 32px -8px rgba(0,0,0,.45); }
 
 .window-opening {
   animation: window-open 0.3s ease-out;
@@ -309,17 +257,7 @@ body {
 }
 
 /* --- Taskbar --- */
-#taskbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 30px;
-  background: linear-gradient(to bottom, #235fce, #1153c7 5%, #0e50c9 8%, #0b4bca 64%, #0948cb 95%, #0847ca);
-  border-top: 1px solid #284593;
-  display: flex;
-  z-index: 9000;
-}
+#taskbar { position:fixed; bottom:0; left:0; width:100%; height:30px; background:linear-gradient(to bottom,#2d6fdd,#1c5fce 50%,#1558c8); border-top:1px solid #284593; display:flex; z-index:9000; box-shadow:0 -1px 0 rgba(255,255,255,.2),0 -3px 6px rgba(0,0,0,.55); }
 
 #start-button {
   width: auto;
@@ -357,27 +295,9 @@ body {
   overflow-x: auto;
 }
 
-.taskbar-tab {
-  height: 22px;
-  min-width: 160px;
-  max-width: 200px;
-  margin: 0 2px;
-  background: linear-gradient(to bottom, #5895dc, #3676cf);
-  border: 1px solid #1e4fad;
-  border-radius: 2px;
-  color: white;
-  display: flex;
-  align-items: center;
-  padding: 0 8px;
-  cursor: pointer;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.taskbar-tab:hover {
-  background: linear-gradient(to bottom, #5f9fe2, #4080d0);
-}
+.taskbar-tab { height:22px; min-width:160px; max-width:200px; margin:0 2px; background:linear-gradient(to bottom,#5a97e2,#3d7fd0); border:1px solid #1e4fad; border-radius:2px; color:#fff; display:flex; align-items:center; padding:0 8px; cursor:pointer; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; position:relative; }
+.taskbar-tab:hover { background:linear-gradient(to bottom,#64a2ea,#4788d6); }
+.taskbar-tab.active { background:linear-gradient(to bottom,#7ab2f5,#5293e6); box-shadow:inset 0 0 0 1px rgba(255,255,255,.55),0 0 0 1px rgba(0,0,0,.25); }
 
 .taskbar-tab .xp-icon {
   display: flex;

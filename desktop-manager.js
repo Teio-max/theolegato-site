@@ -19,30 +19,24 @@ const DesktopManager = {
     this.renderDesktopIcons();
     
     // Rendre les icônes déplaçables
-    this.setupDraggableIcons();
-    
-    // Attacher les gestionnaires d'événements globaux
-    this.attachEvents();
+  this.setupDraggableIcons();
+  // Attacher les événements globaux (dé-sélection clic sur bureau, resize, ...)
+  this.attachEvents();
   },
   
   // Chargement des icônes du bureau
   loadDesktopIcons() {
-    // Vérifier si les icônes sont déjà définies
     if (typeof window.desktopIcons === 'undefined') {
-      // Icônes par défaut - Suppression des icônes Admin et À propos, meilleures positions
       window.desktopIcons = {
         defaultIcons: [
-          // Ajout de la propriété "window" pour un mapping explicite
           { id: 'films', name: 'Films', icon: 'icons/film.png', x: 30, y: 30, visible: true, window: 'films' },
           { id: 'articles', name: 'Articles', icon: 'icons/article.png', x: 30, y: 160, visible: true, window: 'articles' },
           { id: 'cv', name: 'CV', icon: 'icons/cv.png', x: 30, y: 290, visible: true, window: 'cv' },
           { id: 'mangas', name: 'Mangas', icon: 'icons/portfolio.png', x: 30, y: 420, visible: false, window: 'mangas' }
-          // Les icônes "Admin" et "À propos" ont été supprimées comme demandé
         ],
         customIcons: []
       };
     }
-    
     console.log(`📊 ${window.desktopIcons.defaultIcons.length + window.desktopIcons.customIcons.length} icônes chargées`);
   },
   
@@ -104,6 +98,7 @@ const DesktopManager = {
       <div class="icon-label" style="color:white;text-align:center;font-size:14px;text-shadow:1px 1px 3px rgba(0,0,0,0.9);white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;">
         ${icon.name}
       </div>
+  <span class="icon-badge" style="position:absolute;top:4px;right:6px;width:10px;height:10px;border-radius:50%;background:#d10000;box-shadow:0 0 0 1px rgba(255,255,255,.6),0 0 4px rgba(0,0,0,.6);display:none;"></span>
     `;
     
     // Ajouter l'événement de clic
@@ -121,16 +116,28 @@ const DesktopManager = {
     
     return iconElement;
   },
+
+  // Afficher / cacher badge (ex: modifications non sauvegardées)
+  setIconBadge(iconId, visible) {
+    const el = document.querySelector(`.desktop-icon[data-id='${iconId}'] .icon-badge`);
+    if (el) el.style.display = visible ? 'block' : 'none';
+  },
   
   // Gestion du clic sur une icône
   handleIconClick(icon, event) {
     // Sélectionner l'icône
-    this.selectIcon(icon.id);
+  this.selectIcon(icon.id);
   },
   
   // Gestion du double-clic sur une icône
   handleIconDblClick(icon, event) {
     console.log(`🖱️ Double-clic sur l'icône: ${icon.name}`);
+    // Animation d'ouverture rapide (scale + petit flash défini en CSS)
+    const el = event.currentTarget || document.querySelector(`.desktop-icon[data-id='${icon.id}']`);
+    if (el) {
+      el.classList.add('double-open');
+      setTimeout(() => el.classList.remove('double-open'), 260);
+    }
     
     // Déterminer l'action à effectuer
     if (icon.window) {
@@ -150,16 +157,11 @@ const DesktopManager = {
   
   // Sélectionner une icône
   selectIcon(iconId) {
-    // Désélectionner toutes les icônes
-    document.querySelectorAll('.desktop-icon').forEach(icon => {
-      icon.style.backgroundColor = 'transparent';
-    });
-    
-    // Sélectionner l'icône cliquée
-    const selectedIcon = document.querySelector(`.desktop-icon[data-id="${iconId}"]`);
-    if (selectedIcon) {
-      selectedIcon.style.backgroundColor = 'rgba(49, 106, 197, 0.5)';
-    }
+  // Désélectionner toutes les icônes
+  document.querySelectorAll('.desktop-icon.selected').forEach(icon => icon.classList.remove('selected'));
+  // Sélectionner l'icône cliquée
+  const selectedIcon = document.querySelector(`.desktop-icon[data-id="${iconId}"]`);
+  if (selectedIcon) selectedIcon.classList.add('selected');
   },
   
   // Ouvrir une fenêtre personnalisée
@@ -250,9 +252,7 @@ const DesktopManager = {
       desktop.addEventListener('click', (e) => {
         // Ne désélectionner que si le clic est directement sur le bureau
         if (e.target === desktop) {
-          document.querySelectorAll('.desktop-icon').forEach(icon => {
-            icon.style.backgroundColor = 'transparent';
-          });
+          document.querySelectorAll('.desktop-icon.selected').forEach(icon => icon.classList.remove('selected'));
         }
       });
     }
