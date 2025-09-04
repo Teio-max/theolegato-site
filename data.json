@@ -81,8 +81,8 @@
         "id": "articles",
         "name": "Articles",
         "icon": "icons/article.png",
-        "x": 30,
-        "y": 160,
+        "x": 526,
+        "y": 193,
         "visible": true,
         "window": "articles"
       },
@@ -91,7 +91,7 @@
         "name": "CV",
         "icon": "icons/cv.png",
         "x": 30,
-        "y": 214,
+        "y": 215,
         "visible": true,
         "window": "cv"
       },
@@ -100,7 +100,7 @@
         "name": "Mangas",
         "icon": "icons/portfolio.png",
         "x": 30,
-        "y": 214,
+        "y": 215,
         "visible": true,
         "window": "mangas"
       }
@@ -126,5 +126,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-04T14:35:07.676Z"
+  "lastUpdated": "2025-09-04T14:36:34.245Z"
 }
