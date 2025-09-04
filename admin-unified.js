@@ -740,33 +740,24 @@ window.AdminManager = {
   // Sauvegarde de toutes les données
   saveAllData() {
     console.log('💾 Sauvegarde des données');
-    
-    // Vérifier si la fonction de sauvegarde existe
-    if (typeof window.saveDataToGitHub === 'function') {
-      try {
-        window.saveDataToGitHub()
-          .then(() => {
-            alert('Données sauvegardées avec succès');
-          })
-          .catch(error => {
-            console.error('Erreur sauvegarde:', error);
-            alert(`Erreur de sauvegarde: ${error.message}`);
-          });
-      } catch (error) {
-        console.error('Erreur lors de l\'appel à saveDataToGitHub:', error);
-        alert(`Erreur: ${error.message}`);
-      }
+    // Politique: n'utiliser GitHub que si un token valide est présent
+    const hasToken = !!(window.GITHUB_CONFIG?.token);
+    if (hasToken && typeof window.saveDataToGitHub === 'function') {
+      window.saveDataToGitHub()
+        .then(()=> UIManager?.showNotification('Données poussées sur GitHub','success'))
+        .catch(err=> {
+          console.warn('⚠️ Échec push GitHub, fallback local:', err.message);
+          if (typeof window.saveData === 'function') {
+            try { window.saveData(); UIManager?.showNotification('Sauvegarde locale effectuée','warning'); }
+            catch(e){ console.error(e); UIManager?.showNotification('Erreur sauvegarde locale','error'); }
+          }
+        });
     } else if (typeof window.saveData === 'function') {
-      try {
-        window.saveData();
-        alert('Données sauvegardées localement');
-      } catch (error) {
-        console.error('Erreur lors de l\'appel à saveData:', error);
-        alert(`Erreur: ${error.message}`);
-      }
+      try { window.saveData(); UIManager?.showNotification('Données sauvegardées localement','success'); }
+      catch(e){ console.error(e); UIManager?.showNotification('Erreur sauvegarde locale','error'); }
     } else {
       console.error('Aucune fonction de sauvegarde disponible');
-      alert('Erreur: Aucune fonction de sauvegarde disponible');
+      UIManager?.showNotification('Aucune fonction de sauvegarde disponible','error');
     }
   }
   ,
@@ -1332,8 +1323,21 @@ window.AdminManager = {
     window.cvData.education=(document.getElementById('cv-education')?.value||'').split(/\n+/).map(l=>l.trim()).filter(Boolean);
     window.cvData.skills=(document.getElementById('cv-skills')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
     if(window.DataManager?.data){ window.DataManager.data.cvData = JSON.parse(JSON.stringify(window.cvData)); }
-    if(triggerSave){ this.saveAllData(); }
-    alert('CV sauvegardé');
+    if(triggerSave){
+      const hasToken = !!(window.GITHUB_CONFIG?.token);
+      if (hasToken && typeof window.saveDataToGitHub === 'function') {
+        window.saveDataToGitHub()
+          .then(()=> UIManager?.showNotification('CV + données synchronisés GitHub','success'))
+          .catch(err=> { console.warn('Push GitHub CV échoué:', err.message); if(typeof window.saveData==='function'){ try{ window.saveData(); UIManager?.showNotification('CV sauvegardé localement (GitHub indisponible)','warning'); }catch(e){ UIManager?.showNotification('Erreur sauvegarde locale CV','error'); } } });
+      } else if (typeof window.saveData === 'function') {
+        try { window.saveData(); UIManager?.showNotification('CV sauvegardé localement','success'); }
+        catch(e){ UIManager?.showNotification('Erreur sauvegarde locale CV','error'); }
+      } else {
+        UIManager?.showNotification('Aucune fonction de sauvegarde disponible','error');
+      }
+    } else {
+      UIManager?.showNotification('CV mis à jour (non poussé GitHub)','info');
+    }
   },
   loadTagForm(tagId=null){
     console.log(`🏷️ Formulaire tag (id:${tagId})`);
