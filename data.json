@@ -31,19 +31,6 @@
   "mangas": [],
   "articles": [
     {
-      "id": 1,
-      "titre": "L'avenir du journalisme à l'ère numérique",
-      "contenu": "Analyse des transformations du métier de journaliste face aux défis numériques. Le journalisme connaît une révolution sans précédent avec l'émergence des réseaux sociaux et l'intelligence artificielle. Comment les professionnels peuvent-ils s'adapter à ces changements tout en préservant les valeurs fondamentales de leur métier ?",
-      "date": "2025-08-25",
-      "categorie": "Médias",
-      "image": "https://via.placeholder.com/800x450?text=Journalisme+Numérique",
-      "tags": [
-        "journalisme",
-        "numérique",
-        "médias"
-      ]
-    },
-    {
       "id": 2,
       "titre": "Analyse : le traitement médiatique des conflits internationaux",
       "contenu": "Étude comparative de la couverture des conflits internationaux par différents médias et leur influence sur l'opinion publique.",
@@ -72,8 +59,8 @@
         "id": "films",
         "name": "Films",
         "icon": "icons/film.png",
-        "x": 30,
-        "y": 30,
+        "x": 251,
+        "y": 216,
         "visible": true,
         "window": "films"
       },
@@ -81,8 +68,8 @@
         "id": "articles",
         "name": "Articles",
         "icon": "icons/article.png",
-        "x": 30,
-        "y": 160,
+        "x": 277,
+        "y": 36,
         "visible": true,
         "window": "articles"
       },
@@ -90,8 +77,8 @@
         "id": "cv",
         "name": "CV",
         "icon": "icons/cv.png",
-        "x": 30,
-        "y": 290,
+        "x": 79,
+        "y": 155,
         "visible": true,
         "window": "cv"
       },
@@ -99,8 +86,8 @@
         "id": "mangas",
         "name": "Mangas",
         "icon": "icons/portfolio.png",
-        "x": 30,
-        "y": 420,
+        "x": 176,
+        "y": 385,
         "visible": true,
         "window": "mangas"
       }
@@ -126,5 +113,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-04T15:13:33.197Z"
+  "lastUpdated": "2025-09-04T15:22:45.332Z"
 }
