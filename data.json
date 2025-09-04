@@ -44,7 +44,15 @@
       "pdfUrl": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/articles/pdf/1756999405523_The_______1-1.pdf"
     }
   ],
-  "tags": [],
+  "tags": [
+    {
+      "id": 1756999655537,
+      "name": "Taïwan",
+      "color": "#074ae7",
+      "description": "",
+      "createdAt": 1756999655537
+    }
+  ],
   "cvData": {
     "pdfUrl": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/cv/1756998811667_CVVANWASTHEO2025.pdf",
     "lastUpdated": 1756998813195,
@@ -113,5 +121,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-04T15:25:49.611Z"
+  "lastUpdated": "2025-09-04T15:27:36.613Z"
 }
