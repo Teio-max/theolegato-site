@@ -1155,20 +1155,15 @@ window.AdminManager = {
     alert('Positions sauvegardées');
   },
   saveIconsToData(){
-    // Stocker structure dans DataManager.data si dispo
-    if(window.DataManager && window.DataManager.data){
-      window.DataManager.data.desktopIcons = JSON.parse(JSON.stringify(window.desktopIcons));
-      // Sauvegarde conditionnelle: GitHub seulement si token présent, sinon locale silencieuse
-      if(window.GITHUB_CONFIG?.token && typeof window.saveDataToGitHub === 'function'){
-        window.saveDataToGitHub().catch(err=> console.warn('Erreur sauvegarde GitHub icônes:', err));
-      } else if(typeof window.saveData==='function') {
-        try{ window.saveData(); }catch(e){ console.warn('saveData erreur:', e); }
-      } else {
-        try{ localStorage.setItem('site_data', JSON.stringify(window.DataManager.data)); }catch(e){ console.warn('localStorage save fallback erreur:', e); }
-      }
-    } else {
-      // fallback localStorage
-      try{ localStorage.setItem('desktopIconsBackup', JSON.stringify(window.desktopIcons)); }catch(e){ console.warn('localStorage échec:', e); }
+    // Nouvelle politique: positions et ajustements d'icônes uniquement en session
+    try {
+      const snapshot = {};
+      [...(window.desktopIcons?.defaultIcons||[]), ...(window.desktopIcons?.customIcons||[])]
+        .forEach(ic => snapshot[ic.id] = { x: ic.x, y: ic.y, name: ic.name, icon: ic.icon, window: ic.window, visible: ic.visible });
+      sessionStorage.setItem('session_icon_positions', JSON.stringify(snapshot));
+      console.log('💾 Icônes (layout) sauvegardées en session (pas GitHub, pas localStorage)');
+    } catch(e) {
+      console.warn('⚠️ Sauvegarde session icônes échouée:', e.message);
     }
   },
   // ====== MANGAS (CRUD) ======

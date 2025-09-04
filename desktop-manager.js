@@ -39,6 +39,17 @@ const DesktopManager = {
       ],
       customIcons: []
     };
+    // Appliquer positions précédentes de la session (non persistantes)
+    try {
+      const sessionPos = sessionStorage.getItem('session_icon_positions');
+      if (sessionPos) {
+        const posObj = JSON.parse(sessionPos);
+        [...window.desktopIcons.defaultIcons, ...window.desktopIcons.customIcons].forEach(ic => {
+          if (posObj[ic.id]) { ic.x = posObj[ic.id].x; ic.y = posObj[ic.id].y; }
+        });
+        console.log('♻️ Positions icônes restaurées depuis la session');
+      }
+    } catch(e) { console.warn('⚠️ Restauration positions session échouée:', e.message); }
     console.log(`📊 4 icônes chargées (jeu fixe)`);
   },
   
@@ -491,12 +502,17 @@ const DesktopManager = {
       
       // Si l'icône a été déplacée, on persiste immédiatement la position
       if (hasMovedDuringDrag) {
-        if (window.AdminManager && typeof window.AdminManager.saveIconsToData === 'function') {
-          window.AdminManager.saveIconsToData();
-        } else {
-          // Fallback simple localStorage
-          try { localStorage.setItem('desktopIconsBackup', JSON.stringify(window.desktopIcons)); } catch(_) {}
-        }
+        // Sauvegarde uniquement en session (pas GitHub, pas localStorage persistant)
+        try {
+          const positions = {};
+          [...window.desktopIcons.defaultIcons, ...window.desktopIcons.customIcons].forEach(ic => positions[ic.id] = { x: ic.x, y: ic.y });
+          sessionStorage.setItem('session_icon_positions', JSON.stringify(positions));
+          // Indication discrète
+          if (!this._lastSessionSave || Date.now()-this._lastSessionSave>3000) {
+            console.log('💾 Positions icônes (session) mises à jour');
+            this._lastSessionSave = Date.now();
+          }
+        } catch(e) { console.warn('⚠️ Sauvegarde session positions échouée:', e.message); }
       }
       // Ouverture désormais uniquement via double-clic (comportement Windows classique)
     };
