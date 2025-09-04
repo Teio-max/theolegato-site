@@ -91,7 +91,7 @@
         "name": "CV",
         "icon": "icons/cv.png",
         "x": 30,
-        "y": 158,
+        "y": 214,
         "visible": true,
         "window": "cv"
       },
@@ -100,7 +100,7 @@
         "name": "Mangas",
         "icon": "icons/portfolio.png",
         "x": 30,
-        "y": 158,
+        "y": 214,
         "visible": true,
         "window": "mangas"
       }
@@ -108,7 +108,7 @@
     "customIcons": []
   },
   "welcomePopupConfig": {
-    "title": "Bienvenue sur mon site",
+    "title": "Bienvenue ",
     "name": "Théo VAN WAAS",
     "description": "Bienvenue sur mon portfolio qui regroupe tous les projets, sur lesquels j'ai travaillé dernièrement.\n\nJ'espère que la forme vous plaira ! ",
     "buttonText": "Découvrir le site",
@@ -118,8 +118,13 @@
         "name": "Letterboxd",
         "icon": "letterboxd.png",
         "url": "https://letterboxd.com/tei/"
+      },
+      {
+        "name": "Instagram",
+        "icon": "",
+        "url": "https://www.instagram.com/theolegato_o/?hl=fr"
       }
     ]
   },
-  "lastUpdated": "2025-09-04T13:44:36.040Z"
+  "lastUpdated": "2025-09-04T14:29:05.921Z"
 }
