@@ -96,7 +96,7 @@
       if(Array.isArray(d.articles)) window.articles = d.articles;
       if(Array.isArray(d.tags)) window.tags = d.tags;
       if(d.cvData) window.cvData = d.cvData;
-      if(Array.isArray(d.desktopIcons)) window.desktopIcons = d.desktopIcons;
+      // On ignore volontairement desktopIcons pour ne pas écraser le layout par défaut (non persistant)
       if(d.welcomePopupConfig) this.data.welcomePopupConfig = d.welcomePopupConfig;
     },
 
@@ -156,13 +156,13 @@
     },
 
     buildConsolidated(){
+      // Exclure desktopIcons pour que les positions restent éphémères
       return {
         films: window.films||[],
         mangas: window.mangas||[],
         articles: window.articles||[],
         tags: window.tags||[],
         cvData: window.cvData||{ pdfUrl:'', lastUpdated:null },
-        desktopIcons: window.desktopIcons||[],
         welcomePopupConfig: this.data.welcomePopupConfig||{},
         lastUpdated: new Date().toISOString()
       };
@@ -182,11 +182,23 @@
         console.warn('⚠️ Pas de token -> sauvegarde locale uniquement');
         return Promise.resolve(this.saveDataLocally());
       }
-      // File save queue pour éviter conflits simultanés
-      this._saveQueue = this._saveQueue || Promise.resolve();
-      const task = ()=>this._performGitHubSave();
-      this._saveQueue = this._saveQueue.then(task, task); // enchaîner même si erreur précédente
-      return this._saveQueue;
+      // Débounce: si une sauvegarde est en cours on marque pending et réutilise la promesse
+      if(this._saving){
+        this._pendingSave = true;
+        return this._currentSavePromise || Promise.resolve(true);
+      }
+      this._saving = true;
+      this._currentSavePromise = this._performGitHubSave().then(r=>{
+        this._saving=false;
+        if(this._pendingSave){ this._pendingSave=false; return this.saveDataToGitHub(); }
+        return r;
+      }).catch(e=>{
+        this._saving=false;
+        const again = this._pendingSave; this._pendingSave=false;
+        if(again) return this.saveDataToGitHub();
+        throw e;
+      });
+      return this._currentSavePromise;
     },
 
     async _performGitHubSave(){
@@ -205,12 +217,17 @@
       const putFile = async (sha)=>{
         return fetch(apiUrl, { method:'PUT', headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'}, body: JSON.stringify({ message:'📦 Update data.json (auto-save)', content:contentB64, branch, sha }) });
       };
-      const attempt = async (retry)=>{
+      const attempt = async (i)=>{
         const meta = await fetchMeta();
         const resp = await putFile(meta.sha);
         if(!resp.ok){
           let detail=''; try{ const j=await resp.json(); detail=j.message||JSON.stringify(j);}catch(_){ }
-          if(resp.status===409 && !retry){ console.warn('⚠️ Conflit 409 – seconde tentative'); return attempt(true); }
+          if(resp.status===409 && i<2){ // 3 essais
+            const delay = 300*(i+1);
+            console.warn('⚠️ Conflit 409 – retry '+(i+2)+' dans '+delay+'ms');
+            await new Promise(r=>setTimeout(r,delay));
+            return attempt(i+1);
+          }
           throw new Error('PUT '+resp.status+(detail?' - '+detail:''));
         }
         const json = await resp.json();
@@ -220,7 +237,7 @@
         UIManager?.showNotification('Données synchronisées sur GitHub','success');
         return json;
       };
-      try { return await attempt(false); }
+      try { return await attempt(0); }
       catch(e){
         window.GitHubSyncState.lastStatus='error'; window.GitHubSyncState.lastError=e.message; if(/401|403/.test(e.message)) window.GitHubSyncState.invalidToken=true;
         console.error('❌ Sauvegarde GitHub échouée', e.message);
@@ -232,7 +249,10 @@
 
   // === Fonctions globales pratique (compat héritage) ===
   window.saveDataToGitHub = (...a)=>window.DataManager.saveDataToGitHub(...a);
-  window.saveData = ()=>{ window.DataManager.saveDataLocally(); };
+  window.saveData = ()=>{
+    try{ const ok = window.DataManager.saveDataLocally(); return Promise.resolve(ok); }
+    catch(e){ return Promise.reject(e); }
+  };
 
   // === Upload binaire (PDF / images) ===
   window.uploadBinaryToGitHub = async function(file, pathInRepo){

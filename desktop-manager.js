@@ -492,10 +492,7 @@ const DesktopManager = {
       // Si l'icône a été déplacée, on persiste immédiatement la position
       if (hasMovedDuringDrag) {
         if (window.AdminManager && typeof window.AdminManager.saveIconsToData === 'function') {
-          window.AdminManager.saveIconsToData();
-        } else {
-          // Fallback simple localStorage
-          try { localStorage.setItem('desktopIconsBackup', JSON.stringify(window.desktopIcons)); } catch(_) {}
+          window.AdminManager.saveIconsToData(); // pas de persistance
         }
       }
       // Ouverture désormais uniquement via double-clic (comportement Windows classique)

@@ -13,7 +13,12 @@
     try {
       if(!window.DataManager) return;
       // ensure local consolidation
-      if(typeof window.saveData === 'function') await window.saveData().catch(()=>{});
+        if(typeof window.saveData === 'function'){
+          try {
+            const r = window.saveData();
+            if(r && typeof r.then === 'function') await r.catch(()=>{});
+          } catch(_){ }
+        }
       if(canGitHub() && typeof window.DataManager.saveDataToGitHub === 'function'){
         await window.DataManager.saveDataToGitHub();
         console.log('⬆️ Sync GitHub ok ('+reason+')');

@@ -1163,20 +1163,9 @@ window.AdminManager = {
     alert('Positions sauvegardées');
   },
   saveIconsToData(){
-    // Stocker structure dans DataManager.data si dispo
+    // Désactivé: pas de persistance des positions. On met seulement à jour l'objet runtime si besoin.
     if(window.DataManager && window.DataManager.data){
-      window.DataManager.data.desktopIcons = JSON.parse(JSON.stringify(window.desktopIcons));
-      // Sauvegarde conditionnelle: GitHub seulement si token présent, sinon locale silencieuse
-      if(window.GITHUB_CONFIG?.token && typeof window.saveDataToGitHub === 'function'){
-        window.saveDataToGitHub().catch(err=> console.warn('Erreur sauvegarde GitHub icônes:', err));
-      } else if(typeof window.saveData==='function') {
-        try{ window.saveData(); }catch(e){ console.warn('saveData erreur:', e); }
-      } else {
-        try{ localStorage.setItem('site_data', JSON.stringify(window.DataManager.data)); }catch(e){ console.warn('localStorage save fallback erreur:', e); }
-      }
-    } else {
-      // fallback localStorage
-      try{ localStorage.setItem('desktopIconsBackup', JSON.stringify(window.desktopIcons)); }catch(e){ console.warn('localStorage échec:', e); }
+      window.DataManager.data.desktopIcons = undefined; // ne pas stocker
     }
   },
   // ====== MANGAS (CRUD) ======

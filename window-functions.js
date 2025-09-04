@@ -171,7 +171,11 @@ WindowManager.openArticleReader = function(articleId){
     const right = win.querySelector('#page-right');
     const totalSpan = win.querySelector('#art-page-total');
     function refresh(){
-      const st=ArticleReaders[articleId]; if(!st) return; const pair=renderPair(articleId); left.innerHTML=pair.left; right.innerHTML=pair.right; pageNum.textContent = (st.index+1).toString(); totalSpan.textContent = st.pages.length.toString();
+      const st=ArticleReaders[articleId]; if(!st) return; const pair=renderPair(articleId);
+      if(left) left.innerHTML=pair.left;
+      if(right) right.innerHTML=pair.right;
+      if(pageNum) pageNum.textContent = (st.index+1).toString();
+      if(totalSpan) totalSpan.textContent = st.pages.length.toString();
       if(prev) prev.disabled = st.index<=0;
       if(next) next.disabled = st.index>=st.pages.length-1;
     }
