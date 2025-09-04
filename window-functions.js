@@ -62,12 +62,16 @@ WindowManager.generateArticlesContent = function() {
   let content = '';
   
   // Vérifier si les données sont disponibles
-  if (typeof window.DataManager === 'undefined' || !window.DataManager.data || !window.DataManager.data.articles) {
-    return '<p>Aucun article disponible pour le moment.</p>';
+  let sourceArticles = [];
+  if(window.articles && Array.isArray(window.articles) && window.articles.length){
+    sourceArticles = window.articles; // source directe la plus fraîche
+  } else if (window.DataManager?.data?.articles) {
+    sourceArticles = window.DataManager.data.articles;
   }
-  
+  if(!sourceArticles.length) return '<p>Aucun article disponible pour le moment.</p>';
+
   // Générer le HTML pour chaque article
-  window.DataManager.data.articles.forEach(article => {
+  sourceArticles.forEach(article => {
     const resume = (article.summary || article.contenu || '').slice(0,180).replace(/</g,'&lt;');
     const date = article.date || '';
     content += `

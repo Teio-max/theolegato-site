@@ -172,6 +172,9 @@
       try {
         const bundle = this.buildConsolidated();
         localStorage.setItem('site_data', JSON.stringify(bundle));
+  // Maintenir DataManager.data synchronisé avec les modifications (articles, films, etc.)
+  // afin que les fenêtres (ex: Articles) reflètent immédiatement les ajouts / suppressions.
+  try { this.updateGlobalData(bundle); } catch(e){ console.warn('Sync DataManager.data échouée', e.message); }
         console.log('💾 Données sauvegardées localement');
         return true;
       }catch(e){ console.error('❌ Save locale échouée', e.message); return false; }
