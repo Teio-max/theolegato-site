@@ -2806,25 +2806,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Définir une implémentation sécurisée de createAdminPanelWindow dans la portée globale
 // qui ne créera pas de boucle de récursion infinie
-if (typeof window.createAdminPanelWindow !== 'function') {
-  window.createAdminPanelWindow = function(editItemId = null, itemType = 'film') {
-    console.log("📝 Appel global à createAdminPanelWindow");
-    
-    // Vérifier si AdminPanelManager existe et a la méthode createPanel
-    if (window.AdminPanelManager && typeof window.AdminPanelManager.createPanel === 'function') {
-      console.log("✅ Appel direct à AdminPanelManager.createPanel");
-      try {
-        // Utiliser apply pour préserver le contexte this et transmettre les arguments
-        return window.AdminPanelManager.createPanel(editItemId, itemType);
-      } catch (error) {
-        console.error("❌ Erreur lors de l'appel à AdminPanelManager.createPanel:", error);
-        alert("Erreur lors de l'ouverture du panneau d'administration: " + error.message);
-        return null;
-      }
-    } else {
-      console.error("❌ AdminPanelManager n'est pas disponible ou sa méthode createPanel n'existe pas");
-      alert("Le panneau d'administration n'est pas disponible. Veuillez rafraîchir la page.");
-      return null;
-    }
-  };
-}
+// Désactivation douce: toujours déléguer vers AdminManager si disponible pour éviter panneaux multiples
+window.createAdminPanelWindow = function(editItemId = null, itemType = 'film') {
+  console.log('↪️ Redirection createAdminPanelWindow (enhanced) vers AdminManager unifié');
+  if (window.AdminManager && typeof window.AdminManager.createPanel === 'function') {
+    return window.AdminManager.createPanel(editItemId, itemType);
+  }
+  if (window.AdminPanelManager && typeof window.AdminPanelManager.createPanel === 'function') {
+    return window.AdminPanelManager.createPanel(editItemId, itemType);
+  }
+  alert('Panneau admin indisponible');
+  return null;
+};

@@ -22,19 +22,16 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    // Définir ou redéfinir la fonction createAdminPanelWindow globale
+    // Redéfinition centrée: priorité au module unifié AdminManager
     window.createAdminPanelWindow = function(editItemId = null, itemType = 'film') {
-      console.log("🛠️ Fonction createAdminPanelWindow réparée appelée");
-      
-      // Utiliser AdminPanelManager si disponible
-      if (typeof window.AdminPanelManager !== 'undefined' && 
-          typeof window.AdminPanelManager.createPanel === 'function') {
-        console.log("🛠️ Utilisation de AdminPanelManager.createPanel");
+      console.log('🛠️ Redirection réparation -> AdminManager');
+      if (window.AdminManager && typeof window.AdminManager.createPanel === 'function') {
+        return window.AdminManager.createPanel(editItemId, itemType);
+      }
+      if (window.AdminPanelManager && typeof window.AdminPanelManager.createPanel === 'function') {
         return window.AdminPanelManager.createPanel(editItemId, itemType);
       }
-      
-      // Fallback: créer une fenêtre d'administration simple
-      console.log("🛠️ Création d'une fenêtre d'administration de secours");
+      console.warn('⚠️ Aucun gestionnaire admin principal, fallback minimal');
       return createFallbackAdminWindow();
     };
     

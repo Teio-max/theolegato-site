@@ -371,11 +371,120 @@ window.DataManager = {
   
   // Save data to GitHub
   saveDataToGitHub() {
-    // Implement GitHub saving logic
-    console.log("🔄 Cette fonctionnalité sera implémentée dans une future version");
-    return this.saveDataLocally();
+    // Nouvelle implémentation complète utilisant l'API GitHub (PUT /contents)
+    if (!window.GITHUB_CONFIG || !window.GITHUB_CONFIG.token) {
+      console.warn('⚠️ Token GitHub manquant: fallback local uniquement');
+      return Promise.resolve(this.saveDataLocally());
+    }
+    const { owner, repo, branch = 'main', dataFile = 'data.json', token } = window.GITHUB_CONFIG;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${dataFile}`;
+
+    // Construire l'objet consolidé actuel
+    const consolidated = {
+      films: window.films || [],
+      mangas: window.mangas || [],
+      articles: window.articles || [],
+      tags: window.tags || [],
+      cvData: window.cvData || { pdfUrl: '', lastUpdated: null },
+      desktopIcons: window.desktopIcons || this.data.desktopIcons || [],
+      welcomePopupConfig: (window.DataManager && window.DataManager.data && window.DataManager.data.welcomePopupConfig) || {},
+      lastUpdated: new Date().toISOString()
+    };
+
+    // Mettre en cache local immédiatement (optimiste)
+    try { localStorage.setItem('site_data', JSON.stringify(consolidated)); } catch(e) { console.warn('Local cache fail:', e.message); }
+
+    const jsonString = JSON.stringify(consolidated, null, 2);
+    const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
+
+    // Étape 1: récupérer SHA existant (si fichier présent)
+    return fetch(`${apiUrl}?ref=${branch}`, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+    })
+      .then(r => {
+        if (r.status === 200) return r.json();
+        if (r.status === 404) return { sha: undefined }; // fichier nouveau
+        throw new Error('GitHub GET data.json status ' + r.status);
+      })
+      .then(meta => {
+        const body = {
+          message: '� Update data.json via admin panel',
+            content: base64Content,
+            branch,
+            sha: meta.sha
+        };
+        return fetch(apiUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+      })
+      .then(r => { if(!r.ok) throw new Error('GitHub PUT data.json status '+r.status); return r.json(); })
+      .then(resp => {
+        console.log('✅ data.json mis à jour sur GitHub');
+        if(window.UIManager) UIManager.showNotification('Données synchronisées sur GitHub', 'success');
+        return resp;
+      })
+      .catch(err => {
+        console.error('❌ Échec sauvegarde GitHub data.json', err);
+        if(window.UIManager) UIManager.showNotification('Sauvegarde GitHub échouée: '+err.message, 'error');
+        // Pas de rejet brutal: on renvoie tout de même false
+        return false;
+      });
   }
 };
+
+// ---- Utilitaires upload binaire centralisés (PDF / autres) ----
+if (typeof window.fileToBase64Binary !== 'function') {
+  window.fileToBase64Binary = async function(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const bytes = new Uint8Array(reader.result);
+        let binary = '';
+        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+        resolve(btoa(binary));
+      };
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(file);
+    });
+  };
+}
+
+if (typeof window.uploadBinaryToGitHub !== 'function') {
+  window.uploadBinaryToGitHub = async function(file, pathInRepo) {
+    if (!window.GITHUB_CONFIG || !window.GITHUB_CONFIG.token) throw new Error('Token GitHub absent');
+    const { owner, repo, branch='main', token } = window.GITHUB_CONFIG;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${pathInRepo}`;
+    // Récupérer sha si fichier existe
+    let sha;
+    const head = await fetch(`${apiUrl}?ref=${branch}`, { headers:{ 'Authorization': `token ${token}` } });
+    if(head.status === 200){ const meta = await head.json(); sha = meta.sha; }
+    const content = await window.fileToBase64Binary(file);
+    const resp = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `📄 Upload ${pathInRepo}`,
+        content,
+        branch,
+        sha
+      })
+    });
+    if(!resp.ok) throw new Error('Upload GitHub échec status '+resp.status);
+    const json = await resp.json();
+    const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${pathInRepo}`;
+    return { meta: json, rawUrl, downloadUrl: json.content?.download_url || rawUrl };
+  };
+}
 // Utilitaire global pour définir / mémoriser le token GitHub de façon centralisée
 if (typeof window.setGitHubToken !== 'function') {
   window.setGitHubToken = function(token, remember = true) {

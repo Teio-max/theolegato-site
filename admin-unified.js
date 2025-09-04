@@ -740,24 +740,20 @@ window.AdminManager = {
   // Sauvegarde de toutes les données
   saveAllData() {
     console.log('💾 Sauvegarde des données');
-    // Politique: n'utiliser GitHub que si un token valide est présent
-    const hasToken = !!(window.GITHUB_CONFIG?.token);
-    if (hasToken && typeof window.saveDataToGitHub === 'function') {
-      window.saveDataToGitHub()
-        .then(()=> UIManager?.showNotification('Données poussées sur GitHub','success'))
-        .catch(err=> {
-          console.warn('⚠️ Échec push GitHub, fallback local:', err.message);
-          if (typeof window.saveData === 'function') {
-            try { window.saveData(); UIManager?.showNotification('Sauvegarde locale effectuée','warning'); }
-            catch(e){ console.error(e); UIManager?.showNotification('Erreur sauvegarde locale','error'); }
-          }
-        });
-    } else if (typeof window.saveData === 'function') {
-      try { window.saveData(); UIManager?.showNotification('Données sauvegardées localement','success'); }
-      catch(e){ console.error(e); UIManager?.showNotification('Erreur sauvegarde locale','error'); }
-    } else {
-      console.error('Aucune fonction de sauvegarde disponible');
-      UIManager?.showNotification('Aucune fonction de sauvegarde disponible','error');
+    
+    // Vérifier si la fonction de sauvegarde existe
+    // Consolidation locale puis GitHub via DataManager quand disponible
+    try {
+      if (typeof window.saveData === 'function') window.saveData();
+      if (window.DataManager && typeof window.DataManager.saveDataToGitHub === 'function') {
+        window.DataManager.saveDataToGitHub();
+      } else if (typeof window.saveDataToGitHub === 'function') {
+        window.saveDataToGitHub();
+      }
+      UIManager?.showNotification('Sauvegarde déclenchée', 'info');
+    } catch(err){
+      console.error('Erreur sauvegarde globale', err);
+      alert('Erreur sauvegarde: '+err.message);
     }
   }
   ,
@@ -841,21 +837,42 @@ window.AdminManager = {
     document.getElementById('article-cancel-btn')?.addEventListener('click', ()=> this.loadArticlesManager());
     document.getElementById('article-form')?.addEventListener('submit', (e)=> { e.preventDefault(); this.saveArticle(articleId); });
     const pdfInput = document.getElementById('article-pdf');
-    pdfInput?.addEventListener('change', (e)=>{
+    pdfInput?.addEventListener('change', async (e)=>{
       const file = e.target.files[0]; if(!file) return;
-      if(file.size > 4*1024*1024){ alert('PDF trop volumineux (>4Mo)'); e.target.value=''; return; }
       const prog = document.getElementById('article-pdf-progress'); prog.style.display='block'; prog.value=0;
-      const reader = new FileReader();
-      reader.onprogress = ev=> { if(ev.lengthComputable) prog.value = (ev.loaded/ev.total)*100; };
-      reader.onload = ev=> {
-        if(article){ article.pdfUrl = ev.target.result; }
-        else { window._pendingArticlePdf = ev.target.result; }
+      try {
+        // Si token GitHub présent on upload directement, sinon fallback dataURL
+        if(window.GITHUB_CONFIG?.token && typeof window.uploadBinaryToGitHub === 'function') {
+          if(file.type !== 'application/pdf'){ throw new Error('Type de fichier invalide'); }
+          // Pas de limite stricte: on laisse GitHub gérer (max 100Mo), on avertit >8Mo.
+            if(file.size > 8*1024*1024) alert('⚠️ PDF volumineux, le chargement peut prendre du temps.');
+          const safeName = (file.name||'article.pdf').replace(/[^a-zA-Z0-9._-]/g,'_');
+          const path = `articles/pdf/${Date.now()}_${safeName}`;
+          const res = await window.uploadBinaryToGitHub(file, path);
+          if(article){ article.pdfUrl = res.rawUrl; }
+          else { window._pendingArticlePdf = res.rawUrl; }
+          prog.value = 100;
+          const cur = document.getElementById('article-pdf-current'); if(cur){ cur.style.display='block'; cur.querySelector('a').href = (article? article.pdfUrl : window._pendingArticlePdf); }
+          setTimeout(()=> prog.style.display='none', 400);
+          UIManager?.showNotification('PDF article uploadé sur GitHub', 'success');
+        } else {
+          if(file.size > 4*1024*1024){ alert('PDF trop volumineux (>4Mo) sans token GitHub'); e.target.value=''; prog.style.display='none'; return; }
+          const reader = new FileReader();
+          reader.onprogress = ev=> { if(ev.lengthComputable) prog.value = (ev.loaded/ev.total)*100; };
+          reader.onload = ev=> {
+            if(article){ article.pdfUrl = ev.target.result; }
+            else { window._pendingArticlePdf = ev.target.result; }
+            prog.style.display='none';
+            const cur = document.getElementById('article-pdf-current'); if(cur){ cur.style.display='block'; cur.querySelector('a').href = ev.target.result; }
+            alert('PDF chargé (enregistrer pour sauvegarder)');
+          };
+          reader.onerror = ()=> { prog.style.display='none'; alert('Erreur lecture PDF'); };
+          reader.readAsDataURL(file);
+        }
+      } catch(err){
         prog.style.display='none';
-        const cur = document.getElementById('article-pdf-current'); if(cur){ cur.style.display='block'; cur.querySelector('a').href = ev.target.result; }
-        alert('PDF chargé (enregistrer pour sauvegarder)');
-      };
-      reader.onerror = ()=> { prog.style.display='none'; alert('Erreur lecture PDF'); };
-      reader.readAsDataURL(file);
+        console.error(err); alert('Upload PDF échoué: '+err.message);
+      }
     });
   },
   saveArticle(articleId) {
@@ -1146,15 +1163,20 @@ window.AdminManager = {
     alert('Positions sauvegardées');
   },
   saveIconsToData(){
-    // Nouvelle politique: positions et ajustements d'icônes uniquement en session
-    try {
-      const snapshot = {};
-      [...(window.desktopIcons?.defaultIcons||[]), ...(window.desktopIcons?.customIcons||[])]
-        .forEach(ic => snapshot[ic.id] = { x: ic.x, y: ic.y, name: ic.name, icon: ic.icon, window: ic.window, visible: ic.visible });
-      sessionStorage.setItem('session_icon_positions', JSON.stringify(snapshot));
-      console.log('💾 Icônes (layout) sauvegardées en session (pas GitHub, pas localStorage)');
-    } catch(e) {
-      console.warn('⚠️ Sauvegarde session icônes échouée:', e.message);
+    // Stocker structure dans DataManager.data si dispo
+    if(window.DataManager && window.DataManager.data){
+      window.DataManager.data.desktopIcons = JSON.parse(JSON.stringify(window.desktopIcons));
+      // Sauvegarde conditionnelle: GitHub seulement si token présent, sinon locale silencieuse
+      if(window.GITHUB_CONFIG?.token && typeof window.saveDataToGitHub === 'function'){
+        window.saveDataToGitHub().catch(err=> console.warn('Erreur sauvegarde GitHub icônes:', err));
+      } else if(typeof window.saveData==='function') {
+        try{ window.saveData(); }catch(e){ console.warn('saveData erreur:', e); }
+      } else {
+        try{ localStorage.setItem('site_data', JSON.stringify(window.DataManager.data)); }catch(e){ console.warn('localStorage save fallback erreur:', e); }
+      }
+    } else {
+      // fallback localStorage
+      try{ localStorage.setItem('desktopIconsBackup', JSON.stringify(window.desktopIcons)); }catch(e){ console.warn('localStorage échec:', e); }
     }
   },
   // ====== MANGAS (CRUD) ======
@@ -1295,23 +1317,39 @@ window.AdminManager = {
         </div>
       </form>`;
     const fileInput = d.querySelector('#cv-pdf-file');
-    fileInput?.addEventListener('change',(e)=>{
+    fileInput?.addEventListener('change', async (e)=>{
       const file = e.target.files[0]; if(!file) return;
-      if(file.size > 2*1024*1024){ alert('Fichier trop volumineux (>2Mo)'); e.target.value=''; return; }
-      const progress = d.querySelector('#cv-pdf-progress');
-      progress.style.display='block'; progress.value=0;
-      const reader = new FileReader();
-      reader.onprogress = ev=> { if(ev.lengthComputable){ progress.value = (ev.loaded/ev.total)*100; } };
-      reader.onload = ev=> {
-        window.cvData.pdfUrl = ev.target.result; // data URL
-        window.cvData.lastUpdated = Date.now();
-        if(window.DataManager?.data){ window.DataManager.data.cvData = JSON.parse(JSON.stringify(window.cvData)); }
-        progress.style.display='none';
-        const cur = d.querySelector('#cv-pdf-current'); if(cur){ cur.style.display='block'; cur.querySelector('a').href = window.cvData.pdfUrl; }
-        UIManager?.showNotification('PDF chargé (non encore sauvegardé GitHub)', 'info');
-      };
-      reader.onerror = ()=> { progress.style.display='none'; alert('Erreur lecture fichier'); };
-      reader.readAsDataURL(file);
+      const progress = d.querySelector('#cv-pdf-progress'); progress.style.display='block'; progress.value=0;
+      try {
+        if(window.GITHUB_CONFIG?.token && typeof window.uploadBinaryToGitHub === 'function') {
+          if(file.type !== 'application/pdf') throw new Error('Fichier non PDF');
+          if(file.size > 12*1024*1024) alert('⚠️ PDF très volumineux, patience...');
+          const safeName = (file.name||'cv.pdf').replace(/[^a-zA-Z0-9._-]/g,'_');
+          const path = `cv/${Date.now()}_${safeName}`;
+          const res = await window.uploadBinaryToGitHub(file, path);
+          window.cvData.pdfUrl = res.rawUrl;
+          window.cvData.lastUpdated = Date.now();
+          if(window.DataManager?.data){ window.DataManager.data.cvData = JSON.parse(JSON.stringify(window.cvData)); }
+          progress.value = 100; setTimeout(()=> progress.style.display='none', 400);
+          const cur = d.querySelector('#cv-pdf-current'); if(cur){ cur.style.display='block'; cur.querySelector('a').href = window.cvData.pdfUrl; }
+          UIManager?.showNotification('CV uploadé sur GitHub', 'success');
+          // Sauvegarde data.json distante
+          if(typeof window.DataManager?.saveDataToGitHub === 'function') window.DataManager.saveDataToGitHub();
+        } else {
+          if(file.size > 2*1024*1024){ alert('Fichier trop volumineux (>2Mo) sans token GitHub'); progress.style.display='none'; return; }
+          const reader = new FileReader();
+          reader.onprogress = ev=> { if(ev.lengthComputable){ progress.value = (ev.loaded/ev.total)*100; } };
+          reader.onload = ev=> {
+            window.cvData.pdfUrl = ev.target.result; window.cvData.lastUpdated = Date.now();
+            if(window.DataManager?.data){ window.DataManager.data.cvData = JSON.parse(JSON.stringify(window.cvData)); }
+            progress.style.display='none';
+            const cur = d.querySelector('#cv-pdf-current'); if(cur){ cur.style.display='block'; cur.querySelector('a').href = window.cvData.pdfUrl; }
+            UIManager?.showNotification('PDF chargé localement (token manquant)', 'warning');
+          };
+          reader.onerror = ()=> { progress.style.display='none'; alert('Erreur lecture fichier'); };
+          reader.readAsDataURL(file);
+        }
+      } catch(err){ progress.style.display='none'; console.error(err); alert('Upload CV échoué: '+err.message); }
     });
     document.getElementById('cv-cancel-btn')?.addEventListener('click',()=> this.loadDashboard());
     document.getElementById('cv-form')?.addEventListener('submit',e=>{ e.preventDefault(); this.saveCV(true); });
@@ -1323,21 +1361,8 @@ window.AdminManager = {
     window.cvData.education=(document.getElementById('cv-education')?.value||'').split(/\n+/).map(l=>l.trim()).filter(Boolean);
     window.cvData.skills=(document.getElementById('cv-skills')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
     if(window.DataManager?.data){ window.DataManager.data.cvData = JSON.parse(JSON.stringify(window.cvData)); }
-    if(triggerSave){
-      const hasToken = !!(window.GITHUB_CONFIG?.token);
-      if (hasToken && typeof window.saveDataToGitHub === 'function') {
-        window.saveDataToGitHub()
-          .then(()=> UIManager?.showNotification('CV + données synchronisés GitHub','success'))
-          .catch(err=> { console.warn('Push GitHub CV échoué:', err.message); if(typeof window.saveData==='function'){ try{ window.saveData(); UIManager?.showNotification('CV sauvegardé localement (GitHub indisponible)','warning'); }catch(e){ UIManager?.showNotification('Erreur sauvegarde locale CV','error'); } } });
-      } else if (typeof window.saveData === 'function') {
-        try { window.saveData(); UIManager?.showNotification('CV sauvegardé localement','success'); }
-        catch(e){ UIManager?.showNotification('Erreur sauvegarde locale CV','error'); }
-      } else {
-        UIManager?.showNotification('Aucune fonction de sauvegarde disponible','error');
-      }
-    } else {
-      UIManager?.showNotification('CV mis à jour (non poussé GitHub)','info');
-    }
+    if(triggerSave){ this.saveAllData(); }
+    alert('CV sauvegardé');
   },
   loadTagForm(tagId=null){
     console.log(`🏷️ Formulaire tag (id:${tagId})`);
