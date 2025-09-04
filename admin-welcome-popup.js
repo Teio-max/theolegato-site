@@ -243,17 +243,22 @@ console.log("🔧 Chargement du module de configuration du popup de bienvenue");
     window.DataManager.data.welcomePopupConfig = config;
     
     // Sauvegarder les données
-    if (typeof window.DataManager.saveData === 'function') {
-      window.DataManager.saveData()
-        .then(() => {
-          alert("Configuration du popup de bienvenue enregistrée avec succès !");
-        })
-        .catch(error => {
-          console.error("❌ Erreur lors de l'enregistrement:", error);
-          alert("Erreur lors de l'enregistrement. Vérifiez la console pour plus de détails.");
+    try {
+      if (window.DataManager && typeof window.DataManager.saveDataToGitHub === 'function') {
+        window.DataManager.saveDataToGitHub().then(()=>{
+          UIManager?.showNotification('Popup sauvegardé (GitHub)', 'success');
         });
-    } else {
-      alert("Configuration mise à jour. Note: La fonction de sauvegarde permanente n'est pas disponible.");
+      } else if (typeof window.saveDataToGitHub === 'function') {
+        window.saveDataToGitHub();
+      } else if (typeof window.saveData === 'function') {
+        window.saveData();
+      }
+      // Après sauvegarde, réafficher en temps réel
+      if(typeof window.destroyWelcomePopup === 'function') window.destroyWelcomePopup();
+      if(typeof window.showWelcomePopup === 'function') window.showWelcomePopup(true);
+    } catch(err){
+      console.error('Erreur sauvegarde popup', err);
+      alert('Erreur sauvegarde popup: '+err.message);
     }
   };
   
@@ -266,11 +271,9 @@ console.log("🔧 Chargement du module de configuration du popup de bienvenue");
     }
     
     // Réinitialiser l'état du popup
-    window.welcomePopupShown = false;
-    
-    // Afficher le popup
+    // Afficher/rafraîchir le popup forcé
     if (typeof window.showWelcomePopup === 'function') {
-      window.showWelcomePopup();
+      window.showWelcomePopup(true);
     } else {
       alert("Erreur: La fonction showWelcomePopup n'est pas disponible");
     }

@@ -590,29 +590,26 @@ if (typeof window.setGitHubToken !== 'function') {
   
   if (typeof window.saveData !== 'function') {
     window.saveData = function() {
-      const dataToSave = {
-        films: window.films || [],
-        mangas: window.mangas || [],
-        articles: window.articles || [],
-        tags: window.tags || [],
-        cvData: window.cvData || { pdfUrl: '', lastUpdated: null },
-        lastUpdated: new Date().toISOString()
-      };
-      
-      try {
-        localStorage.setItem('site_data', JSON.stringify(dataToSave));
-        console.log("✅ Données sauvegardées localement");
-        if (window.UIManager && typeof window.UIManager.showNotification === 'function') {
-          window.UIManager.showNotification("Données sauvegardées localement", "success");
+      return new Promise((resolve, reject) => {
+        const dataToSave = {
+          films: window.films || [],
+          mangas: window.mangas || [],
+          articles: window.articles || [],
+          tags: window.tags || [],
+          cvData: window.cvData || { pdfUrl: '', lastUpdated: null },
+          lastUpdated: new Date().toISOString()
+        };
+        try {
+          localStorage.setItem('site_data', JSON.stringify(dataToSave));
+          console.log('✅ Données sauvegardées localement');
+          if (window.UIManager?.showNotification) UIManager.showNotification('Données sauvegardées localement','success');
+          resolve(true);
+        } catch(error){
+          console.error('❌ Erreur sauvegarde locale', error);
+          if (window.UIManager?.showNotification) UIManager.showNotification('Erreur: '+error.message,'error');
+          reject(error);
         }
-        return true;
-      } catch (error) {
-        console.error("❌ Erreur lors de la sauvegarde locale:", error);
-        if (window.UIManager && typeof window.UIManager.showNotification === 'function') {
-          window.UIManager.showNotification(`Erreur: ${error.message}`, "error");
-        }
-        return false;
-      }
+      });
     };
   }
   

@@ -1,14 +1,14 @@
 // Script pour la fenêtre pop-up de présentation
 console.log("🌟 Chargement du module de présentation");
 
-// Variable pour gérer l'état (pop-up déjà affichée ou non)
-let welcomePopupShown = false;
+// Variable globale (attachée à window) pour permettre reset depuis admin
+window.welcomePopupShown = false;
 
 // Fonction pour créer et afficher la pop-up de présentation
-function showWelcomePopup() {
-  // Éviter d'afficher plusieurs fois
-  if (welcomePopupShown) return;
-  welcomePopupShown = true;
+function showWelcomePopup(force = false) {
+  // Éviter d'afficher plusieurs fois sauf en mode force
+  if (window.welcomePopupShown && !force) return;
+  window.welcomePopupShown = true;
   
   console.log("👋 Affichage de la pop-up de bienvenue");
   
@@ -126,7 +126,10 @@ function showWelcomePopup() {
     </div>
   `;
   
-  // Ajouter la fenêtre au document
+  // Supprimer ancienne instance si force
+  if(force){
+    document.querySelectorAll('.xp-window.welcome-window').forEach(el=> el.remove());
+  }
   document.body.appendChild(welcomeWindow);
   
   // Rendre la fenêtre draggable
@@ -199,7 +202,7 @@ function showWelcomePopup() {
   const exploreBtn = welcomeWindow.querySelector('#explore-site-btn');
   
   closeBtn.addEventListener('click', () => {
-    document.body.removeChild(welcomeWindow);
+    destroyWelcomePopup();
   });
   
   minBtn.addEventListener('click', () => {
@@ -232,7 +235,7 @@ function showWelcomePopup() {
   });
   
   exploreBtn.addEventListener('click', () => {
-    document.body.removeChild(welcomeWindow);
+    destroyWelcomePopup();
   });
   
   // Fonction pour rendre un élément draggable
@@ -274,6 +277,14 @@ function showWelcomePopup() {
     }
   }
 }
+
+function destroyWelcomePopup(){
+  document.querySelectorAll('.xp-window.welcome-window').forEach(el=> el.remove());
+  window.welcomePopupShown = false; // Permet un nouvel affichage
+}
+
+// Exposer utilitaires
+window.destroyWelcomePopup = destroyWelcomePopup;
 
 // Ne pas exécuter automatiquement, laisser script.js l'appeler
 // au moment approprié après le chargement du bureau
