@@ -31,17 +31,17 @@
   "mangas": [],
   "articles": [
     {
-      "id": 2,
-      "titre": "Analyse : le traitement médiatique des conflits internationaux",
-      "contenu": "Étude comparative de la couverture des conflits internationaux par différents médias et leur influence sur l'opinion publique.",
-      "date": "2025-08-20",
-      "categorie": "International",
-      "image": "https://via.placeholder.com/800x450?text=Médias+et+Conflits",
+      "id": 1756999548293,
+      "titre": "A year at the PCCU",
+      "date": "2025-05-20",
       "tags": [
-        "géopolitique",
-        "médias",
-        "analyse"
-      ]
+        "Taïwan",
+        "Échange",
+        "Anglais"
+      ],
+      "contenu": "Article en anglais destiné aux nouveaux étudiants étrangers pour leur présenter la fac.",
+      "createdAt": 1756999548293,
+      "pdfUrl": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/articles/pdf/1756999405523_The_______1-1.pdf"
     }
   ],
   "tags": [],
@@ -113,5 +113,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-04T15:22:45.332Z"
+  "lastUpdated": "2025-09-04T15:25:49.611Z"
 }
