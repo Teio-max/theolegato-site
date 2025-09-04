@@ -51,6 +51,34 @@
       "color": "#074ae7",
       "description": "",
       "createdAt": 1756999655537
+    },
+    {
+      "id": 1756999673912,
+      "name": "Anglais",
+      "color": "#e7d607",
+      "description": "",
+      "createdAt": 1756999673912
+    },
+    {
+      "id": 1756999690561,
+      "name": "Échange",
+      "color": "#61d21c",
+      "description": "",
+      "createdAt": 1756999690561
+    },
+    {
+      "id": 1756999712912,
+      "name": "Histoire",
+      "color": "#846933",
+      "description": "",
+      "createdAt": 1756999712912
+    },
+    {
+      "id": 1756999727816,
+      "name": "Chine",
+      "color": "#dd2b11",
+      "description": "",
+      "createdAt": 1756999727816
     }
   ],
   "cvData": {
@@ -121,5 +149,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-04T15:27:36.613Z"
+  "lastUpdated": "2025-09-04T15:28:48.910Z"
 }
