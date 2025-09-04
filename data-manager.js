@@ -1,671 +1,290 @@
-// Initialiser l'exposition des données globales
-(function() {
-  console.log("🔄 Initialisation des données globales");
-  
-  // S'assurer que les collections sont disponibles globalement
-  if (typeof window.films === 'undefined') {
-    window.films = [];
-  }
-  
-  if (typeof window.mangas === 'undefined') {
-    window.mangas = [];
-  }
-  
-  if (typeof window.articles === 'undefined') {
-    window.articles = [];
-  }
-  
-  if (typeof window.tags === 'undefined') {
-    window.tags = [];
-  }
-  
-  if (typeof window.cvData === 'undefined') {
-    window.cvData = {
-      pdfUrl: '',
-      lastUpdated: null
-    };
-  }
+// ==============================================================
+// Data Manager unifié + Persistance GitHub + Diagnostics
+// ==============================================================
+(function(){
+  console.log('🔄 Initialisation DataManager (clean build)');
 
-  // Exposer GITHUB_CONFIG globalement s'il n'est pas déjà disponible
-  if (typeof window.GITHUB_CONFIG === 'undefined') {
+  // === Configuration & État Global ===
+  window.films   = window.films   || [];
+  window.mangas  = window.mangas  || [];
+  window.articles= window.articles|| [];
+  window.tags    = window.tags    || [];
+  window.cvData  = window.cvData  || { pdfUrl:'', lastUpdated:null };
+
+  if(!window.GITHUB_CONFIG){
     window.GITHUB_CONFIG = {
-      owner: 'Teio-max',
-      repo: 'theolegato-site',
-      branch: 'main',
-      dataFile: 'data.json',
+      owner:'Teio-max', repo:'theolegato-site', branch:'main', dataFile:'data.json',
       token: localStorage.getItem('github_token') || sessionStorage.getItem('github_token') || null
     };
   }
-  
-  // Initialiser UIManager s'il n'est pas déjà défini
-  if (typeof window.UIManager === 'undefined') {
-    window.UIManager = {
-      showNotification: function(message, type = 'info', duration = 3000) {
-        console.log(`📣 [${type}]: ${message}`);
-        
-        // Créer une notification visuelle simple
-        const notification = document.createElement('div');
-        notification.style.position = 'fixed';
-        notification.style.bottom = '20px';
-        notification.style.right = '20px';
-        notification.style.padding = '10px 15px';
-        notification.style.borderRadius = '4px';
-        notification.style.color = '#fff';
-        notification.style.zIndex = '10000';
-        notification.style.boxShadow = '0 3px 6px rgba(0,0,0,0.2)';
-        notification.style.transition = 'opacity 0.3s, transform 0.3s';
-        notification.style.opacity = '0';
-        notification.style.transform = 'translateX(100%)';
-        
-        // Définir la couleur de fond selon le type
-        switch (type) {
-          case 'success':
-            notification.style.backgroundColor = '#4CAF50';
-            break;
-          case 'warning':
-            notification.style.backgroundColor = '#FF9800';
-            break;
-          case 'error':
-            notification.style.backgroundColor = '#F44336';
-            break;
-          default: // info
-            notification.style.backgroundColor = '#2196F3';
-        }
-        
-        notification.textContent = message;
-        document.body.appendChild(notification);
-        
-        // Afficher la notification avec animation
-        setTimeout(() => {
-          notification.style.opacity = '1';
-          notification.style.transform = 'translateX(0)';
-        }, 10);
-        
-        // Cacher et supprimer après un délai
-        setTimeout(() => {
-          notification.style.opacity = '0';
-          notification.style.transform = 'translateX(100%)';
-          setTimeout(() => {
-            document.body.removeChild(notification);
-          }, 300);
-        }, duration);
-      }
-    };
+
+  if(!window.UIManager){
+    window.UIManager = { showNotification:(msg,type='info')=>console.log(`📣 [${type}] ${msg}`) };
   }
-})();
 
-// Définition du gestionnaire de données centralisé
-// Ce gestionnaire est exposé globalement et utilisé par tous les modules
-window.DataManager = {
-  data: {
-    films: [],
-    articles: [],
-    projects: [],
-    desktopIcons: []
-  },
-  
-  // Default data (fallback)
-  defaultData: {
-    films: [
-      {
-        id: 1,
-        titre: 'Blade Runner 2049',
-        note: 5,
-        critique: 'Une suite magistrale qui respecte l\'œuvre originale tout en développant sa propre identité.',
-        image: 'https://m.media-amazon.com/images/M/MV5BNzA1Njg4NzYxOV5BMl5BanBnXkFtZTgwODk5NjU3MzI@._V1_.jpg',
-        galerie: [
-          'https://via.placeholder.com/420x240?text=Image+1',
-          'https://via.placeholder.com/420x240?text=Image+2'
-        ],
-        bandeAnnonce: 'https://www.youtube.com/watch?v=gCcx85zbxz4',
-        liens: [
-          { nom: 'Allociné', url: 'https://www.allocine.fr/film/fichefilm_gen_cfilm=219931.html' },
-          { nom: 'SensCritique', url: 'https://www.senscritique.com/film/Blade_Runner_2049/12087891' }
-        ],
-        tags: ['science-fiction', 'dystopie', 'cyberpunk']
-      }
-    ],
-    articles: [
-      {
-        id: 1,
-        titre: "L'avenir du journalisme à l'ère numérique",
-        contenu: "Analyse des transformations du métier de journaliste face aux défis numériques. Le journalisme connaît une révolution sans précédent avec l'émergence des réseaux sociaux et l'intelligence artificielle. Comment les professionnels peuvent-ils s'adapter à ces changements tout en préservant les valeurs fondamentales de leur métier ?",
-        date: "2025-08-25",
-        categorie: "Médias",
-        image: "https://via.placeholder.com/800x450?text=Journalisme+Numérique",
-        tags: ["journalisme", "numérique", "médias"]
-      },
-      {
-        id: 2,
-        titre: "Analyse : le traitement médiatique des conflits internationaux",
-        contenu: "Étude comparative de la couverture des conflits internationaux par différents médias et leur influence sur l'opinion publique.",
-        date: "2025-08-20",
-        categorie: "International",
-        image: "https://via.placeholder.com/800x450?text=Médias+et+Conflits",
-        tags: ["géopolitique", "médias", "analyse"]
-      }
-    ],
-    projects: [
-      {
-        id: 1,
-        titre: "Enquête sur la gentrification urbaine",
-        description: "Projet d'enquête journalistique sur la transformation des quartiers populaires et ses conséquences sociales.",
-        status: "En cours",
-        date: "2025",
-        image: "https://via.placeholder.com/800x450?text=Gentrification+Urbaine",
-        liens: [
-          { nom: "Document de recherche", url: "#" },
-          { nom: "Interviews", url: "#" }
-        ]
-      }
-    ],
-    desktopIcons: [
-      {
-        id: 'icon-articles',
-        name: 'Articles',
-        icon: 'icons/article.png',
-        action: 'createArticlesWindow',
-        position: { x: 50, y: 50 }
-      },
-      {
-        id: 'icon-portfolio',
-        name: 'Portfolio',
-        icon: 'icons/portfolio.png',
-        action: 'createPortfolioWindow',
-        position: { x: 50, y: 150 }
-      },
-      {
-        id: 'icon-films',
-        name: 'Critiques Ciné',
-        icon: 'icons/film.png',
-        action: 'createFilmsWindow',
-        position: { x: 50, y: 250 }
-      },
-      {
-        id: 'icon-cv',
-        name: 'CV',
-        icon: 'icons/cv.png',
-        action: 'createCVWindow',
-        position: { x: 50, y: 350 }
-      },
-      {
-        id: 'icon-contact',
-        name: 'Contact',
-        icon: 'icons/email.png',
-        action: 'createContactWindow',
-        position: { x: 150, y: 50 }
-      }
-    ]
-  },
-  
-  // Initialiser les données
-  initData() {
-    console.log("📊 Initialisation des données");
-    
-    // Charger les données depuis GitHub
-    this.loadDataFromGitHub();
-  },
-  
-  // Charger les données depuis GitHub
-  loadDataFromGitHub() {
-    console.log("🔄 Chargement des données depuis GitHub");
-    
-    // Vérifier si le token GitHub est configuré
-    if (!window.GITHUB_CONFIG || !window.GITHUB_CONFIG.token) {
-      console.log("ℹ️ Token GitHub non configuré, utilisation des données locales");
-      this.loadDataFromLocal();
-      return;
-    }
-    
-    // URL de l'API GitHub
-    const apiUrl = `https://api.github.com/repos/${window.GITHUB_CONFIG.owner}/${window.GITHUB_CONFIG.repo}/contents/${window.GITHUB_CONFIG.dataFile}`;
-    
-    // En-têtes de la requête
-    const headers = {
-      'Authorization': `token ${window.GITHUB_CONFIG.token}`,
-      'Accept': 'application/vnd.github.v3.raw'
-    };
-    
-    // Effectuer la requête
-    fetch(apiUrl, { headers })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Erreur GitHub API: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(data => {
-        console.log("✅ Données chargées depuis GitHub");
-        
-        // Mettre à jour les données globales
-        this.updateGlobalData(data);
-        
-        // Déclencher un événement pour signaler que les données sont chargées
-        document.dispatchEvent(new CustomEvent('data:loaded', { detail: data }));
-      })
-      .catch(error => {
-        console.error("❌ Erreur lors du chargement depuis GitHub:", error);
-        
-        // Fallback: charger depuis localStorage
-        this.loadDataFromLocal();
-      });
-  },
-  
-  // Load default data
-  loadDefaultData() {
-    this.data = JSON.parse(JSON.stringify(this.defaultData));
-    
-    // Update global data references
-    this.updateGlobalData(this.data);
-    
-    return this.data;
-  },
-  
-  // Charger les données depuis localStorage
-  loadDataFromLocal() {
-    console.log("🔄 Chargement des données depuis localStorage");
-    
-    try {
-      // Récupérer les données depuis localStorage
-      const localData = localStorage.getItem('site_data');
-      
-      if (localData) {
-        // Parser les données
-        const data = JSON.parse(localData);
-        
-        // Mettre à jour les données globales
-        this.updateGlobalData(data);
-        
-        console.log("✅ Données chargées depuis localStorage");
-        
-        // Déclencher un événement pour signaler que les données sont chargées
-        document.dispatchEvent(new CustomEvent('data:loaded', { detail: data }));
-        return data;
-      } else {
-        console.log("ℹ️ Aucune donnée locale trouvée, chargement des données par défaut");
-        return this.loadDefaultData();
-      }
-    } catch (error) {
-      console.error("❌ Erreur lors du chargement des données locales:", error);
-      return this.loadDefaultData();
-    }
-  },
-  
-  // Mettre à jour les données globales
-  updateGlobalData(data) {
-    // Stocker les données dans this.data
-    this.data = { ...this.data, ...data };
-    
-    // Mettre à jour les films
-    if (data.films && Array.isArray(data.films)) {
-      window.films = data.films;
-    }
-    
-    // Mettre à jour les mangas
-    if (data.mangas && Array.isArray(data.mangas)) {
-      window.mangas = data.mangas;
-    }
-    
-    // Mettre à jour les articles
-    if (data.articles && Array.isArray(data.articles)) {
-      window.articles = data.articles;
-    }
-    
-    // Mettre à jour les tags
-    if (data.tags && Array.isArray(data.tags)) {
-      window.tags = data.tags;
-    }
-    
-    // Mettre à jour les données du CV
-    if (data.cvData && typeof data.cvData === 'object') {
-      window.cvData = data.cvData;
-    }
-    
-    // Mettre à jour les icônes du bureau
-    if (data.desktopIcons && Array.isArray(data.desktopIcons)) {
-      window.desktopIcons = data.desktopIcons;
-    }
-  },
-  
-  // Save data to localStorage
-  saveDataLocally() {
-    try {
-      // Compile all data
-      const dataToSave = {
-        films: window.films || this.data.films,
-        mangas: window.mangas || this.data.mangas,
-        articles: window.articles || this.data.articles,
-        tags: window.tags || this.data.tags,
-        cvData: window.cvData || this.data.cvData,
-        desktopIcons: window.desktopIcons || this.data.desktopIcons
-      };
-      
-      localStorage.setItem('site_data', JSON.stringify(dataToSave));
-      console.log("✅ Données enregistrées localement");
-      
-      return true;
-    } catch (error) {
-      console.error("❌ Erreur lors de l'enregistrement des données localement", error);
-      
-      // Tenter d'enregistrer sans les images pour réduire la taille
-      try {
-        const dataWithoutImages = { ...this.data };
-        
-        // Supprimer les galeries d'images
-        if (dataWithoutImages.films) {
-          dataWithoutImages.films = dataWithoutImages.films.map(film => {
-            const { galerie, ...rest } = film;
-            return rest;
-          });
-        }
-        
-        localStorage.setItem('site_data', JSON.stringify(dataWithoutImages));
-        console.log("⚠️ Données enregistrées sans les images");
-        return true;
-      } catch (e) {
-        console.error("❌ Échec de l'enregistrement réduit", e);
-        return false;
-      }
-    }
-  },
-  
-  // Save data to GitHub
-  saveDataToGitHub() {
-    // Nouvelle implémentation complète utilisant l'API GitHub (PUT /contents)
-    if (!window.GITHUB_CONFIG || !window.GITHUB_CONFIG.token) {
-      console.warn('⚠️ Token GitHub manquant: fallback local uniquement');
-      return Promise.resolve(this.saveDataLocally());
-    }
-    const { owner, repo, branch = 'main', dataFile = 'data.json', token } = window.GITHUB_CONFIG;
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${dataFile}`;
-
-    // Construire l'objet consolidé actuel
-    const consolidated = {
-      films: window.films || [],
-      mangas: window.mangas || [],
-      articles: window.articles || [],
-      tags: window.tags || [],
-      cvData: window.cvData || { pdfUrl: '', lastUpdated: null },
-      desktopIcons: window.desktopIcons || this.data.desktopIcons || [],
-      welcomePopupConfig: (window.DataManager && window.DataManager.data && window.DataManager.data.welcomePopupConfig) || {},
-      lastUpdated: new Date().toISOString()
-    };
-
-    // Mettre en cache local immédiatement (optimiste)
-    try { localStorage.setItem('site_data', JSON.stringify(consolidated)); } catch(e) { console.warn('Local cache fail:', e.message); }
-
-    const jsonString = JSON.stringify(consolidated, null, 2);
-    const base64Content = btoa(unescape(encodeURIComponent(jsonString)));
-
-    // Étape 1: récupérer SHA existant (si fichier présent)
-    return fetch(`${apiUrl}?ref=${branch}`, {
-      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
-    })
-      .then(r => {
-        if (r.status === 200) return r.json();
-        if (r.status === 404) return { sha: undefined }; // fichier nouveau
-        throw new Error('GitHub GET data.json status ' + r.status);
-      })
-      .then(meta => {
-        const body = {
-          message: '� Update data.json via admin panel',
-            content: base64Content,
-            branch,
-            sha: meta.sha
-        };
-        return fetch(apiUrl, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `token ${token}`,
-            'Accept': 'application/vnd.github.v3+json',
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(body)
-        });
-      })
-      .then(r => { if(!r.ok) throw new Error('GitHub PUT data.json status '+r.status); return r.json(); })
-      .then(resp => {
-        console.log('✅ data.json mis à jour sur GitHub');
-        if(window.UIManager) UIManager.showNotification('Données synchronisées sur GitHub', 'success');
-        return resp;
-      })
-      .catch(err => {
-        console.error('❌ Échec sauvegarde GitHub data.json', err);
-        if(window.UIManager) UIManager.showNotification('Sauvegarde GitHub échouée: '+err.message, 'error');
-        // Pas de rejet brutal: on renvoie tout de même false
-        return false;
-      });
+  if(!window.GitHubSyncState){
+    window.GitHubSyncState = { lastStatus:null,lastError:null,invalidToken:false,lastCommitSha:null,lastSync:null };
   }
-};
 
-// ================== Couche Diagnostic & Upload GitHub Améliorée ==================
-if(!window.GitHubSyncState){
-  window.GitHubSyncState = { lastStatus:null, lastError:null, invalidToken:false, lastCommitSha:null, lastSync:null };
-}
-
-if (typeof window.fileToBase64Binary !== 'function') {
-  window.fileToBase64Binary = async function(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const bytes = new Uint8Array(reader.result);
-        let binary = '';
-        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-        resolve(btoa(binary));
-      };
-      reader.onerror = () => reject(reader.error);
-      reader.readAsArrayBuffer(file);
-    });
+  const encodeJsonToBase64 = (obj)=>{
+    const json = JSON.stringify(obj,null,2);
+    return btoa(unescape(encodeURIComponent(json))); // UTF-8 safe
   };
-}
-
-async function githubApi(url, options = {}) {
-  const { token } = window.GITHUB_CONFIG || {};
-  if (!token) throw new Error('Token GitHub manquant');
-  const headers = Object.assign({
-    'Authorization': 'Bearer ' + token,
-    'Accept': 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2022-11-28'
-  }, options.headers || {});
-  const resp = await fetch(url, { ...options, headers });
-  if (!resp.ok) {
-    let detail = '';
-    try { const j = await resp.json(); detail = j.message || JSON.stringify(j); } catch(e){}
-    const err = new Error(`GitHub ${options.method||'GET'} ${url} status ${resp.status}${detail? ' - '+detail:''}`);
-    err.status = resp.status; err.detail = detail;
-    throw err;
-  }
-  return resp;
-}
-
-window.testGitHubWrite = async function(){
-  try {
-    const { owner, repo, branch='main' } = window.GITHUB_CONFIG || {};
-    if(!owner||!repo) throw new Error('Config owner/repo manquante');
-    const path='tmp_permission_test.txt';
-    const api = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-    let sha; try { const meta=await githubApi(`${api}?ref=${branch}`); sha=(await meta.json()).sha; } catch(e){ if(e.status!==404) throw e; }
-    const contentB64 = btoa('ok '+new Date().toISOString());
-    const put = await githubApi(api,{ method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ message:'permission test', branch, content:contentB64, sha })});
-    const j = await put.json(); console.log('✅ Test écriture OK', j.content?.path); return true;
-  } catch(e){ console.error('❌ Test écriture échoué', e.message); return false; }
-};
-
-window.uploadBinaryToGitHub = async function(file, pathInRepo){
-  if(!window.GITHUB_CONFIG?.token) throw new Error('Token GitHub absent');
-  if(window.GitHubSyncState.invalidToken) throw new Error('Token invalide (marqué précédemment)');
-  const { owner, repo, branch='main' } = window.GITHUB_CONFIG;
-  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${pathInRepo}`;
-  let sha;
-  try { const meta=await githubApi(`${apiUrl}?ref=${branch}`); const mj=await meta.json(); sha=mj.sha; } catch(e){ if(e.status!==404) throw e; }
-  const content = await window.fileToBase64Binary(file);
-  try {
-    const resp = await githubApi(apiUrl, { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ message:`Upload ${pathInRepo}`, branch, content, sha }) });
-    const json = await resp.json();
-    const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${pathInRepo}`;
-    window.GitHubSyncState.lastCommitSha = json.commit?.sha || null;
-    window.GitHubSyncState.lastStatus='ok'; window.GitHubSyncState.lastSync=Date.now();
-    return { downloadUrl: json.content?.download_url || rawUrl, rawUrl };
-  } catch(e){
-    window.GitHubSyncState.lastStatus='error'; window.GitHubSyncState.lastError=e.message; if(e.status===401||e.status===403) window.GitHubSyncState.invalidToken=true; throw e;
-  }
-};
-
-window.getGitHubSyncStatus = function(){
-  const st = window.GitHubSyncState; return { ...st, lastSyncISO: st.lastSync? new Date(st.lastSync).toISOString(): null };
-};
-// Utilitaire global pour définir / mémoriser le token GitHub de façon centralisée
-if (typeof window.setGitHubToken !== 'function') {
-  window.setGitHubToken = function(token, remember = true) {
-    if (!window.GITHUB_CONFIG) {
-      window.GITHUB_CONFIG = { owner:'Teio-max', repo:'theolegato-site', branch:'main', dataFile:'data.json', token:null };
+  const decodeGitHubFileJson = (ghJson)=>{
+    if(ghJson && ghJson.content && ghJson.encoding==='base64'){
+      try{ return JSON.parse(decodeURIComponent(escape(atob(ghJson.content)))); }catch(e){ console.warn('⚠️ Decode base64 JSON échoué',e.message); }
     }
+    return ghJson;
+  };
+
+  // === API utilitaire GitHub bas-niveau ===
+  async function githubApi(url, options={}){
+    const token = (window.GITHUB_CONFIG||{}).token;
+    if(!token) throw new Error('Token GitHub manquant');
+    const headers = Object.assign({
+      'Authorization': 'Bearer '+token,
+      'Accept':'application/vnd.github+json',
+      'X-GitHub-Api-Version':'2022-11-28'
+    }, options.headers||{});
+    const resp = await fetch(url,{...options, headers});
+    if(!resp.ok){
+      let detail='';
+      try{ const j=await resp.json(); detail=j.message||JSON.stringify(j); }catch(_){ }
+      const err = new Error(`GitHub ${options.method||'GET'} ${resp.status}${detail?' - '+detail:''}`);
+      err.status=resp.status; err.detail=detail; throw err;
+    }
+    return resp;
+  }
+
+  // === Conversion binaire fichier -> Base64 (PDF, etc.) ===
+  if(typeof window.fileToBase64Binary !== 'function'){
+    window.fileToBase64Binary = async function(file){
+      return new Promise((resolve,reject)=>{
+        const reader = new FileReader();
+        reader.onload = ()=>{
+          const bytes = new Uint8Array(reader.result);
+          let bin='';
+            for(let i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+          resolve(btoa(bin));
+        };
+        reader.onerror = ()=>reject(reader.error);
+        reader.readAsArrayBuffer(file);
+      });
+    };
+  }
+
+  // === Objet Principal DataManager ===
+  window.DataManager = {
+    data:{ films:[], articles:[], projects:[], desktopIcons:[], welcomePopupConfig:{} },
+    defaultData:{
+      films:[{ id:1, titre:'Blade Runner 2049', note:5, critique:'Démo', image:'https://via.placeholder.com/420x240?text=BR2049', galerie:[], bandeAnnonce:'', liens:[], tags:['demo']}],
+      articles:[], projects:[], desktopIcons:[
+        { id:'icon-articles', name:'Articles', icon:'icons/article.png', action:'createArticlesWindow', position:{x:50,y:50}},
+        { id:'icon-films', name:'Critiques Ciné', icon:'icons/film.png', action:'createFilmsWindow', position:{x:50,y:150}},
+        { id:'icon-cv', name:'CV', icon:'icons/cv.png', action:'createCVWindow', position:{x:50,y:250}}
+      ],
+      welcomePopupConfig:{}
+    },
+
+    initData(){ this.loadDataFromGitHub(); },
+
+    updateGlobalData(d){
+      if(!d) return;
+      this.data = { ...this.data, ...d };
+      if(Array.isArray(d.films)) window.films = d.films;
+      if(Array.isArray(d.mangas)) window.mangas = d.mangas;
+      if(Array.isArray(d.articles)) window.articles = d.articles;
+      if(Array.isArray(d.tags)) window.tags = d.tags;
+      if(d.cvData) window.cvData = d.cvData;
+      if(Array.isArray(d.desktopIcons)) window.desktopIcons = d.desktopIcons;
+      if(d.welcomePopupConfig) this.data.welcomePopupConfig = d.welcomePopupConfig;
+    },
+
+    loadDefaultData(){
+      console.log('ℹ️ Chargement des données par défaut');
+      this.data = JSON.parse(JSON.stringify(this.defaultData));
+      this.updateGlobalData(this.data);
+      document.dispatchEvent(new CustomEvent('data:loaded',{detail:this.data}));
+      return this.data;
+    },
+
+    loadDataFromLocal(){
+      try{
+        const raw = localStorage.getItem('site_data');
+        if(raw){
+          const parsed = JSON.parse(raw);
+          console.log('📦 Données locales chargées');
+          this.updateGlobalData(parsed);
+          document.dispatchEvent(new CustomEvent('data:loaded',{detail:parsed}));
+          return parsed;
+        }
+      }catch(e){ console.warn('⚠️ Lecture locale échouée',e.message); }
+      return this.loadDefaultData();
+    },
+
+    async loadDataFromGitHub(){
+      const cfg = window.GITHUB_CONFIG || {};
+      const apiUrl = `https://api.github.com/repos/${cfg.owner}/${cfg.repo}/contents/${cfg.dataFile}`;
+      const token = cfg.token;
+      const headersBase = {'Accept':'application/vnd.github.v3+json'};
+      const headersTok = token ? {...headersBase,'Authorization':'Bearer '+token}: headersBase;
+      const isTokenLikelyValid = t=>typeof t==='string' && (t.startsWith('ghp_')||t.startsWith('github_pat_')) && t.length>=40;
+      try{
+        if(token && isTokenLikelyValid(token)){
+          const r = await fetch(apiUrl,{headers:headersTok});
+          if(r.status===401||r.status===403){
+            console.warn('🔐 Token invalide -> suppression & retry public');
+            try{localStorage.removeItem('github_token');sessionStorage.removeItem('github_token');}catch(_){ }
+            window.GITHUB_CONFIG.token=null; window.GitHubSyncState.invalidToken=true;
+          } else if(!r.ok){ throw new Error('GitHub '+r.status); }
+          else {
+            const json = decodeGitHubFileJson(await r.json());
+            console.log('✅ Données chargées depuis GitHub (token)');
+            this.updateGlobalData(json); document.dispatchEvent(new CustomEvent('data:loaded',{detail:json})); return json;
+          }
+        }
+        // Public fallback
+        const r2 = await fetch(apiUrl,{headers:headersBase});
+        if(!r2.ok) throw new Error('GitHub public '+r2.status);
+        const json2 = decodeGitHubFileJson(await r2.json());
+        console.log('✅ Données chargées depuis GitHub (public)');
+        this.updateGlobalData(json2); document.dispatchEvent(new CustomEvent('data:loaded',{detail:json2})); return json2;
+      }catch(e){
+        console.error('❌ Échec GitHub -> fallback local', e.message);
+        return this.loadDataFromLocal();
+      }
+    },
+
+    buildConsolidated(){
+      return {
+        films: window.films||[],
+        mangas: window.mangas||[],
+        articles: window.articles||[],
+        tags: window.tags||[],
+        cvData: window.cvData||{ pdfUrl:'', lastUpdated:null },
+        desktopIcons: window.desktopIcons||[],
+        welcomePopupConfig: this.data.welcomePopupConfig||{},
+        lastUpdated: new Date().toISOString()
+      };
+    },
+
+    saveDataLocally(){
+      try {
+        const bundle = this.buildConsolidated();
+        localStorage.setItem('site_data', JSON.stringify(bundle));
+        console.log('💾 Données sauvegardées localement');
+        return true;
+      }catch(e){ console.error('❌ Save locale échouée', e.message); return false; }
+    },
+
+    saveDataToGitHub(){
+      if(!window.GITHUB_CONFIG?.token){
+        console.warn('⚠️ Pas de token -> sauvegarde locale uniquement');
+        return Promise.resolve(this.saveDataLocally());
+      }
+      // File save queue pour éviter conflits simultanés
+      this._saveQueue = this._saveQueue || Promise.resolve();
+      const task = ()=>this._performGitHubSave();
+      this._saveQueue = this._saveQueue.then(task, task); // enchaîner même si erreur précédente
+      return this._saveQueue;
+    },
+
+    async _performGitHubSave(){
+      const { owner, repo, branch='main', dataFile='data.json', token } = window.GITHUB_CONFIG;
+      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${dataFile}`;
+      const consolidated = this.buildConsolidated();
+      // cache local optimiste
+      try{ localStorage.setItem('site_data', JSON.stringify(consolidated)); }catch(_){ }
+      const contentB64 = encodeJsonToBase64(consolidated);
+      const fetchMeta = async ()=>{
+        const r = await fetch(`${apiUrl}?ref=${branch}`,{headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json'}});
+        if(r.status===200) return r.json();
+        if(r.status===404) return { sha: undefined };
+        throw new Error('GET meta '+r.status);
+      };
+      const putFile = async (sha)=>{
+        return fetch(apiUrl, { method:'PUT', headers:{'Authorization':`token ${token}`,'Accept':'application/vnd.github.v3+json','Content-Type':'application/json'}, body: JSON.stringify({ message:'📦 Update data.json (auto-save)', content:contentB64, branch, sha }) });
+      };
+      const attempt = async (retry)=>{
+        const meta = await fetchMeta();
+        const resp = await putFile(meta.sha);
+        if(!resp.ok){
+          let detail=''; try{ const j=await resp.json(); detail=j.message||JSON.stringify(j);}catch(_){ }
+          if(resp.status===409 && !retry){ console.warn('⚠️ Conflit 409 – seconde tentative'); return attempt(true); }
+          throw new Error('PUT '+resp.status+(detail?' - '+detail:''));
+        }
+        const json = await resp.json();
+        window.GitHubSyncState.lastCommitSha = json.commit?.sha || null;
+        window.GitHubSyncState.lastStatus = 'ok'; window.GitHubSyncState.lastSync = Date.now(); window.GitHubSyncState.lastError=null;
+        console.log('✅ data.json synchronisé sur GitHub');
+        UIManager?.showNotification('Données synchronisées sur GitHub','success');
+        return json;
+      };
+      try { return await attempt(false); }
+      catch(e){
+        window.GitHubSyncState.lastStatus='error'; window.GitHubSyncState.lastError=e.message; if(/401|403/.test(e.message)) window.GitHubSyncState.invalidToken=true;
+        console.error('❌ Sauvegarde GitHub échouée', e.message);
+        UIManager?.showNotification('Sauvegarde GitHub échouée: '+e.message,'error');
+        return false;
+      }
+    }
+  };
+
+  // === Fonctions globales pratique (compat héritage) ===
+  window.saveDataToGitHub = (...a)=>window.DataManager.saveDataToGitHub(...a);
+  window.saveData = ()=>{ window.DataManager.saveDataLocally(); };
+
+  // === Upload binaire (PDF / images) ===
+  window.uploadBinaryToGitHub = async function(file, pathInRepo){
+    if(!window.GITHUB_CONFIG?.token) throw new Error('Token GitHub absent');
+    if(window.GitHubSyncState.invalidToken) throw new Error('Token invalide (marqué)');
+    const { owner, repo, branch='main' } = window.GITHUB_CONFIG;
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${pathInRepo}`;
+    let sha; try { const meta=await githubApi(`${apiUrl}?ref=${branch}`); const mj=await meta.json(); sha=mj.sha; } catch(e){ if(e.status!==404) throw e; }
+    const content = await window.fileToBase64Binary(file);
+    try{
+      const resp = await githubApi(apiUrl,{ method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message:`Upload ${pathInRepo}`, branch, content, sha }) });
+      const json = await resp.json();
+      const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${pathInRepo}`;
+      window.GitHubSyncState.lastCommitSha = json.commit?.sha || null;
+      window.GitHubSyncState.lastStatus='ok'; window.GitHubSyncState.lastSync=Date.now();
+      return { downloadUrl: json.content?.download_url || rawUrl, rawUrl };
+    }catch(e){
+      window.GitHubSyncState.lastStatus='error'; window.GitHubSyncState.lastError=e.message; if(e.status===401||e.status===403) window.GitHubSyncState.invalidToken=true; throw e;
+    }
+  };
+
+  // === Test rapide permissions écriture ===
+  window.testGitHubWrite = async function(){
+    try{
+      const { owner, repo, branch='main' } = window.GITHUB_CONFIG || {};
+      if(!owner||!repo) throw new Error('Config incomplète');
+      const path='tmp_permission_test.txt';
+      const api = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+      let sha; try { const meta=await githubApi(`${api}?ref=${branch}`); sha=(await meta.json()).sha; } catch(e){ if(e.status!==404) throw e; }
+      const contentB64 = btoa('ok '+new Date().toISOString());
+      const put = await githubApi(api,{ method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ message:'permission test', branch, content:contentB64, sha }) });
+      const j = await put.json(); console.log('✅ Test écriture OK', j.content?.path); return true;
+    }catch(e){ console.error('❌ Test écriture échoué', e.message); return false; }
+  };
+
+  window.getGitHubSyncStatus = function(){ const st=window.GitHubSyncState; return { ...st, lastSyncISO: st.lastSync? new Date(st.lastSync).toISOString(): null }; };
+
+  window.setGitHubToken = function(token, remember=true){
+    if(!window.GITHUB_CONFIG) window.GITHUB_CONFIG={ owner:'Teio-max', repo:'theolegato-site', branch:'main', dataFile:'data.json', token:null };
     window.GITHUB_CONFIG.token = token || null;
-    try {
-      if (token && remember) {
-        localStorage.setItem('github_token', token);
-      } else if (token) {
-        sessionStorage.setItem('github_token', token);
-      }
-      if (!token) {
-        localStorage.removeItem('github_token');
-        sessionStorage.removeItem('github_token');
-      }
-      console.log('🔐 Token GitHub mis à jour (remember=' + remember + ')');
-    } catch(e) {
-      console.warn('⚠️ Impossible de stocker le token:', e.message);
-    }
+    try{
+      if(token){
+        if(remember) localStorage.setItem('github_token', token); else sessionStorage.setItem('github_token', token);
+      } else { localStorage.removeItem('github_token'); sessionStorage.removeItem('github_token'); }
+      console.log('🔐 Token GitHub mis à jour');
+    }catch(e){ console.warn('⚠️ Stockage token impossible', e.message); }
     return window.GITHUB_CONFIG.token;
   };
-}
-  
-  // Exposer les fonctions de sauvegarde si elles n'existent pas
-  if (typeof window.saveDataToGitHub !== 'function') {
-    window.saveDataToGitHub = function() {
-      return new Promise((resolve, reject) => {
-        if (!window.GITHUB_CONFIG || !window.GITHUB_CONFIG.token) {
-          reject(new Error("Token GitHub manquant. Veuillez configurer un token pour la sauvegarde."));
-          return;
-        }
-        
-        const token = window.GITHUB_CONFIG.token;
-        const dataToSave = {
-          films: window.films || [],
-          mangas: window.mangas || [],
-          articles: window.articles || [],
-          tags: window.tags || [],
-          cvData: window.cvData || { pdfUrl: '', lastUpdated: null },
-          lastUpdated: new Date().toISOString()
-        };
-        
-        console.log("💾 Tentative de sauvegarde des données vers GitHub...");
-        
-        // Vérifier d'abord si le fichier existe pour obtenir le SHA
-        fetch(`https://api.github.com/repos/${window.GITHUB_CONFIG.owner}/${window.GITHUB_CONFIG.repo}/contents/${window.GITHUB_CONFIG.dataFile}`, {
-          headers: {
-            'Authorization': `token ${token}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Erreur GitHub API: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(fileInfo => {
-          // Préparer le contenu encodé en base64
-          const content = btoa(JSON.stringify(dataToSave, null, 2));
-          
-          // Mettre à jour le fichier avec le SHA
-          return fetch(`https://api.github.com/repos/${window.GITHUB_CONFIG.owner}/${window.GITHUB_CONFIG.repo}/contents/${window.GITHUB_CONFIG.dataFile}`, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `token ${token}`,
-              'Accept': 'application/vnd.github.v3+json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              message: '📊 Mise à jour des données du site',
-              content: content,
-              sha: fileInfo.sha,
-              branch: window.GITHUB_CONFIG.branch || 'main'
-            })
-          });
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Erreur GitHub API: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log("✅ Données sauvegardées avec succès!", data);
-          if (window.UIManager && typeof window.UIManager.showNotification === 'function') {
-            window.UIManager.showNotification("Données sauvegardées avec succès!", "success");
-          }
-          resolve(data);
-        })
-        .catch(error => {
-          console.error("❌ Erreur lors de la sauvegarde:", error);
-          if (window.UIManager && typeof window.UIManager.showNotification === 'function') {
-            window.UIManager.showNotification(`Erreur: ${error.message}`, "error");
-          }
-          reject(error);
-        });
-      });
-    };
-  }
-  
-  if (typeof window.saveData !== 'function') {
-    window.saveData = function() {
-      return new Promise((resolve, reject) => {
-        const dataToSave = {
-          films: window.films || [],
-          mangas: window.mangas || [],
-          articles: window.articles || [],
-          tags: window.tags || [],
-          cvData: window.cvData || { pdfUrl: '', lastUpdated: null },
-          lastUpdated: new Date().toISOString()
-        };
-        try {
-          localStorage.setItem('site_data', JSON.stringify(dataToSave));
-          console.log('✅ Données sauvegardées localement');
-          if (window.UIManager?.showNotification) UIManager.showNotification('Données sauvegardées localement','success');
-          resolve(true);
-        } catch(error){
-          console.error('❌ Erreur sauvegarde locale', error);
-          if (window.UIManager?.showNotification) UIManager.showNotification('Erreur: '+error.message,'error');
-          reject(error);
-        }
-      });
-    };
-  }
-  
-  // Charger les données depuis localStorage si elles existent
-  const localData = localStorage.getItem('site_data');
-  if (localData) {
-    try {
-      const parsedData = JSON.parse(localData);
-      if (parsedData.films && Array.isArray(parsedData.films)) {
-        window.films = parsedData.films;
-      }
-      if (parsedData.mangas && Array.isArray(parsedData.mangas)) {
-        window.mangas = parsedData.mangas;
-      }
-      if (parsedData.articles && Array.isArray(parsedData.articles)) {
-        window.articles = parsedData.articles;
-      }
-      if (parsedData.tags && Array.isArray(parsedData.tags)) {
-        window.tags = parsedData.tags;
-      }
-      if (parsedData.cvData && typeof parsedData.cvData === 'object') {
-        window.cvData = parsedData.cvData;
-      }
-      console.log("📦 Données chargées depuis localStorage");
-    } catch (error) {
-      console.error("❌ Erreur lors du chargement des données locales:", error);
-    }
-  }
-  
-  console.log("✅ Initialisation des données globales terminée");
+
+  // === Pré-chargement local rapide puis fetch GitHub ===
+  try{ window.DataManager.loadDataFromLocal(); }catch(_){ }
+  window.DataManager.initData();
+
+  console.log('✅ DataManager initialisé');
+})();
