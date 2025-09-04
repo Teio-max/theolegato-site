@@ -438,7 +438,11 @@ window.DataManager = {
   }
 };
 
-// ---- Utilitaires upload binaire centralisés (PDF / autres) ----
+// ================== Couche Diagnostic & Upload GitHub Améliorée ==================
+if(!window.GitHubSyncState){
+  window.GitHubSyncState = { lastStatus:null, lastError:null, invalidToken:false, lastCommitSha:null, lastSync:null };
+}
+
 if (typeof window.fileToBase64Binary !== 'function') {
   window.fileToBase64Binary = async function(file) {
     return new Promise((resolve, reject) => {
@@ -455,36 +459,61 @@ if (typeof window.fileToBase64Binary !== 'function') {
   };
 }
 
-if (typeof window.uploadBinaryToGitHub !== 'function') {
-  window.uploadBinaryToGitHub = async function(file, pathInRepo) {
-    if (!window.GITHUB_CONFIG || !window.GITHUB_CONFIG.token) throw new Error('Token GitHub absent');
-    const { owner, repo, branch='main', token } = window.GITHUB_CONFIG;
-    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${pathInRepo}`;
-    // Récupérer sha si fichier existe
-    let sha;
-    const head = await fetch(`${apiUrl}?ref=${branch}`, { headers:{ 'Authorization': `token ${token}` } });
-    if(head.status === 200){ const meta = await head.json(); sha = meta.sha; }
-    const content = await window.fileToBase64Binary(file);
-    const resp = await fetch(apiUrl, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: `📄 Upload ${pathInRepo}`,
-        content,
-        branch,
-        sha
-      })
-    });
-    if(!resp.ok) throw new Error('Upload GitHub échec status '+resp.status);
+async function githubApi(url, options = {}) {
+  const { token } = window.GITHUB_CONFIG || {};
+  if (!token) throw new Error('Token GitHub manquant');
+  const headers = Object.assign({
+    'Authorization': 'Bearer ' + token,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  }, options.headers || {});
+  const resp = await fetch(url, { ...options, headers });
+  if (!resp.ok) {
+    let detail = '';
+    try { const j = await resp.json(); detail = j.message || JSON.stringify(j); } catch(e){}
+    const err = new Error(`GitHub ${options.method||'GET'} ${url} status ${resp.status}${detail? ' - '+detail:''}`);
+    err.status = resp.status; err.detail = detail;
+    throw err;
+  }
+  return resp;
+}
+
+window.testGitHubWrite = async function(){
+  try {
+    const { owner, repo, branch='main' } = window.GITHUB_CONFIG || {};
+    if(!owner||!repo) throw new Error('Config owner/repo manquante');
+    const path='tmp_permission_test.txt';
+    const api = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+    let sha; try { const meta=await githubApi(`${api}?ref=${branch}`); sha=(await meta.json()).sha; } catch(e){ if(e.status!==404) throw e; }
+    const contentB64 = btoa('ok '+new Date().toISOString());
+    const put = await githubApi(api,{ method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ message:'permission test', branch, content:contentB64, sha })});
+    const j = await put.json(); console.log('✅ Test écriture OK', j.content?.path); return true;
+  } catch(e){ console.error('❌ Test écriture échoué', e.message); return false; }
+};
+
+window.uploadBinaryToGitHub = async function(file, pathInRepo){
+  if(!window.GITHUB_CONFIG?.token) throw new Error('Token GitHub absent');
+  if(window.GitHubSyncState.invalidToken) throw new Error('Token invalide (marqué précédemment)');
+  const { owner, repo, branch='main' } = window.GITHUB_CONFIG;
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${pathInRepo}`;
+  let sha;
+  try { const meta=await githubApi(`${apiUrl}?ref=${branch}`); const mj=await meta.json(); sha=mj.sha; } catch(e){ if(e.status!==404) throw e; }
+  const content = await window.fileToBase64Binary(file);
+  try {
+    const resp = await githubApi(apiUrl, { method:'PUT', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify({ message:`Upload ${pathInRepo}`, branch, content, sha }) });
     const json = await resp.json();
     const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${pathInRepo}`;
-    return { meta: json, rawUrl, downloadUrl: json.content?.download_url || rawUrl };
-  };
-}
+    window.GitHubSyncState.lastCommitSha = json.commit?.sha || null;
+    window.GitHubSyncState.lastStatus='ok'; window.GitHubSyncState.lastSync=Date.now();
+    return { downloadUrl: json.content?.download_url || rawUrl, rawUrl };
+  } catch(e){
+    window.GitHubSyncState.lastStatus='error'; window.GitHubSyncState.lastError=e.message; if(e.status===401||e.status===403) window.GitHubSyncState.invalidToken=true; throw e;
+  }
+};
+
+window.getGitHubSyncStatus = function(){
+  const st = window.GitHubSyncState; return { ...st, lastSyncISO: st.lastSync? new Date(st.lastSync).toISOString(): null };
+};
 // Utilitaire global pour définir / mémoriser le token GitHub de façon centralisée
 if (typeof window.setGitHubToken !== 'function') {
   window.setGitHubToken = function(token, remember = true) {

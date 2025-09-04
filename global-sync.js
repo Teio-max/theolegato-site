@@ -2,6 +2,13 @@
 (function(){
   console.log('🔗 Global Sync Layer loaded');
   function canGitHub(){ return window.GITHUB_CONFIG && window.GITHUB_CONFIG.token; }
+  function report(label){
+    if(typeof window.getGitHubSyncStatus === 'function'){
+      const st = window.getGitHubSyncStatus();
+      if(st.lastStatus==='error') console.warn(`[GitHubSync][${label}] erreur: ${st.lastError}`);
+      else if(st.lastStatus==='ok') console.log(`[GitHubSync][${label}] ok commit=${st.lastCommitSha?.slice(0,7)||'—'}`);
+    }
+  }
   async function sync(reason){
     try {
       if(!window.DataManager) return;
@@ -10,6 +17,7 @@
       if(canGitHub() && typeof window.DataManager.saveDataToGitHub === 'function'){
         await window.DataManager.saveDataToGitHub();
         console.log('⬆️ Sync GitHub ok ('+reason+')');
+        report(reason);
       }
     } catch(e){ console.warn('Sync fail ('+reason+'): ', e.message); }
   }

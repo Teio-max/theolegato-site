@@ -29,7 +29,9 @@ function showWelcomePopup(force = false) {
   
   // Utiliser la configuration depuis DataManager si disponible
   if (window.DataManager && window.DataManager.data && window.DataManager.data.welcomePopupConfig) {
-    config = window.DataManager.data.welcomePopupConfig;
+    // Fusion en conservant les champs par défaut manquants
+    config = Object.assign({}, config, window.DataManager.data.welcomePopupConfig);
+    if(!Array.isArray(config.socialLinks)) config.socialLinks = [];
   }
   
   // Créer la fenêtre modale
