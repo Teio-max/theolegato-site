@@ -91,7 +91,7 @@
         "name": "CV",
         "icon": "icons/cv.png",
         "x": 30,
-        "y": 290,
+        "y": 214,
         "visible": true,
         "window": "cv"
       },
@@ -100,7 +100,7 @@
         "name": "Mangas",
         "icon": "icons/portfolio.png",
         "x": 30,
-        "y": 420,
+        "y": 214,
         "visible": true,
         "window": "mangas"
       }
@@ -126,5 +126,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-04T14:14:14.812Z"
+  "lastUpdated": "2025-09-04T14:17:02.837Z"
 }
