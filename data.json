@@ -26,6 +26,16 @@
         "dystopie",
         "cyberpunk"
       ]
+    },
+    {
+      "id": 1757097891950,
+      "titre": "Teorema, Pier Paolo Pasolini",
+      "note": 4,
+      "critique": "",
+      "image": "",
+      "bandeAnnonce": "",
+      "galerie": [],
+      "liens": []
     }
   ],
   "mangas": [],
@@ -82,8 +92,8 @@
     }
   ],
   "cvData": {
-    "pdfUrl": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/cv/1756998811667_CVVANWASTHEO2025.pdf",
-    "lastUpdated": 1756998813195,
+    "pdfUrl": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/cv/1757097855489_CVVANWASTHEO2025.pdf",
+    "lastUpdated": 1757097857119,
     "summary": "",
     "experiences": [],
     "education": [],
@@ -108,5 +118,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-05T18:43:49.469Z"
+  "lastUpdated": "2025-09-05T18:44:51.950Z"
 }
