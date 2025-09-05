@@ -134,7 +134,7 @@
   "welcomePopupConfig": {
     "title": "Bienvenue ( Site en construction )",
     "name": "Théo VAN WAAS",
-    "description": "Bienvenue sur mon portfolio qui regroupe tous les projets, sur lesquels j'ai travaillé dernièrement.\n\nJ'espère que la forme vous plaira ! ",
+    "description": "Bonjour, bienvenue sur mon site qui regroupe tous les projets sur lesquels j'ai travaillé dernièrement.\n\nJ'espère que la forme vous plaira ! \n\nDéveloppé grâce à GitHub et Copilot.",
     "buttonText": "Découvrir le site",
     "avatarImage": "avatar.jpg",
     "socialLinks": [
@@ -147,8 +147,13 @@
         "name": "Instagram",
         "icon": "",
         "url": "https://www.instagram.com/theolegato_o/?hl=fr"
+      },
+      {
+        "name": "Tumblr",
+        "icon": "",
+        "url": "https://www.tumblr.com/theolegato"
       }
     ]
   },
-  "lastUpdated": "2025-09-05T21:10:39.731Z"
+  "lastUpdated": "2025-09-05T21:12:39.738Z"
 }
