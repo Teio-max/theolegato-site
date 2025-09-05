@@ -74,13 +74,22 @@ WindowManager.generateArticlesContent = function() {
   sourceArticles.forEach(article => {
     const resume = (article.summary || article.contenu || '').slice(0,180).replace(/</g,'&lt;');
     const date = article.date || '';
+    const cover = article.cover || '';
+    const thumb = cover ? `<div style='flex:0 0 72px;width:72px;height:54px;border:1px solid #bbb;border-radius:4px;overflow:hidden;background:#f7f7f7;'>
+        <img src='${cover}' alt='' style='width:100%;height:100%;object-fit:cover;'>
+      </div>` : '';
     content += `
       <div class='article-item' onclick="WindowManager.openArticleReader(${article.id})" style="cursor:pointer;border:1px solid #888;border-radius:6px;padding:10px 12px;background:#fff;transition:background .15s;">
-        <div style='display:flex;align-items:center;justify-content:space-between;gap:10px;'>
-          <h3 style='margin:0;font-size:15px;color:#222;line-height:1.2;'>${article.titre||article.title||'Sans titre'}</h3>
-          <span style='font-size:11px;color:#555;'>${date}</span>
+        <div style='display:flex;gap:10px;align-items:flex-start;'>
+          ${thumb}
+          <div style='flex:1;'>
+            <div style='display:flex;align-items:center;justify-content:space-between;gap:10px;'>
+              <h3 style='margin:0;font-size:15px;color:#222;line-height:1.2;'>${article.titre||article.title||'Sans titre'}</h3>
+              <span style='font-size:11px;color:#555;'>${date}</span>
+            </div>
+            <div style='font-size:11px;color:#444;margin-top:6px;'>${resume}${resume.length===180?'…':''}</div>
+          </div>
         </div>
-        <div style='font-size:11px;color:#444;margin-top:6px;'>${resume}${resume.length===180?'…':''}</div>
       </div>`;
   });
   
@@ -103,6 +112,12 @@ WindowManager.openFilmCritique = function(filmId){
         <div style='font-size:12px;color:#333;margin-bottom:6px;'>${film.year||''}</div>
         <div style='font-size:12px;margin-bottom:8px;'>Note: ${note}</div>
         ${film.bandeAnnonce? `<button onclick="window.open('${film.bandeAnnonce}','_blank')" style='font-size:11px;padding:4px 8px;'>Bande annonce</button>`:''}
+        ${(film.galerie&&film.galerie.length)? `<div style='margin-top:10px;'>
+          <div style='font-weight:bold;font-size:12px;margin-bottom:4px;'>Galerie</div>
+          <div style='display:grid;grid-template-columns:repeat(3,1fr);gap:6px;'>${film.galerie.slice(0,9).map(u=>`<div style="width:100%;padding-top:66%;position:relative;border:1px solid #777;background:#fff;">
+            <img src='${u}' style='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;'>
+          </div>`).join('')}</div>
+        </div>`:''}
       </div>
       <div style='flex:1;display:flex;flex-direction:column;'>
         <div style='padding:10px 14px;flex:1;overflow:auto;background:#fff;'>
@@ -156,7 +171,10 @@ WindowManager.openArticleReader = function(articleId){
   const content = `
     <div style='display:flex;flex-direction:column;height:100%;'>
       <div style='padding:6px 10px;background:#ece9d8;border-bottom:1px solid #999;font-size:12px;display:flex;justify-content:space-between;align-items:center;'>
-        <strong>${(article.titre||'Article')}</strong>
+        <div style='display:flex;align-items:center;gap:8px;'>
+          ${article.cover ? `<img src='${article.cover}' alt='' style='width:40px;height:28px;object-fit:cover;border:1px solid #999;border-radius:3px;background:#fff;'>` : ''}
+          <strong>${(article.titre||'Article')}</strong>
+        </div>
         <span style='font-size:11px;color:#555;'>${article.date||''}</span>
       </div>
       ${navHtml}
@@ -276,7 +294,7 @@ WindowManager.generateMangasContent = function() {
   
   // Générer le HTML pour chaque manga
   window.DataManager.data.mangas.forEach(manga => {
-    const cover = manga.cover || 'https://via.placeholder.com/150x200?text=No+Cover';
+    const cover = manga.cover || manga.image || 'https://via.placeholder.com/150x200?text=No+Cover';
     const status = manga.status || 'unknown';
     let statusClass = '';
     let statusText = '';
@@ -307,10 +325,10 @@ WindowManager.generateMangasContent = function() {
     content += `
       <div class="manga-card" style="border: 1px solid #ccc; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         <div style="height: 220px; overflow: hidden;">
-          <img src="${cover}" alt="${manga.title}" style="width: 100%; height: 100%; object-fit: cover;">
+          <img src="${cover}" alt="${manga.title||manga.titre||''}" style="width: 100%; height: 100%; object-fit: cover;">
         </div>
         <div style="padding: 12px;">
-          <h3 style="margin: 0 0 8px; font-size: 16px;">${manga.title}</h3>
+          <h3 style="margin: 0 0 8px; font-size: 16px;">${manga.title||manga.titre||'Sans titre'}</h3>
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <span style="color: #666; font-size: 14px;">Volumes: ${manga.volumes || '?'}</span>
             <span class="manga-status ${statusClass}" style="padding: 2px 8px; border-radius: 12px; font-size: 12px;">${statusText}</span>

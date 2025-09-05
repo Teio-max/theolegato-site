@@ -43,7 +43,57 @@ window.AdminManager = {
     }
     
     this.state.isInitialized = true;
+    this.state.tagEditors = {};
   },
+
+  // ----- Tag editor (chips + suggestions) -----
+  _buildTagSuggestions(){
+    const set = new Set();
+    (window.tags||[]).forEach(t=> t?.name && set.add(String(t.name)));
+    (window.films||[]).forEach(f=> (f.tags||[]).forEach(x=> x && set.add(String(x))));
+    (window.articles||[]).forEach(a=> (a.tags||[]).forEach(x=> x && set.add(String(x))));
+    (window.mangas||[]).forEach(m=> (m.tags||[]).forEach(x=> x && set.add(String(x))));
+    return Array.from(set).sort((a,b)=> a.localeCompare(b));
+  },
+  initTagEditor(editorId, hiddenInputId, initialTags){
+    const root=document.getElementById(editorId); if(!root) return;
+    const tags=(initialTags||[]).map(s=> String(s).trim()).filter(Boolean);
+    if(!this.state.tagEditors) this.state.tagEditors={};
+    this.state.tagEditors[editorId]={ tags };
+    root.innerHTML=`
+      <div class='tags-chips' style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;border:1px solid #ACA899;border-radius:3px;padding:6px;background:#fff;">
+        <div class='chips' style='display:flex;flex-wrap:wrap;gap:6px;'></div>
+        <input type='text' class='tag-input' placeholder='Ajouter un tag…' style='flex:1;min-width:120px;border:0;outline:none;'>
+      </div>
+      <div class='tag-suggest' style='position:relative;'>
+        <div class='menu' style='position:absolute;z-index:5;left:0;right:0;background:#fff;border:1px solid #ACA899;border-top:0;display:none;max-height:160px;overflow:auto;'></div>
+      </div>`;
+    const chips=root.querySelector('.chips');
+    const input=root.querySelector('.tag-input');
+    const menu=root.querySelector('.tag-suggest .menu');
+    const hidden=hiddenInputId? document.getElementById(hiddenInputId): null;
+    const sync=()=>{ this.state.tagEditors[editorId].tags = tags.slice(); if(hidden) hidden.value = tags.join(', '); };
+    const render=()=>{
+      chips.innerHTML='';
+      tags.forEach((t,idx)=>{
+        const el=document.createElement('span');
+        el.style.cssText='display:inline-flex;align-items:center;background:#e7f0fb;border:1px solid #8ab4f8;color:#0b57d0;border-radius:12px;padding:2px 8px;font-size:11px;';
+        el.innerHTML = `<span>${t}</span><button title='Retirer' style="margin-left:6px;border:0;background:#e33;color:#fff;width:16px;height:16px;border-radius:50%;line-height:16px;font-size:10px;cursor:pointer">×</button>`;
+        el.querySelector('button').addEventListener('click',()=>{ tags.splice(idx,1); sync(); render(); });
+        chips.appendChild(el);
+      });
+    };
+    const addTag=(raw)=>{ const t=String(raw||'').trim(); if(!t) return; if(tags.includes(t)) return; tags.push(t); sync(); render(); input.value=''; hideMenu(); };
+    const suggestions=this._buildTagSuggestions();
+    const showMenu=(items)=>{ if(!items.length){ hideMenu(); return; } menu.style.display='block'; menu.innerHTML=items.slice(0,12).map(s=>`<div class='itm' style="padding:6px 8px;cursor:pointer;border-top:1px solid #eee;">${s}</div>`).join(''); Array.from(menu.querySelectorAll('.itm')).forEach(el=> el.addEventListener('click',()=> addTag(el.textContent))); };
+    const hideMenu=()=>{ menu.style.display='none'; };
+    input.addEventListener('keydown',(e)=>{ if(e.key==='Enter' || e.key===','){ e.preventDefault(); addTag(input.value.replace(/,+$/,'')); } else if(e.key==='Backspace' && !input.value && tags.length){ tags.pop(); sync(); render(); } });
+    input.addEventListener('input',()=>{ const q=input.value.trim().toLowerCase(); if(!q){ hideMenu(); return; } const items=suggestions.filter(s=> s.toLowerCase().includes(q) && !tags.includes(s)); showMenu(items); });
+    input.addEventListener('blur',()=> setTimeout(hideMenu,150));
+    // initial render
+    sync(); render();
+  },
+  getTagEditorTags(editorId){ return (this.state.tagEditors && this.state.tagEditors[editorId] && this.state.tagEditors[editorId].tags) || []; },
   
   // Création du panneau d'administration - Méthode unifiée
   createPanel(editItemId = null, itemType = 'film') {
@@ -444,7 +494,7 @@ window.AdminManager = {
         ${filmId ? 'Modifier' : 'Ajouter'} un film
       </h3>
       
-      <form id="film-form">
+  <form id="film-form">
         <div style="margin-bottom:15px;">
           <label for="film-titre" style="display:block;margin-bottom:5px;font-weight:bold;">Titre</label>
           <input type="text" id="film-titre" name="titre" value="${filmToEdit ? filmToEdit.titre : ''}" 
@@ -464,9 +514,28 @@ window.AdminManager = {
         </div>
         
         <div style="margin-bottom:15px;">
-          <label for="film-image" style="display:block;margin-bottom:5px;font-weight:bold;">URL de l'image</label>
-          <input type="text" id="film-image" name="image" value="${filmToEdit ? filmToEdit.image : ''}" 
+          <label style="display:block;margin-bottom:5px;font-weight:bold;">Tags</label>
+          <div id="film-tags-editor"></div>
+          <input type="hidden" id="film-tags-hidden" value="${filmToEdit && Array.isArray(filmToEdit.tags) ? filmToEdit.tags.join(', ') : ''}">
+          <div style='font-size:11px;color:#666;margin-top:4px;'>Ajoutez avec Entrée, utilisez la liste de suggestions.</div>
+        </div>
+        
+        <div style="margin-bottom:15px;">
+          <label for="film-image" style="display:block;margin-bottom:5px;font-weight:bold;">Affiche (URL) </label>
+          <input type="text" id="film-image" name="image" value="${filmToEdit ? (filmToEdit.image||'') : ''}" 
             style="width:100%;padding:5px;border:1px solid #ACA899;border-radius:3px;">
+          <div style="margin-top:6px;display:flex;gap:8px;align-items:center;">
+            <input type="file" id="film-image-file" accept="image/*" style="font-size:12px;">
+            <span style="font-size:11px;color:#555;">ou collez une URL ci-dessus</span>
+          </div>
+          <div id="film-image-preview" style="margin-top:8px;"></div>
+        </div>
+
+        <div style="margin-bottom:15px;">
+          <label style="display:block;margin-bottom:5px;font-weight:bold;">Galerie photos</label>
+          <input type="file" id="film-gallery-files" accept="image/*" multiple style="font-size:12px;">
+          <div id="film-gallery-list" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;"></div>
+          <div style="font-size:11px;color:#666;margin-top:4px;">Astuce: sélectionnez plusieurs images pour les envoyer d'un coup.</div>
         </div>
         
         <div style="margin-bottom:15px;">
@@ -486,12 +555,15 @@ window.AdminManager = {
       </form>
     `;
     
-    // Ajouter les gestionnaires d'événements
-    this.initFilmFormEvents(filmId);
+  // Init tags editor then ajouter les gestionnaires d'événements
+  this.initTagEditor('film-tags-editor','film-tags-hidden', filmToEdit ? (filmToEdit.tags||[]) : []);
+  this.initFilmFormEvents(filmId);
   },
   
   // Initialisation des événements du formulaire film
   initFilmFormEvents(filmId) {
+    // État temporaire pour la galerie
+    this.state._filmGallery = [];
     // Bouton annuler
     document.getElementById('film-cancel-btn')?.addEventListener('click', () => {
       this.loadDashboard();
@@ -502,6 +574,68 @@ window.AdminManager = {
       e.preventDefault();
       this.saveFilm(filmId);
     });
+
+    // Pré-remplir la galerie/preview si édition
+    if (filmId && Array.isArray(window.films)){
+      const f = window.films.find(x=> x.id===filmId);
+      if(f){
+        // Affiche
+        if(f.image){
+          const prev = document.getElementById('film-image-preview');
+          if(prev){ prev.innerHTML = `<img src="${f.image}" alt="affiche" style="max-width:180px;max-height:120px;border:1px solid #ACA899;">`; }
+        }
+        // Galerie
+        (f.galerie||[]).forEach(url=> this._pushFilmGalleryThumb(url));
+      }
+    }
+
+    // Upload affiche
+    const posterInput = document.getElementById('film-image-file');
+    posterInput?.addEventListener('change', async (ev)=>{
+      const file = ev.target.files && ev.target.files[0];
+      if(!file) return;
+      try{
+        const url = await MediaManager.uploadImage(file, MediaManager.config.uploadDirectories.films);
+        const urlInput = document.getElementById('film-image');
+        if(urlInput) urlInput.value = url;
+        const prev = document.getElementById('film-image-preview');
+        if(prev){ prev.innerHTML = `<img src="${url}" alt="affiche" style="max-width:180px;max-height:120px;border:1px solid #ACA899;">`; }
+        alert('Affiche envoyée');
+      }catch(err){ alert('Upload affiche échoué: '+err.message); }
+    });
+
+    // Upload galerie multiple
+    const galleryInput = document.getElementById('film-gallery-files');
+    galleryInput?.addEventListener('change', async (ev)=>{
+      const files = ev.target.files; if(!files || !files.length) return;
+      try{
+        const results = await MediaManager.uploadMultipleImages(files, MediaManager.config.uploadDirectories.films);
+        const ok = results.filter(r=> r.success).map(r=> r.url);
+        ok.forEach(url=> this._pushFilmGalleryThumb(url));
+        const ko = results.filter(r=> !r.success);
+        if(ko.length) alert(`${ok.length} image(s) envoyée(s), ${ko.length} erreur(s)`);
+      }catch(err){ alert('Upload galerie échoué: '+err.message); }
+      finally { ev.target.value = ''; }
+    });
+  },
+
+  // Ajouter visuellement et mémoriser une image de galerie (films)
+  _pushFilmGalleryThumb(url){
+    if(!this.state._filmGallery) this.state._filmGallery=[];
+    this.state._filmGallery.push(url);
+    const list = document.getElementById('film-gallery-list'); if(!list) return;
+    const idx = this.state._filmGallery.length-1;
+    const wrap = document.createElement('div');
+    wrap.style.cssText='width:90px;height:70px;position:relative;border:1px solid #ACA899;background:#fff;display:flex;align-items:center;justify-content:center;';
+    wrap.innerHTML = `
+      <img src="${url}" style="max-width:100%;max-height:100%;object-fit:cover;">
+      <button title="Retirer" style="position:absolute;top:2px;right:2px;border:0;background:#e33;color:#fff;width:18px;height:18px;border-radius:50%;line-height:18px;font-size:11px;cursor:pointer">×</button>
+    `;
+    wrap.querySelector('button').addEventListener('click',()=>{
+      this.state._filmGallery = this.state._filmGallery.filter(u=> u!==url);
+      wrap.remove();
+    });
+    list.appendChild(wrap);
   },
   
   // Sauvegarde d'un film
@@ -512,17 +646,21 @@ window.AdminManager = {
       titre: document.getElementById('film-titre')?.value || '',
       note: parseInt(document.getElementById('film-note')?.value) || 0,
       critique: document.getElementById('film-critique')?.value || '',
-      image: document.getElementById('film-image')?.value || '',
+  image: document.getElementById('film-image')?.value || '',
       bandeAnnonce: document.getElementById('film-bande-annonce')?.value || '',
-      galerie: [],
-      liens: []
+  galerie: (this.state._filmGallery||[]),
+  liens: [],
+  tags: (()=>{ let t=this.getTagEditorTags('film-tags-editor'); if(!t.length){ const h=document.getElementById('film-tags-hidden')?.value||''; t=h.split(',').map(s=>s.trim()).filter(Boolean);} return t; })()
     };
     
     // Conserver les données existantes pour les tableaux
     if (filmId && typeof window.films !== 'undefined') {
       const existingFilm = window.films.find(f => f.id === filmId);
       if (existingFilm) {
-        filmData.galerie = existingFilm.galerie || [];
+        // Si aucune modif faite côté UI, garder l'ancienne galerie
+        if(!(this.state._filmGallery && this.state._filmGallery.length)){
+          filmData.galerie = existingFilm.galerie || [];
+        }
         filmData.liens = existingFilm.liens || [];
       }
     }
@@ -815,14 +953,25 @@ window.AdminManager = {
           <div id='article-pdf-current' style='font-size:12px;${article?.pdfUrl? '':'display:none;'}'>Actuel: <a href='${article?.pdfUrl||'#'}' target='_blank'>Ouvrir PDF</a></div>
           <progress id='article-pdf-progress' value='0' max='100' style='width:100%;display:none;'></progress>
         </div>
-        <div style='margin-bottom:15px;display:flex;gap:15px;flex-wrap:wrap;'>
+        <div style='margin-bottom:15px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Image de couverture (URL)</label>
+          <input type='text' id='article-cover' value='${article? (article.cover||''): ''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          <div style='margin-top:6px;display:flex;gap:8px;align-items:center;'>
+            <input type='file' id='article-cover-file' accept='image/*' style='font-size:12px;'>
+            <span style='font-size:11px;color:#555;'>ou collez une URL ci-dessus</span>
+          </div>
+          <div id='article-cover-preview' style='margin-top:8px;'></div>
+        </div>
+    <div style='margin-bottom:15px;display:flex;gap:15px;flex-wrap:wrap;'>
           <div style='flex:1;min-width:200px;'>
             <label style='display:block;margin-bottom:5px;font-weight:bold;'>Date</label>
             <input type='date' id='article-date' value='${article? (article.date||today): today}' style='padding:6px;border:1px solid #ACA899;border-radius:3px;'>
           </div>
           <div style='flex:2;min-width:220px;'>
-            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Tags (séparés par des virgules)</label>
-            <input type='text' id='article-tags' value='${article? (article.tags||[]).join(', '): ''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+      <label style='display:block;margin-bottom:5px;font-weight:bold;'>Tags</label>
+      <div id='article-tags-editor'></div>
+      <input type='hidden' id='article-tags-hidden' value='${article? (article.tags||[]).join(', '): ''}'>
+      <div style='font-size:11px;color:#666;margin-top:4px;'>Ajoutez avec Entrée, utilisez la liste de suggestions.</div>
           </div>
         </div>
         <div style='margin-bottom:15px;'>
@@ -835,7 +984,9 @@ window.AdminManager = {
         </div>
       </form>`;
     document.getElementById('article-cancel-btn')?.addEventListener('click', ()=> this.loadArticlesManager());
-    document.getElementById('article-form')?.addEventListener('submit', (e)=> { e.preventDefault(); this.saveArticle(articleId); });
+  document.getElementById('article-form')?.addEventListener('submit', (e)=> { e.preventDefault(); this.saveArticle(articleId); });
+  // Init tag editor
+  this.initTagEditor('article-tags-editor','article-tags-hidden', article? (article.tags||[]) : []);
     const pdfInput = document.getElementById('article-pdf');
     pdfInput?.addEventListener('change', async (e)=>{
       const file = e.target.files[0]; if(!file) return;
@@ -874,22 +1025,46 @@ window.AdminManager = {
         console.error(err); alert('Upload PDF échoué: '+err.message);
       }
     });
+
+    // Prévisualisation couverture (si édition)
+    if(article?.cover){
+      const prev = document.getElementById('article-cover-preview');
+      if(prev){ prev.innerHTML = `<img src='${article.cover}' alt='couverture' style='max-width:180px;max-height:120px;border:1px solid #ACA899;'>`; }
+    }
+
+    // Upload image de couverture
+    const coverInput = document.getElementById('article-cover-file');
+    coverInput?.addEventListener('change', async (ev)=>{
+      const file = ev.target.files && ev.target.files[0]; if(!file) return;
+      try{
+        const url = await MediaManager.uploadImage(file, MediaManager.config.uploadDirectories.articles);
+        const urlInput = document.getElementById('article-cover'); if(urlInput) urlInput.value = url;
+        const prev = document.getElementById('article-cover-preview');
+        if(prev){ prev.innerHTML = `<img src='${url}' alt='couverture' style='max-width:180px;max-height:120px;border:1px solid #ACA899;'>`; }
+        alert('Image de couverture envoyée');
+      }catch(err){ alert('Upload couverture échoué: '+err.message); }
+      finally{ ev.target.value=''; }
+    });
   },
   saveArticle(articleId) {
     if (!window.articles || !Array.isArray(window.articles)) window.articles = [];
     const titre = document.getElementById('article-titre')?.value.trim() || '';
     if (!titre) { alert('Titre requis'); return; }
     const date = document.getElementById('article-date')?.value || new Date().toISOString().slice(0,10);
-    const tagsRaw = document.getElementById('article-tags')?.value || '';
     const contenu = document.getElementById('article-contenu')?.value || '';
-    const tags = tagsRaw.split(',').map(t=>t.trim()).filter(Boolean);
+    const cover = document.getElementById('article-cover')?.value || '';
+    let tags = this.getTagEditorTags('article-tags-editor');
+    if(!tags.length){
+      const hidden = document.getElementById('article-tags-hidden')?.value || '';
+      tags = hidden.split(',').map(t=>t.trim()).filter(Boolean);
+    }
     let article;
     if (articleId) {
       article = window.articles.find(a=> a.id === articleId);
       if (!article) { alert('Article introuvable'); return; }
-      Object.assign(article, {titre,date,tags,contenu,updatedAt:Date.now()});
+      Object.assign(article, {titre,date,tags,contenu,cover,updatedAt:Date.now()});
     } else {
-      article = { id: Date.now(), titre, date, tags, contenu, createdAt: Date.now() };
+      article = { id: Date.now(), titre, date, tags, contenu, cover, createdAt: Date.now() };
       if(window._pendingArticlePdf){ article.pdfUrl = window._pendingArticlePdf; delete window._pendingArticlePdf; }
       window.articles.push(article);
     }
@@ -1211,15 +1386,30 @@ window.AdminManager = {
           <label style='display:block;margin-bottom:5px;font-weight:bold;'>Titre</label>
           <input type='text' id='manga-titre' value='${manga? (manga.titre||'').replace(/"/g,'&quot;'):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;' required>
         </div>
-        <div style='margin-bottom:12px;display:flex;flex-wrap:wrap;gap:15px;'>
+    <div style='margin-bottom:12px;display:flex;flex-wrap:wrap;gap:15px;'>
           <div style='flex:1;min-width:120px;'>
             <label style='display:block;margin-bottom:5px;font-weight:bold;'>Chapitres</label>
             <input type='number' id='manga-chapitres' value='${manga? (manga.chapitres||0):0}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
           </div>
           <div style='flex:2;min-width:200px;'>
-            <label style='display:block;margin-bottom:5px;font-weight:bold;'>Tags (virgules)</label>
-            <input type='text' id='manga-tags' value='${manga? (manga.tags||[]).join(', '):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+      <label style='display:block;margin-bottom:5px;font-weight:bold;'>Tags</label>
+      <div id='manga-tags-editor'></div>
+      <input type='hidden' id='manga-tags-hidden' value='${manga? (manga.tags||[]).join(', '):''}'>
           </div>
+        </div>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Couverture (URL)</label>
+          <input type='text' id='manga-cover' value='${manga? (manga.cover||''):''}' style='width:100%;padding:6px;border:1px solid #ACA899;border-radius:3px;'>
+          <div style='margin-top:6px;display:flex;gap:8px;align-items:center;'>
+            <input type='file' id='manga-cover-file' accept='image/*' style='font-size:12px;'>
+            <span style='font-size:11px;color:#555;'>ou collez une URL ci-dessus</span>
+          </div>
+          <div id='manga-cover-preview' style='margin-top:8px;'></div>
+        </div>
+        <div style='margin-bottom:12px;'>
+          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Galerie</label>
+          <input type='file' id='manga-gallery-files' accept='image/*' multiple style='font-size:12px;'>
+          <div id='manga-gallery-list' style='margin-top:8px;display:flex;flex-wrap:wrap;gap:8px;'></div>
         </div>
         <div style='margin-bottom:12px;'>
           <label style='display:block;margin-bottom:5px;font-weight:bold;'>Description / Notes</label>
@@ -1231,19 +1421,64 @@ window.AdminManager = {
         </div>
       </form>`;
     document.getElementById('manga-cancel-btn')?.addEventListener('click',()=> this.loadMangasManager());
-    document.getElementById('manga-form')?.addEventListener('submit',e=>{ e.preventDefault(); this.saveManga(mangaId); });
+  document.getElementById('manga-form')?.addEventListener('submit',e=>{ e.preventDefault(); this.saveManga(mangaId); });
+  // Init tag editor
+  this.initTagEditor('manga-tags-editor','manga-tags-hidden', manga? (manga.tags||[]) : []);
+
+    // État galerie mangas
+    this.state._mangaGallery = [];
+    if(manga){
+      if(manga.cover){ const prev=document.getElementById('manga-cover-preview'); if(prev){ prev.innerHTML = `<img src='${manga.cover}' style='max-width:180px;max-height:120px;border:1px solid #ACA899;'>`; } }
+      (manga.gallery||[]).forEach(url=> this._pushMangaGalleryThumb(url));
+    }
+    document.getElementById('manga-cover-file')?.addEventListener('change',async (ev)=>{
+      const file = ev.target.files && ev.target.files[0]; if(!file) return;
+      try{
+        const url = await MediaManager.uploadImage(file, MediaManager.config.uploadDirectories.mangas);
+        const inp = document.getElementById('manga-cover'); if(inp) inp.value = url;
+        const prev=document.getElementById('manga-cover-preview'); if(prev){ prev.innerHTML = `<img src='${url}' style='max-width:180px;max-height:120px;border:1px solid #ACA899;'>`; }
+        alert('Couverture envoyée');
+      }catch(err){ alert('Upload couverture échoué: '+err.message); }
+      finally{ ev.target.value=''; }
+    });
+    document.getElementById('manga-gallery-files')?.addEventListener('change',async (ev)=>{
+      const files = ev.target.files; if(!files||!files.length) return;
+      try{
+        const results = await MediaManager.uploadMultipleImages(files, MediaManager.config.uploadDirectories.mangas);
+        const ok = results.filter(r=> r.success).map(r=> r.url);
+        ok.forEach(url=> this._pushMangaGalleryThumb(url));
+        const ko = results.filter(r=> !r.success);
+        if(ko.length) alert(`${ok.length} image(s) envoyée(s), ${ko.length} erreur(s)`);
+      }catch(err){ alert('Upload galerie échoué: '+err.message); }
+      finally{ ev.target.value=''; }
+    });
+  },
+  _pushMangaGalleryThumb(url){
+    if(!this.state._mangaGallery) this.state._mangaGallery=[];
+    this.state._mangaGallery.push(url);
+    const list=document.getElementById('manga-gallery-list'); if(!list) return;
+    const wrap=document.createElement('div');
+    wrap.style.cssText='width:90px;height:70px;position:relative;border:1px solid #ACA899;background:#fff;display:flex;align-items:center;justify-content:center;';
+    wrap.innerHTML = `
+      <img src='${url}' style='max-width:100%;max-height:100%;object-fit:cover;'>
+      <button title='Retirer' style='position:absolute;top:2px;right:2px;border:0;background:#e33;color:#fff;width:18px;height:18px;border-radius:50%;line-height:18px;font-size:11px;cursor:pointer'>×</button>
+    `;
+    wrap.querySelector('button').addEventListener('click',()=>{ this.state._mangaGallery = this.state._mangaGallery.filter(u=> u!==url); wrap.remove(); });
+    list.appendChild(wrap);
   },
   saveManga(mangaId){
     if(!Array.isArray(window.mangas)) window.mangas=[];
     const titre=(document.getElementById('manga-titre')?.value||'').trim(); if(!titre){ alert('Titre requis'); return; }
-    const chapitres=parseInt(document.getElementById('manga-chapitres')?.value)||0;
-    const tagsRaw=document.getElementById('manga-tags')?.value||''; const tags=tagsRaw.split(',').map(t=>t.trim()).filter(Boolean);
+  const chapitres=parseInt(document.getElementById('manga-chapitres')?.value)||0;
+  let tags=this.getTagEditorTags('manga-tags-editor');
+  if(!tags.length){ const hidden=document.getElementById('manga-tags-hidden')?.value||''; tags=hidden.split(',').map(t=>t.trim()).filter(Boolean); }
     const notes=document.getElementById('manga-notes')?.value||'';
+    const cover=(document.getElementById('manga-cover')?.value||'').trim();
     if(mangaId){
       const m=window.mangas.find(mm=> mm.id===mangaId); if(!m){ alert('Manga introuvable'); return; }
-      Object.assign(m,{ titre, chapitres, tags, notes, updatedAt:Date.now() });
+      Object.assign(m,{ titre, chapitres, tags, notes, cover, gallery:(this.state._mangaGallery||[]), updatedAt:Date.now() });
     } else {
-      window.mangas.push({ id:Date.now(), titre, chapitres, tags, notes, createdAt:Date.now() });
+      window.mangas.push({ id:Date.now(), titre, chapitres, tags, notes, cover, gallery:(this.state._mangaGallery||[]), createdAt:Date.now() });
     }
     this.saveAllData(); alert('Manga sauvegardé'); this.loadMangasManager();
   },
