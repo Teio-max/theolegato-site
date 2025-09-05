@@ -32,10 +32,13 @@
       "titre": "Teorema, Pier Paolo Pasolini",
       "note": 4,
       "critique": "",
-      "image": "",
+      "image": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/images/films/films_1757105103337_affiche.jpg",
       "bandeAnnonce": "",
-      "galerie": [],
-      "liens": []
+      "galerie": [
+        "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/images/films/films_1757105131199_dinertable.png"
+      ],
+      "liens": [],
+      "tags": []
     }
   ],
   "mangas": [],
@@ -135,5 +138,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-05T20:45:00.617Z"
+  "lastUpdated": "2025-09-05T20:46:22.644Z"
 }
