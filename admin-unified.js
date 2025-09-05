@@ -94,6 +94,62 @@ window.AdminManager = {
     sync(); render();
   },
   getTagEditorTags(editorId){ return (this.state.tagEditors && this.state.tagEditors[editorId] && this.state.tagEditors[editorId].tags) || []; },
+
+  // ----- Editeur riche pour articles (type Tumblr léger) -----
+  _sanitizeHtml(html){
+    if(!html) return '';
+    // Retirer scripts et attributs dangereux
+    let out = String(html)
+      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi,'')
+      .replace(/ on[a-z]+\s*=\s*"[^"]*"/gi,'')
+      .replace(/ on[a-z]+\s*=\s*'[^']*'/gi,'')
+      .replace(/ on[a-z]+\s*=\s*[^\s>]+/gi,'')
+      .replace(/(href|src)\s*=\s*"javascript:[^"]*"/gi,'')
+      .replace(/(href|src)\s*=\s*'javascript:[^']*'/gi,'');
+    return out;
+  },
+  _stripHtml(html){ const tmp=document.createElement('div'); tmp.innerHTML=html||''; return tmp.textContent||tmp.innerText||''; },
+  _insertHtmlAtCursor(html){
+    const sel = window.getSelection();
+    if(!sel || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    const frag = range.createContextualFragment(html);
+    const lastNode = frag.lastChild;
+    range.insertNode(frag);
+    // move cursor after inserted
+    if(lastNode){
+      const newRange = document.createRange();
+      newRange.setStartAfter(lastNode);
+      newRange.collapse(true);
+      sel.removeAllRanges(); sel.addRange(newRange);
+    }
+  },
+  initRichArticleEditor(editorId, toolbarId){
+    const editor = document.getElementById(editorId); const bar = document.getElementById(toolbarId);
+    if(!editor || !bar) return;
+    const imgInput = bar.querySelector('#article-editor-image');
+    function fmt(cmd, val=null){ document.execCommand(cmd,false,val); editor.focus(); }
+    bar.querySelector('#btn-h1')?.addEventListener('click',()=> fmt('formatBlock','H1'));
+    bar.querySelector('#btn-h2')?.addEventListener('click',()=> fmt('formatBlock','H2'));
+    bar.querySelector('#btn-bold')?.addEventListener('click',()=> fmt('bold'));
+    bar.querySelector('#btn-italic')?.addEventListener('click',()=> fmt('italic'));
+    bar.querySelector('#btn-ul')?.addEventListener('click',()=> fmt('insertUnorderedList'));
+    bar.querySelector('#btn-ol')?.addEventListener('click',()=> fmt('insertOrderedList'));
+    bar.querySelector('#btn-quote')?.addEventListener('click',()=> fmt('formatBlock','BLOCKQUOTE'));
+    bar.querySelector('#btn-hr')?.addEventListener('click',()=> fmt('insertHorizontalRule'));
+    bar.querySelector('#btn-clear')?.addEventListener('click',()=> fmt('removeFormat'));
+    bar.querySelector('#btn-link')?.addEventListener('click',()=>{
+      const url = prompt('URL du lien:','https://'); if(!url) return; let safe=url.trim(); if(!/^https?:\/\//i.test(safe)) safe='https://'+safe; fmt('createLink',safe);
+    });
+    bar.querySelector('#btn-img')?.addEventListener('click',()=> imgInput && imgInput.click());
+    imgInput?.addEventListener('change', async (e)=>{
+      const file = e.target.files && e.target.files[0]; if(!file) return; try{
+        const url = await MediaManager.uploadImage(file, MediaManager.config.uploadDirectories.articles);
+        this._insertHtmlAtCursor(`<img src="${url}" alt="" style="max-width:100%;">`);
+      }catch(err){ alert('Upload image échoué: '+err.message); } finally { e.target.value=''; }
+    });
+  },
   
   // Création du panneau d'administration - Méthode unifiée
   createPanel(editItemId = null, itemType = 'film') {
@@ -974,9 +1030,26 @@ window.AdminManager = {
       <div style='font-size:11px;color:#666;margin-top:4px;'>Ajoutez avec Entrée, utilisez la liste de suggestions.</div>
           </div>
         </div>
-        <div style='margin-bottom:15px;'>
-          <label style='display:block;margin-bottom:5px;font-weight:bold;'>Contenu / Markdown</label>
-          <textarea id='article-contenu' rows='12' style='width:100%;padding:8px;border:1px solid #ACA899;border-radius:3px;font-family:monospace;'>${article? (article.contenu||'').replace(/</g,'&lt;') : ''}</textarea>
+        <div style='margin-bottom:10px;'>
+          <label style='display:block;margin-bottom:6px;font-weight:bold;'>Contenu (éditeur riche)</label>
+          <div id='article-editor-toolbar' style='display:flex;gap:6px;flex-wrap:wrap;padding:6px;background:#ece9d8;border:1px solid #ACA899;border-radius:4px;margin-bottom:6px;'>
+            <button type='button' id='btn-h1' style='padding:4px 6px;'>H1</button>
+            <button type='button' id='btn-h2' style='padding:4px 6px;'>H2</button>
+            <button type='button' id='btn-bold' style='padding:4px 6px;font-weight:bold;'>B</button>
+            <button type='button' id='btn-italic' style='padding:4px 6px;font-style:italic;'>I</button>
+            <button type='button' id='btn-ul' style='padding:4px 6px;'>• Liste</button>
+            <button type='button' id='btn-ol' style='padding:4px 6px;'>1. Liste</button>
+            <button type='button' id='btn-quote' style='padding:4px 6px;'>&ldquo; Quote</button>
+            <button type='button' id='btn-hr' style='padding:4px 6px;'>— HR</button>
+            <button type='button' id='btn-link' style='padding:4px 6px;'>Lien</button>
+            <button type='button' id='btn-img' style='padding:4px 6px;'>Image</button>
+            <button type='button' id='btn-clear' style='padding:4px 6px;'>Nettoyer</button>
+            <input type='file' id='article-editor-image' accept='image/*' style='display:none;'>
+          </div>
+          <div id='article-editor' contenteditable='true' style='min-height:280px;padding:10px;border:1px solid #ACA899;border-radius:4px;background:#fff;outline:none;'>
+            ${article? (article.contenuHtml || (article.contenu||'').replace(/</g,'&lt;').replace(/\n/g,'<br>')) : ''}
+          </div>
+          <small style='display:block;margin-top:4px;color:#666;'>Astuce: sélectionnez du texte puis utilisez la barre pour formater, insérez des liens et images. Le HTML est sauvegardé.</small>
         </div>
         <div style='margin-top:15px;'>
           <button type='submit' style='background:#0058a8;color:#fff;border:1px solid #003f7d;padding:8px 16px;border-radius:3px;cursor:pointer;'>${article? 'Enregistrer':'Créer'}</button>
@@ -987,6 +1060,8 @@ window.AdminManager = {
   document.getElementById('article-form')?.addEventListener('submit', (e)=> { e.preventDefault(); this.saveArticle(articleId); });
   // Init tag editor
   this.initTagEditor('article-tags-editor','article-tags-hidden', article? (article.tags||[]) : []);
+  // Init rich text editor
+  this.initRichArticleEditor('article-editor','article-editor-toolbar');
     const pdfInput = document.getElementById('article-pdf');
     pdfInput?.addEventListener('change', async (e)=>{
       const file = e.target.files[0]; if(!file) return;
@@ -1051,7 +1126,9 @@ window.AdminManager = {
     const titre = document.getElementById('article-titre')?.value.trim() || '';
     if (!titre) { alert('Titre requis'); return; }
     const date = document.getElementById('article-date')?.value || new Date().toISOString().slice(0,10);
-    const contenu = document.getElementById('article-contenu')?.value || '';
+  const contenuHtmlRaw = document.getElementById('article-editor')?.innerHTML || '';
+  const contenuHtml = this._sanitizeHtml(contenuHtmlRaw);
+  const contenu = this._stripHtml(contenuHtml); // fallback texte brut pour listings/exports
     const cover = document.getElementById('article-cover')?.value || '';
     let tags = this.getTagEditorTags('article-tags-editor');
     if(!tags.length){
@@ -1062,9 +1139,9 @@ window.AdminManager = {
     if (articleId) {
       article = window.articles.find(a=> a.id === articleId);
       if (!article) { alert('Article introuvable'); return; }
-      Object.assign(article, {titre,date,tags,contenu,cover,updatedAt:Date.now()});
+  Object.assign(article, {titre,date,tags,contenu,contenuHtml,cover,updatedAt:Date.now()});
     } else {
-      article = { id: Date.now(), titre, date, tags, contenu, cover, createdAt: Date.now() };
+  article = { id: Date.now(), titre, date, tags, contenu, contenuHtml, cover, createdAt: Date.now() };
       if(window._pendingArticlePdf){ article.pdfUrl = window._pendingArticlePdf; delete window._pendingArticlePdf; }
       window.articles.push(article);
     }

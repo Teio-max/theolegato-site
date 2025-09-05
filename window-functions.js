@@ -97,6 +97,9 @@ WindowManager.generateArticlesContent = function() {
 };
 
 // --- Détails / Critiques Films ---
+// État des visionneuses de galerie pour les films
+window.FilmGalleryViewers = window.FilmGalleryViewers || {};
+
 WindowManager.openFilmCritique = function(filmId){
   if(!window.DataManager?.data?.films) return alert('Pas de films');
   const film = window.DataManager.data.films.find(f=> String(f.id)===String(filmId));
@@ -104,6 +107,7 @@ WindowManager.openFilmCritique = function(filmId){
   const poster = film.image || film.poster || '';
   const note = film.note ? '⭐'.repeat(Math.min(5, film.note)) : '—';
   const critique = (film.critique||'Aucune critique.').replace(/</g,'&lt;').replace(/\n/g,'<br>');
+  const gallery = Array.isArray(film.galerie) ? film.galerie : [];
   const content = `
     <div style='display:flex;height:100%;'>
       <div style='width:240px;border-right:1px solid #999;background:#f0f0f0;padding:10px;overflow:auto;'>
@@ -112,9 +116,9 @@ WindowManager.openFilmCritique = function(filmId){
         <div style='font-size:12px;color:#333;margin-bottom:6px;'>${film.year||''}</div>
         <div style='font-size:12px;margin-bottom:8px;'>Note: ${note}</div>
         ${film.bandeAnnonce? `<button onclick="window.open('${film.bandeAnnonce}','_blank')" style='font-size:11px;padding:4px 8px;'>Bande annonce</button>`:''}
-        ${(film.galerie&&film.galerie.length)? `<div style='margin-top:10px;'>
+        ${gallery.length? `<div style='margin-top:10px;'>
           <div style='font-weight:bold;font-size:12px;margin-bottom:4px;'>Galerie</div>
-          <div style='display:grid;grid-template-columns:repeat(3,1fr);gap:6px;'>${film.galerie.slice(0,9).map(u=>`<div style="width:100%;padding-top:66%;position:relative;border:1px solid #777;background:#fff;">
+          <div id='film-grid' style='display:grid;grid-template-columns:repeat(3,1fr);gap:6px;'>${gallery.map((u,i)=>`<div class="film-grid-thumb" data-idx='${i}' style="width:100%;padding-top:66%;position:relative;border:1px solid #777;background:#fff;cursor:pointer;">
             <img src='${u}' style='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;'>
           </div>`).join('')}</div>
         </div>`:''}
@@ -123,10 +127,54 @@ WindowManager.openFilmCritique = function(filmId){
         <div style='padding:10px 14px;flex:1;overflow:auto;background:#fff;'>
           <h3 style='margin:0 0 10px;font-size:15px;color:#222;'>Critique</h3>
           <div style='font-size:13px;line-height:1.5;'>${critique}</div>
+          ${gallery.length? `
+          <div style='margin-top:16px;'>
+            <h3 style='margin:0 0 8px;font-size:15px;color:#222;'>Galerie</h3>
+            <div id='gal-viewer' style='position:relative;border:1px solid #aaa;background:#000;height:300px;display:flex;align-items:center;justify-content:center;border-radius:4px;'>
+              <img id='gal-main' src='${gallery[0]}' alt='' style='max-width:100%;max-height:100%;object-fit:contain;background:#000;'>
+              <button id='gal-prev' title='Précédent' style='position:absolute;left:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:1px solid #999;background:#ece9d8;cursor:pointer;'>&lsaquo;</button>
+              <button id='gal-next' title='Suivant' style='position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:1px solid #999;background:#ece9d8;cursor:pointer;'>&rsaquo;</button>
+              <div id='gal-counter' style='position:absolute;right:8px;bottom:6px;color:#fff;background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:3px;font-size:11px;'>1/${gallery.length}</div>
+            </div>
+            <div id='gal-thumbs' style='display:flex;gap:6px;overflow:auto;margin-top:8px;'>
+              ${gallery.map((u,i)=>`<div class='film-thumb' data-idx='${i}' style="width:70px;height:50px;border:2px solid ${i===0?'#0b57d0':'#bbb'};border-radius:4px;overflow:hidden;cursor:pointer;background:#fff;">
+                <img src='${u}' style='width:100%;height:100%;object-fit:cover;'>
+              </div>`).join('')}
+            </div>
+          </div>
+          `:''}
         </div>
       </div>
     </div>`;
-  this.createWindow({ title:`Film: ${film.titre||film.title||'Film'}`, icon:'icons/film.png', width:720, height:520, content });
+  const win = this.createWindow({ title:`Film: ${film.titre||film.title||'Film'}`, icon:'icons/film.png', width:760, height:560, content });
+
+  // Attacher la logique de navigation si galerie
+  if(gallery.length){
+    window.FilmGalleryViewers[filmId] = { index: 0 };
+    setTimeout(()=>{
+      const st = window.FilmGalleryViewers[filmId];
+      const main = win.querySelector('#gal-main');
+      const prev = win.querySelector('#gal-prev');
+      const next = win.querySelector('#gal-next');
+      const counter = win.querySelector('#gal-counter');
+      const thumbs = Array.from(win.querySelectorAll('#gal-thumbs .film-thumb'));
+      const gridThumbs = Array.from(win.querySelectorAll('#film-grid .film-grid-thumb'));
+
+      function select(i){
+        if(!gallery.length) return;
+        st.index = Math.max(0, Math.min(gallery.length-1, i));
+        if(main) main.src = gallery[st.index];
+        if(counter) counter.textContent = `${st.index+1}/${gallery.length}`;
+        thumbs.forEach((el,idx)=>{ el.style.borderColor = idx===st.index? '#0b57d0' : '#bbb'; });
+      }
+      function nextImg(){ select(st.index+1); }
+      function prevImg(){ select(st.index-1); }
+      prev && prev.addEventListener('click', prevImg);
+      next && next.addEventListener('click', nextImg);
+      thumbs.forEach(el=> el.addEventListener('click', ()=> select(parseInt(el.getAttribute('data-idx')))));
+      gridThumbs.forEach(el=> el.addEventListener('click', ()=> select(parseInt(el.getAttribute('data-idx')))));
+    }, 50);
+  }
 };
 
 // --- Lecteur double-page Articles ---
@@ -147,6 +195,24 @@ WindowManager.openArticleReader = function(articleId){
         </div>
       </div>`;
     this.createWindow({ title:`Article: ${article.titre||'PDF'}`, icon:'icons/article.png', width:860, height:620, content });
+    return;
+  }
+  // Si un contenu HTML riche est disponible, l'afficher directement (mode lecture unique)
+  if(article.contenuHtml){
+    const content = `
+      <div style='display:flex;flex-direction:column;height:100%;'>
+        <div style='padding:6px 10px;background:#ece9d8;border-bottom:1px solid #999;font-size:12px;display:flex;justify-content:space-between;align-items:center;'>
+          <div style='display:flex;align-items:center;gap:8px;'>
+            ${article.cover ? `<img src='${article.cover}' alt='' style='width:40px;height:28px;object-fit:cover;border:1px solid #999;border-radius:3px;background:#fff;'>` : ''}
+            <strong>${(article.titre||'Article')}</strong>
+          </div>
+          <span style='font-size:11px;color:#555;'>${article.date||''}</span>
+        </div>
+        <div style='flex:1;overflow:auto;background:#fff;'>
+          <div style='padding:12px 16px;line-height:1.6;font-size:14px;'>${article.contenuHtml}</div>
+        </div>
+      </div>`;
+    this.createWindow({ title:`Article: ${article.titre||'Lecture'}`, icon:'icons/article.png', width:820, height:600, content });
     return;
   }
   const raw = (article.contenu||'').replace(/\r/g,'');
