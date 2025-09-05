@@ -51,7 +51,9 @@
       ],
       "contenu": "Article en anglais destiné aux nouveaux étudiants étrangers pour leur présenter la fac.",
       "createdAt": 1756999548293,
-      "pdfUrl": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/articles/pdf/1756999405523_The_______1-1.pdf"
+      "pdfUrl": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/articles/pdf/1756999405523_The_______1-1.pdf",
+      "cover": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/images/articles/articles_1757104851253_unnamed.jpg",
+      "updatedAt": 1757104856730
     },
     {
       "id": 1757098428740,
@@ -133,5 +135,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-05T20:38:37.320Z"
+  "lastUpdated": "2025-09-05T20:40:56.731Z"
 }
