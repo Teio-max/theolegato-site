@@ -89,49 +89,8 @@
     "education": [],
     "skills": []
   },
-  "desktopIcons": {
-    "defaultIcons": [
-      {
-        "id": "films",
-        "name": "Films",
-        "icon": "icons/film.png",
-        "x": 251,
-        "y": 216,
-        "visible": true,
-        "window": "films"
-      },
-      {
-        "id": "articles",
-        "name": "Articles",
-        "icon": "icons/article.png",
-        "x": 277,
-        "y": 36,
-        "visible": true,
-        "window": "articles"
-      },
-      {
-        "id": "cv",
-        "name": "CV",
-        "icon": "icons/cv.png",
-        "x": 79,
-        "y": 155,
-        "visible": true,
-        "window": "cv"
-      },
-      {
-        "id": "mangas",
-        "name": "Mangas",
-        "icon": "icons/portfolio.png",
-        "x": 176,
-        "y": 385,
-        "visible": true,
-        "window": "mangas"
-      }
-    ],
-    "customIcons": []
-  },
   "welcomePopupConfig": {
-    "title": "Bienvenue ",
+    "title": "Bienvenue ( Site en construction )",
     "name": "Théo VAN WAAS",
     "description": "Bienvenue sur mon portfolio qui regroupe tous les projets, sur lesquels j'ai travaillé dernièrement.\n\nJ'espère que la forme vous plaira ! ",
     "buttonText": "Découvrir le site",
@@ -149,5 +108,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-04T15:28:48.910Z"
+  "lastUpdated": "2025-09-05T18:43:49.469Z"
 }
