@@ -52,6 +52,17 @@
       "contenu": "Article en anglais destiné aux nouveaux étudiants étrangers pour leur présenter la fac.",
       "createdAt": 1756999548293,
       "pdfUrl": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/articles/pdf/1756999405523_The_______1-1.pdf"
+    },
+    {
+      "id": 1757098428740,
+      "titre": "Fiche de lecture Lin Zhao: \"Combattante de la liberté\"-Anne Kerlan",
+      "date": "2025-04-02",
+      "tags": [
+        "Chine"
+      ],
+      "contenu": "Fiche de lecture sur le livre de Anne Kerlan retraçant l'histoire de Lin Zhao jeune révolutionnaire victime du régime de Mao",
+      "createdAt": 1757098428740,
+      "pdfUrl": "https://raw.githubusercontent.com/Teio-max/theolegato-site/main/articles/pdf/1757098298723_fiche_de_lecture_lin_zhao__VAN_WAAS_Th_o_.pdf"
     }
   ],
   "tags": [
@@ -118,5 +129,5 @@
       }
     ]
   },
-  "lastUpdated": "2025-09-05T18:53:06.918Z"
+  "lastUpdated": "2025-09-05T18:55:06.923Z"
 }
