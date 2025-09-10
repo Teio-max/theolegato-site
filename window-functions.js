@@ -26,12 +26,12 @@ WindowManager.generateFilmsContent = function() {
   
   // Générer le HTML pour chaque film
   window.DataManager.data.films.forEach(film => {
-    const poster = film.image || film.poster || 'https://via.placeholder.com/160x220?text=Film';
+  const poster = film.image || film.poster || 'https://via.placeholder.com/160x220?text=Film';
     const note = film.note ? '⭐'.repeat(Math.min(5, film.note)) : '';
     content += `
       <div class="film-card" onclick="WindowManager.openFilmCritique(${film.id})" style="cursor:pointer;border:1px solid #888;border-radius:6px;overflow:hidden;background:#fff;display:flex;flex-direction:column;transition:box-shadow .2s,border-color .2s;">
         <div style='height:200px;overflow:hidden;background:#000;'>
-          <img src='${poster}' alt='${(film.titre||'').replace(/'/g,"&#39;")}' style='width:100%;height:100%;object-fit:cover;filter:brightness(.94);'>
+      <img data-src='${poster}' alt='${(film.titre||'').replace(/'/g,"&#39;")}' class='lazy-img' style='width:100%;height:100%;object-fit:cover;filter:brightness(.94);opacity:.1;transition:opacity .4s;'>
         </div>
         <div style='padding:8px 9px 10px;'>
           <div style='font-weight:bold;font-size:13px;line-height:1.2;margin-bottom:4px;'>${film.titre||film.title||'Sans titre'}</div>
@@ -76,7 +76,7 @@ WindowManager.generateArticlesContent = function() {
     const date = article.date || '';
     const cover = article.cover || '';
     const thumb = cover ? `<div style='flex:0 0 72px;width:72px;height:54px;border:1px solid #bbb;border-radius:4px;overflow:hidden;background:#f7f7f7;'>
-        <img src='${cover}' alt='' style='width:100%;height:100%;object-fit:cover;'>
+        <img data-src='${cover}' alt='' class='lazy-img' style='width:100%;height:100%;object-fit:cover;opacity:.1;transition:opacity .4s;'>
       </div>` : '';
     content += `
       <div class='article-item' onclick="WindowManager.openArticleReader(${article.id})" style="cursor:pointer;border:1px solid #888;border-radius:6px;padding:10px 12px;background:#fff;transition:background .15s;">
@@ -111,7 +111,7 @@ WindowManager.openFilmCritique = function(filmId){
   const content = `
     <div style='display:flex;height:100%;'>
       <div style='width:240px;border-right:1px solid #999;background:#f0f0f0;padding:10px;overflow:auto;'>
-        ${poster? `<div style='border:1px solid #777;padding:2px;background:#000;'><img src='${poster}' style='width:100%;height:auto;object-fit:cover;'></div>`:''}
+  ${poster? `<div style='border:1px solid #777;padding:2px;background:#000;'><img data-src='${poster}' class='lazy-img' style='width:100%;height:auto;object-fit:cover;opacity:.1;transition:opacity .4s;'></div>`:''}
         <h2 style='font-size:16px;margin:10px 0 4px;color:#003399;'>${film.titre||'Sans titre'}</h2>
         <div style='font-size:12px;color:#333;margin-bottom:6px;'>${film.year||''}</div>
         <div style='font-size:12px;margin-bottom:8px;'>Note: ${note}</div>
@@ -130,15 +130,15 @@ WindowManager.openFilmCritique = function(filmId){
           ${gallery.length? `
           <div style='margin-top:16px;'>
             <h3 style='margin:0 0 8px;font-size:15px;color:#222;'>Galerie</h3>
-            <div id='gal-viewer' style='position:relative;border:1px solid #aaa;background:#000;height:300px;display:flex;align-items:center;justify-content:center;border-radius:4px;'>
-              <img id='gal-main' src='${gallery[0]}' alt='' style='max-width:100%;max-height:100%;object-fit:contain;background:#000;'>
+            <div id='gal-viewer' style='position:relative;border:1px solid #aaa;background:#000;height:300px;display:flex;align-items:center;justify-content:center;border-radius:4px;touch-action:pan-y;'>
+                <img id='gal-main' data-src='${gallery[0]}' class='lazy-img' alt='' style='max-width:100%;max-height:100%;object-fit:contain;background:#000;opacity:.1;transition:opacity .4s;'>
               <button id='gal-prev' title='Précédent' style='position:absolute;left:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:1px solid #999;background:#ece9d8;cursor:pointer;'>&lsaquo;</button>
               <button id='gal-next' title='Suivant' style='position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:50%;border:1px solid #999;background:#ece9d8;cursor:pointer;'>&rsaquo;</button>
               <div id='gal-counter' style='position:absolute;right:8px;bottom:6px;color:#fff;background:rgba(0,0,0,0.5);padding:2px 6px;border-radius:3px;font-size:11px;'>1/${gallery.length}</div>
             </div>
             <div id='gal-thumbs' style='display:flex;gap:6px;overflow:auto;margin-top:8px;'>
               ${gallery.map((u,i)=>`<div class='film-thumb' data-idx='${i}' style="width:70px;height:50px;border:2px solid ${i===0?'#0b57d0':'#bbb'};border-radius:4px;overflow:hidden;cursor:pointer;background:#fff;">
-                <img src='${u}' style='width:100%;height:100%;object-fit:cover;'>
+                  <img data-src='${u}' class='lazy-img' style='width:100%;height:100%;object-fit:cover;opacity:.1;transition:opacity .4s;'>
               </div>`).join('')}
             </div>
           </div>
@@ -163,9 +163,14 @@ WindowManager.openFilmCritique = function(filmId){
       function select(i){
         if(!gallery.length) return;
         st.index = Math.max(0, Math.min(gallery.length-1, i));
-        if(main) main.src = gallery[st.index];
+        if(main){ main.setAttribute('data-src', gallery[st.index]); WindowManager._lazyLoadNow(main); }
         if(counter) counter.textContent = `${st.index+1}/${gallery.length}`;
         thumbs.forEach((el,idx)=>{ el.style.borderColor = idx===st.index? '#0b57d0' : '#bbb'; });
+  // Précharger précédent / suivant
+  if(!window._filmPreloaded) window._filmPreloaded = new Set();
+  const preload = (url)=>{ if(url && !window._filmPreloaded.has(url)){ const im=new Image(); im.src=url; window._filmPreloaded.add(url); } };
+  preload(gallery[st.index+1]);
+  preload(gallery[st.index-1]);
       }
       function nextImg(){ select(st.index+1); }
       function prevImg(){ select(st.index-1); }
@@ -173,9 +178,54 @@ WindowManager.openFilmCritique = function(filmId){
       next && next.addEventListener('click', nextImg);
       thumbs.forEach(el=> el.addEventListener('click', ()=> select(parseInt(el.getAttribute('data-idx')))));
       gridThumbs.forEach(el=> el.addEventListener('click', ()=> select(parseInt(el.getAttribute('data-idx')))));
+
+      // Gestes swipe dans le viewer
+      let sx=0, sy=0, dx=0, dy=0;
+      const viewer = win.querySelector('#gal-viewer');
+      if(viewer){
+        viewer.addEventListener('touchstart', e=>{ const t=e.touches[0]; sx=t.clientX; sy=t.clientY; dx=0; dy=0; }, {passive:true});
+        viewer.addEventListener('touchmove', e=>{ const t=e.touches[0]; dx=t.clientX-sx; dy=t.clientY-sy; }, {passive:true});
+        viewer.addEventListener('touchend', ()=>{ if(Math.abs(dx)>50 && Math.abs(dx)>Math.abs(dy)){ if(dx<0) nextImg(); else prevImg(); } }, {passive:true});
+      }
     }, 50);
   }
 };
+
+// ----- Lazy loading (IntersectionObserver) -----
+WindowManager._lazyObserver = null;
+WindowManager._initLazyObserver = function(){
+  if(this._lazyObserver) return;
+  if(!('IntersectionObserver' in window)){ // fallback: charge tout immédiatement
+    document.querySelectorAll('img.lazy-img[data-src]').forEach(img=>{ img.src=img.dataset.src; img.style.opacity='1'; });
+    return;
+  }
+  this._lazyObserver = new IntersectionObserver((entries)=>{
+    entries.forEach(ent=>{
+      if(ent.isIntersecting){
+        const img = ent.target; this._lazyObserver.unobserve(img); this._lazyLoadNow(img);
+      }
+    });
+  }, { rootMargin: '120px 0px 120px 0px', threshold: 0.01 });
+};
+WindowManager._lazyLoadNow = function(img){
+  if(!img || !img.dataset || !img.dataset.src) return; 
+  img.src = img.dataset.src; 
+  img.addEventListener('load', ()=>{ img.style.opacity='1'; }, { once:true }); 
+  delete img.dataset.src; 
+  // Auto disconnect si plus aucune image lazy
+  if(this._lazyObserver && !document.querySelector('img.lazy-img[data-src]')){ this._lazyObserver.disconnect(); this._lazyObserver=null; }
+};
+WindowManager.scanLazyImages = function(root=document){ this._initLazyObserver(); if(!this._lazyObserver) return; root.querySelectorAll('img.lazy-img[data-src]').forEach(img=> this._lazyObserver.observe(img)); };
+
+// Scanner après création de chaque fenêtre
+(function(){
+  const originalCreate = WindowManager.createWindow.bind(WindowManager);
+  WindowManager.createWindow = function(opts){
+    const win = originalCreate(opts);
+    setTimeout(()=> WindowManager.scanLazyImages(win), 30);
+    return win;
+  };
+})();
 
 // --- Lecteur double-page Articles ---
 window.ArticleReaders = window.ArticleReaders || {};
@@ -183,18 +233,14 @@ WindowManager.openArticleReader = function(articleId){
   if(!window.DataManager?.data?.articles) return alert('Pas d\u0027articles');
   const article = window.DataManager.data.articles.find(a=> String(a.id)===String(articleId));
   if(!article) return alert('Article introuvable');
+  // Utilisation des onglets PDF virtuels si un PDF est présent
   if(article.pdfUrl){
-    const content = `
-      <div style='display:flex;flex-direction:column;height:100%;'>
-        <div style='padding:6px 10px;background:#ece9d8;border-bottom:1px solid #999;font-size:12px;display:flex;justify-content:space-between;align-items:center;'>
-          <strong>${(article.titre||'Article')}</strong>
-          <span style='font-size:11px;color:#555;'>PDF • ${article.date||''}</span>
-        </div>
-        <div style='flex:1;position:relative;'>
-          <iframe src='${article.pdfUrl}' style='width:100%;height:100%;border:0;background:#fff;'></iframe>
-        </div>
-      </div>`;
-    this.createWindow({ title:`Article: ${article.titre||'PDF'}`, icon:'icons/article.png', width:860, height:620, content });
+    WindowManager.openPdfTab({
+      id: 'article-pdf-'+article.id,
+      url: article.pdfUrl,
+      title: (article.titre||'Article PDF'),
+      page: 1
+    });
     return;
   }
   // Si un contenu HTML riche est disponible, l'afficher directement (mode lecture unique)
@@ -209,7 +255,11 @@ WindowManager.openArticleReader = function(articleId){
           <span style='font-size:11px;color:#555;'>${article.date||''}</span>
         </div>
         <div style='flex:1;overflow:auto;background:#fff;'>
-          <div style='padding:12px 16px;line-height:1.6;font-size:14px;'>${article.contenuHtml}</div>
+          <div style='padding:12px 16px;line-height:1.6;font-size:14px;'>${article.contenuHtml.replace(/<img([^>]*?)src=("|')(.*?)(\2)([^>]*)>/gi, (m, before, q, url, _q2, after)=>{
+            if(/data-src=/.test(m)) return m; // déjà transformée
+            // Conserver dimensions si présentes
+            return `<img${before}class="lazy-img" data-src="${url}" ${after}>`;
+          })}</div>
         </div>
       </div>`;
     this.createWindow({ title:`Article: ${article.titre||'Lecture'}`, icon:'icons/article.png', width:820, height:600, content });
@@ -286,7 +336,8 @@ WindowManager.createCVWindow = function() {
         <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:#ece9d8;border-bottom:1px solid #999;font-size:11px;">
           <div><strong>CV PDF</strong>${window.cvData.lastUpdated? ' - '+ new Date(window.cvData.lastUpdated).toLocaleDateString() : ''}</div>
           <div>
-            <button style='margin-right:6px;' onclick="(function(u){ window.open(u,'_blank'); })(window.cvData.pdfUrl);">Nouvel Onglet</button>
+              <button style='margin-right:6px;' onclick="(function(u){ WindowManager.openPdfTab({ url:u, title:'CV PDF', id:'cv-pdf' }); })(window.cvData.pdfUrl);">Onglet PDF</button>
+              <button style='margin-right:6px;' onclick="(function(u){ window.open(u,'_blank'); })(window.cvData.pdfUrl);">Navigateur</button>
             <button onclick="(function(u){ const a=document.createElement('a'); a.href=u; a.download='cv.pdf'; a.click(); })(window.cvData.pdfUrl);">Télécharger</button>
           </div>
         </div>
@@ -406,3 +457,57 @@ WindowManager.generateMangasContent = function() {
   
   return content || '<p>Aucun manga disponible pour le moment.</p>';
 };
+
+// === Onglets PDF Virtuels (multi-PDF persistants) ===
+(function(){
+  if(window.PdfTabManager) return;
+  // Styles injectés une fois
+  (function(){
+    if(document.getElementById('pdfTabStyles')) return;
+    const st = document.createElement('style');
+    st.id='pdfTabStyles';
+    st.textContent = `
+    #pdfTabBar{position:fixed;top:0;left:0;right:0;height:40px;display:flex;align-items:center;gap:6px;background:#1d2127;color:#f0f0f0;font:12px/1 sans-serif;padding:4px 8px;z-index:5000;box-shadow:0 2px 4px rgba(0,0,0,.35);} 
+    #pdfTabBar .pdf-tab-btn{background:#2c3139;border:1px solid #444;color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:.15s background;font-size:11px;} 
+    #pdfTabBar .pdf-tab-btn.active{background:#3d7ef0;border-color:#3774d3;} 
+    #pdfTabBar .pdf-tab-btn span.close{font-weight:bold;cursor:pointer;display:inline-block;padding:0 2px;} 
+    #pdfTabContent{position:fixed;top:40px;left:0;right:0;bottom:0;background:#0f0f10;z-index:4999;} 
+    #pdfTabContent .pdf-pane{position:absolute;inset:0;display:none;} 
+    #pdfTabContent .pdf-pane.active{display:block;} 
+    #pdfTabBar .pdf-tab-btn:hover{background:#3a424d;} 
+    body.is-mobile #pdfTabBar{top:auto;bottom:56px;} 
+    body.is-mobile #pdfTabContent{top:0;bottom:56px;} 
+    `;
+    document.head.appendChild(st);
+  })();
+
+  const tabs = new Map();
+  let bar=null, zone=null;
+  function ensureShell(){ if(bar&&zone) return; bar=document.createElement('div'); bar.id='pdfTabBar'; zone=document.createElement('div'); zone.id='pdfTabContent'; document.body.append(bar, zone); }
+  function sanitizeId(id){ return id.replace(/[^a-zA-Z0-9_\-:.]/g,'_'); }
+  function makeButton(id,title){ const b=document.createElement('button'); b.className='pdf-tab-btn'; b.dataset.id=id; b.innerHTML = `<span class="label">${title}</span><span class="close">×</span>`; b.addEventListener('click',e=>{ if(e.target.classList.contains('close')){ close(id); return; } activate(id); }); return b; }
+  function open(opts){
+    const { url, title='PDF', id=url, page, usePdfJs=false, pdfJsBase='/pdfjs/web/viewer.html', pushHistory=true } = opts||{};
+    if(!url) return;
+    const cleanId = sanitizeId(id);
+    if(tabs.has(cleanId)){ activate(cleanId); return; }
+    ensureShell();
+    const pane=document.createElement('div'); pane.className='pdf-pane'; pane.dataset.id=cleanId;
+    let finalUrl=url;
+    if(usePdfJs){ finalUrl = pdfJsBase + '?file=' + encodeURIComponent(url); if(page) finalUrl += '#page=' + page; }
+    else if(page){ finalUrl += '#page=' + page; }
+    const iframe=document.createElement('iframe'); iframe.src=finalUrl; iframe.style.cssText='width:100%;height:100%;border:0;background:#fff;'; pane.appendChild(iframe); zone.appendChild(pane);
+    const btn=makeButton(cleanId,title); bar.appendChild(btn);
+    tabs.set(cleanId,{button:btn,pane,iframe,url,title});
+    activate(cleanId);
+    if(pushHistory){ history.pushState({pdfTab:cleanId},'', '#pdf='+encodeURIComponent(cleanId)); }
+  }
+  function activate(id){ tabs.forEach((o,k)=>{ const act=k===id; o.button.classList.toggle('active',act); o.pane.classList.toggle('active',act); }); if(!tabs.has(id)) return; history.replaceState({pdfTab:id},'', '#pdf='+encodeURIComponent(id)); }
+  function close(id){ const st=tabs.get(id); if(!st) return; st.button.remove(); st.pane.remove(); tabs.delete(id); if(!tabs.size){ if(bar){ bar.remove(); zone.remove(); bar=null; zone=null; } history.replaceState({},'', location.pathname+location.search); return; } const last=[...tabs.keys()].pop(); activate(last); }
+  window.addEventListener('popstate', e=>{ if(e.state && e.state.pdfTab && tabs.has(e.state.pdfTab)){ activate(e.state.pdfTab); } else if(!e.state || !e.state.pdfTab){ [...tabs.keys()].forEach(close); } });
+  window.PdfTabManager = { open, close, activate };
+  WindowManager.openPdfTab = function(options){ PdfTabManager.open(options); };
+  WindowManager.attachPdfLinks = function(root=document){ root.querySelectorAll('a.pdf-link').forEach(a=>{ if(a._pdfBound) return; a._pdfBound=true; a.addEventListener('click', e=>{ e.preventDefault(); WindowManager.openPdfTab({ url:a.href, title:a.dataset.title || a.textContent.trim().slice(0,40) || 'Document', id:a.dataset.id || a.href }); }); }); };
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',()=> WindowManager.attachPdfLinks()); } else { WindowManager.attachPdfLinks(); }
+})();
+

@@ -1,0 +1,15 @@
+:root { --mobile-nav-h:56px; }
+@media (max-width:768px){
+  body.is-mobile { overflow:hidden; touch-action:manipulation; font-size:15px; }
+  body.is-mobile #desktop { display:block !important; }
+  body.is-mobile .desktop-icons, body.is-mobile .taskbar, body.is-mobile [data-app="admin"], body.is-mobile .icon-admin { display:none !important; }
+  body.is-mobile .xp-window, body.is-mobile .window, body.is-mobile .win { position:fixed !important; inset:0 0 var(--mobile-nav-h) 0 !important; margin:0 !important; width:100% !important; height:auto !important; max-width:100% !important; max-height:none !important; border-radius:0 !important; z-index:1000; }
+  body.is-mobile .xp-window .window-content, body.is-mobile .window .window-content, body.is-mobile .win .window-content, body.is-mobile .xp-window .content, body.is-mobile .window .content { overflow:auto; -webkit-overflow-scrolling:touch; padding-bottom:18px; }
+  body.is-mobile button, body.is-mobile .btn { min-height:40px; font-size:16px; }
+  #mobileNav { position:fixed; left:0; right:0; bottom:0; height:var(--mobile-nav-h); background:rgba(18,18,18,.92); display:flex; gap:6px; padding:6px 8px; z-index:1200; backdrop-filter:blur(8px); }
+  #mobileNav button { flex:1; border-radius:10px; border:1px solid rgba(255,255,255,.15); color:#fff; background:#2d2d2d; font-size:13px; font-weight:500; }
+  #mobileNav button.active { background:#1d6cf0; }
+  body.is-mobile img { max-width:100%; height:auto; }
+  body.is-mobile .xp-titlebar { padding:10px 12px; }
+  body.is-mobile .xp-titlebar span { font-size:15px; }
+}

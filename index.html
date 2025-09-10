@@ -2,13 +2,14 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
   <title>Site Théo - Collection Films & Manga</title>
   <meta name="description" content="Site personnel avec interface Windows XP pour gérer films et manga">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="admin.css">
   <link rel="stylesheet" href="admin-styles.css">
   <link rel="stylesheet" href="admin-panel.css">
+  <link rel="stylesheet" href="mobile.css">
   <!-- Chargement du gestionnaire d'erreurs en premier -->
   <script src="error-handler.js"></script>
 </head>
@@ -92,6 +93,8 @@
   <script src="admin-desktop-manager.js"></script>
   <!-- Couche de synchronisation GitHub automatique -->
   <script src="global-sync.js"></script>
+  <!-- Adaptation mobile (doit être chargé après les gestionnaires principaux) -->
+  <script src="mobile-adapter.js"></script>
 
 </body>
 </html>
