@@ -235,12 +235,7 @@ WindowManager.openArticleReader = function(articleId){
   if(!article) return alert('Article introuvable');
   // Utilisation des onglets PDF virtuels si un PDF est présent
   if(article.pdfUrl){
-    WindowManager.openPdfTab({
-      id: 'article-pdf-'+article.id,
-      url: article.pdfUrl,
-      title: (article.titre||'Article PDF'),
-      page: 1
-    });
+  WindowManager.openPdfTab({ id:'article-'+article.id, url:article.pdfUrl, title: article.titre||'Article PDF', page:1 });
     return;
   }
   // Si un contenu HTML riche est disponible, l'afficher directement (mode lecture unique)
@@ -332,18 +327,9 @@ WindowManager.createCVWindow = function() {
     let content = document.createElement('div');
     content.style.padding='0';
     if(hasPdf){
-      content.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:#ece9d8;border-bottom:1px solid #999;font-size:11px;">
-          <div><strong>CV PDF</strong>${window.cvData.lastUpdated? ' - '+ new Date(window.cvData.lastUpdated).toLocaleDateString() : ''}</div>
-          <div>
-              <button style='margin-right:6px;' onclick="(function(u){ WindowManager.openPdfTab({ url:u, title:'CV PDF', id:'cv-pdf' }); })(window.cvData.pdfUrl);">Onglet PDF</button>
-              <button style='margin-right:6px;' onclick="(function(u){ window.open(u,'_blank'); })(window.cvData.pdfUrl);">Navigateur</button>
-            <button onclick="(function(u){ const a=document.createElement('a'); a.href=u; a.download='cv.pdf'; a.click(); })(window.cvData.pdfUrl);">Télécharger</button>
-          </div>
-        </div>
-        <iframe src='${window.cvData.pdfUrl}' style="width:100%;height:calc(100% - 32px);border:0;background:white;"></iframe>
-      `;
-  WindowManager.createWindow({ title:'CV', icon:'icons/cv.png', content, width:700, height:500 });
+      // Ouvrir directement en onglet PDF interne et quitter
+      WindowManager.openPdfTab({ url: window.cvData.pdfUrl, title: 'CV PDF', id: 'cv-pdf' });
+      return;
     } else {
       content.style.padding='10px';
       content.innerHTML = `
@@ -366,14 +352,8 @@ WindowManager.createCVWindow = function() {
   WindowManager.createWindow({ title:'CV', icon:'icons/cv.png', content, width:500, height:420 });
     }
   
-  // Créer la fenêtre
-  return this.createWindow({
-    title: 'CV',
-    icon: 'icons/cv.png',
-    width: 750,
-    height: 600,
-    content: content
-  });
+  // Créer la fenêtre (version texte)
+  return this.createWindow({ title:'CV', icon:'icons/cv.png', width:600, height:500, content });
 };
 
 // Création de la fenêtre Mangas
@@ -458,56 +438,89 @@ WindowManager.generateMangasContent = function() {
   return content || '<p>Aucun manga disponible pour le moment.</p>';
 };
 
-// === Onglets PDF Virtuels (multi-PDF persistants) ===
+// === Onglets PDF Virtuels (version fenêtre interne) ===
 (function(){
   if(window.PdfTabManager) return;
-  // Styles injectés une fois
-  (function(){
-    if(document.getElementById('pdfTabStyles')) return;
-    const st = document.createElement('style');
-    st.id='pdfTabStyles';
-    st.textContent = `
-    #pdfTabBar{position:fixed;top:0;left:0;right:0;height:40px;display:flex;align-items:center;gap:6px;background:#1d2127;color:#f0f0f0;font:12px/1 sans-serif;padding:4px 8px;z-index:5000;box-shadow:0 2px 4px rgba(0,0,0,.35);} 
-    #pdfTabBar .pdf-tab-btn{background:#2c3139;border:1px solid #444;color:#fff;padding:4px 10px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:.15s background;font-size:11px;} 
-    #pdfTabBar .pdf-tab-btn.active{background:#3d7ef0;border-color:#3774d3;} 
-    #pdfTabBar .pdf-tab-btn span.close{font-weight:bold;cursor:pointer;display:inline-block;padding:0 2px;} 
-    #pdfTabContent{position:fixed;top:40px;left:0;right:0;bottom:0;background:#0f0f10;z-index:4999;} 
-    #pdfTabContent .pdf-pane{position:absolute;inset:0;display:none;} 
-    #pdfTabContent .pdf-pane.active{display:block;} 
-    #pdfTabBar .pdf-tab-btn:hover{background:#3a424d;} 
-    body.is-mobile #pdfTabBar{top:auto;bottom:56px;} 
-    body.is-mobile #pdfTabContent{top:0;bottom:56px;} 
-    `;
-    document.head.appendChild(st);
-  })();
+  const tabs = new Map(); // id -> {tabBtn,pane,iframe}
+  let hostWin = null; // fenêtre WindowManager
+  let container = null; // racine interne
+  let bar = null; // barre d'onglets
+  let zone = null; // zone contenu
 
-  const tabs = new Map();
-  let bar=null, zone=null;
-  function ensureShell(){ if(bar&&zone) return; bar=document.createElement('div'); bar.id='pdfTabBar'; zone=document.createElement('div'); zone.id='pdfTabContent'; document.body.append(bar, zone); }
-  function sanitizeId(id){ return id.replace(/[^a-zA-Z0-9_\-:.]/g,'_'); }
-  function makeButton(id,title){ const b=document.createElement('button'); b.className='pdf-tab-btn'; b.dataset.id=id; b.innerHTML = `<span class="label">${title}</span><span class="close">×</span>`; b.addEventListener('click',e=>{ if(e.target.classList.contains('close')){ close(id); return; } activate(id); }); return b; }
+  function ensureWindow(){
+    if(hostWin && document.body.contains(hostWin)) return;
+    const inner = document.createElement('div');
+    inner.className='pdf-workspace';
+    inner.style.cssText='display:flex;flex-direction:column;height:100%;background:#1b1e22;';
+    inner.innerHTML = `<div class="pdf-tabs-bar" style="flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:4px 6px;background:#23272d;border-bottom:1px solid #333;font:11px sans-serif;color:#eee;overflow:auto;">
+        <span style='font-weight:bold;margin-right:8px;font-size:11px;'>PDF</span>
+      </div>
+      <div class="pdf-tabs-zone" style="flex:1;position:relative;background:#0f1012;"></div>`;
+    hostWin = WindowManager.createWindow({ title:'Documents PDF', icon:'icons/article.png', width:880, height:640, content: inner });
+    container = inner;
+    bar = inner.querySelector('.pdf-tabs-bar');
+    zone = inner.querySelector('.pdf-tabs-zone');
+  }
+
+  function sanitizeId(id){ return (id||'pdf').toString().replace(/[^a-zA-Z0-9_\-:.]/g,'_'); }
+
+  function activate(id){
+    tabs.forEach((o,k)=>{
+      const active = k===id;
+      o.tabBtn.classList.toggle('active', active);
+      o.pane.style.display = active? 'block':'none';
+      if(active) o.tabBtn.style.background='#3d7ef0'; else o.tabBtn.style.background='#2f343b';
+    });
+    if(hostWin) WindowManager.focusWindow(hostWin);
+  }
+
+  function close(id){
+    const st = tabs.get(id); if(!st) return;
+    st.pane.remove(); st.tabBtn.remove(); tabs.delete(id);
+    if(!tabs.size){
+      // fermer la fenêtre
+      if(hostWin){ hostWin.parentNode && hostWin.parentNode.removeChild(hostWin); hostWin=null; }
+      container=bar=zone=null; return;
+    }
+    activate([...tabs.keys()].pop());
+  }
+
+  function makeTab(id,title){
+    const btn = document.createElement('button');
+    btn.className='pdf-tab-btn';
+    btn.style.cssText='background:#2f343b;border:1px solid #444;color:#fff;padding:4px 8px;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:6px;font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    btn.innerHTML = `<span class="label">${title}</span><span class="close" style='font-weight:bold;padding:0 4px;cursor:pointer;'>×</span>`;
+    btn.addEventListener('click', e=>{ if(e.target.classList.contains('close')){ e.stopPropagation(); close(id); } else activate(id); });
+    bar.appendChild(btn);
+    return btn;
+  }
+
   function open(opts){
-    const { url, title='PDF', id=url, page, usePdfJs=false, pdfJsBase='/pdfjs/web/viewer.html', pushHistory=true } = opts||{};
+    const { url, title='PDF', id=url, page, usePdfJs=false, pdfJsBase='/pdfjs/web/viewer.html' } = opts||{};
     if(!url) return;
     const cleanId = sanitizeId(id);
+    ensureWindow();
     if(tabs.has(cleanId)){ activate(cleanId); return; }
-    ensureShell();
-    const pane=document.createElement('div'); pane.className='pdf-pane'; pane.dataset.id=cleanId;
-    let finalUrl=url;
-    if(usePdfJs){ finalUrl = pdfJsBase + '?file=' + encodeURIComponent(url); if(page) finalUrl += '#page=' + page; }
-    else if(page){ finalUrl += '#page=' + page; }
-    const iframe=document.createElement('iframe'); iframe.src=finalUrl; iframe.style.cssText='width:100%;height:100%;border:0;background:#fff;'; pane.appendChild(iframe); zone.appendChild(pane);
-    const btn=makeButton(cleanId,title); bar.appendChild(btn);
-    tabs.set(cleanId,{button:btn,pane,iframe,url,title});
+    // Créer pane
+    const pane = document.createElement('div');
+    pane.className='pdf-pane';
+    pane.style.cssText='position:absolute;inset:0;display:none;';
+    let finalUrl = url;
+    if(usePdfJs){ finalUrl = pdfJsBase + '?file=' + encodeURIComponent(url); if(page) finalUrl += '#page='+page; }
+    else if(page){ finalUrl += '#page='+page; }
+    const iframe=document.createElement('iframe');
+    iframe.src=finalUrl;
+    iframe.style.cssText='width:100%;height:100%;border:0;background:#fff;';
+    pane.appendChild(iframe);
+    zone.appendChild(pane);
+    const tabBtn = makeTab(cleanId, title);
+    tabs.set(cleanId,{tabBtn,pane,iframe,url,title});
     activate(cleanId);
-    if(pushHistory){ history.pushState({pdfTab:cleanId},'', '#pdf='+encodeURIComponent(cleanId)); }
   }
-  function activate(id){ tabs.forEach((o,k)=>{ const act=k===id; o.button.classList.toggle('active',act); o.pane.classList.toggle('active',act); }); if(!tabs.has(id)) return; history.replaceState({pdfTab:id},'', '#pdf='+encodeURIComponent(id)); }
-  function close(id){ const st=tabs.get(id); if(!st) return; st.button.remove(); st.pane.remove(); tabs.delete(id); if(!tabs.size){ if(bar){ bar.remove(); zone.remove(); bar=null; zone=null; } history.replaceState({},'', location.pathname+location.search); return; } const last=[...tabs.keys()].pop(); activate(last); }
-  window.addEventListener('popstate', e=>{ if(e.state && e.state.pdfTab && tabs.has(e.state.pdfTab)){ activate(e.state.pdfTab); } else if(!e.state || !e.state.pdfTab){ [...tabs.keys()].forEach(close); } });
+
   window.PdfTabManager = { open, close, activate };
-  WindowManager.openPdfTab = function(options){ PdfTabManager.open(options); };
-  WindowManager.attachPdfLinks = function(root=document){ root.querySelectorAll('a.pdf-link').forEach(a=>{ if(a._pdfBound) return; a._pdfBound=true; a.addEventListener('click', e=>{ e.preventDefault(); WindowManager.openPdfTab({ url:a.href, title:a.dataset.title || a.textContent.trim().slice(0,40) || 'Document', id:a.dataset.id || a.href }); }); }); };
-  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded',()=> WindowManager.attachPdfLinks()); } else { WindowManager.attachPdfLinks(); }
+  WindowManager.openPdfTab = function(o){ PdfTabManager.open(o); };
+  WindowManager.attachPdfLinks = function(root=document){ root.querySelectorAll('a.pdf-link').forEach(a=>{ if(a._pdfBound) return; a._pdfBound=true; a.addEventListener('click', e=>{ e.preventDefault(); WindowManager.openPdfTab({ url:a.href, title:a.dataset.title||a.textContent.trim().slice(0,40)||'Document', id:a.dataset.id||a.href }); }); }); };
+  if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', ()=> WindowManager.attachPdfLinks()); } else { WindowManager.attachPdfLinks(); }
 })();
 
