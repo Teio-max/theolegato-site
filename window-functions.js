@@ -465,17 +465,17 @@ WindowManager.generateMangasContent = function() {
 
   function ensureWindow(){
     if(hostWin && document.body.contains(hostWin)) return;
-    const inner = document.createElement('div');
-    inner.className='pdf-workspace';
-    inner.style.cssText='display:flex;flex-direction:column;height:100%;background:#1b1e22;';
-    inner.innerHTML = `<div class="pdf-tabs-bar" style="flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:4px 6px;background:#23272d;border-bottom:1px solid #333;font:11px sans-serif;color:#eee;overflow:auto;">
-        <span style='font-weight:bold;margin-right:8px;font-size:11px;'>PDF</span>
-      </div>
-      <div class="pdf-tabs-zone" style="flex:1;position:relative;background:#0f1012;"></div>`;
-    hostWin = WindowManager.createWindow({ title:'Documents PDF', icon:'icons/article.png', width:880, height:640, content: inner });
-    container = inner;
-    bar = inner.querySelector('.pdf-tabs-bar');
-    zone = inner.querySelector('.pdf-tabs-zone');
+    const innerHtml = `
+      <div class="pdf-workspace" style="display:flex;flex-direction:column;height:100%;background:#1b1e22;">
+        <div class="pdf-tabs-bar" style="flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:4px 6px;background:#23272d;border-bottom:1px solid #333;font:11px sans-serif;color:#eee;overflow:auto;">
+          <span style='font-weight:bold;margin-right:8px;font-size:11px;'>PDF</span>
+        </div>
+        <div class="pdf-tabs-zone" style="flex:1;position:relative;background:#0f1012;"></div>
+      </div>`;
+    hostWin = WindowManager.createWindow({ title:'Documents PDF', icon:'icons/article.png', width:880, height:640, content: innerHtml });
+    container = hostWin.querySelector('.pdf-workspace') || hostWin.querySelector('.window-content');
+    bar = hostWin.querySelector('.pdf-tabs-bar');
+    zone = hostWin.querySelector('.pdf-tabs-zone');
   focusHost();
   }
 
