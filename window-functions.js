@@ -513,7 +513,7 @@ WindowManager.generateMangasContent = function() {
   }
 
   function open(opts){
-    const { url, title='PDF', id=url, page, usePdfJs=false, pdfJsBase='/pdfjs/web/viewer.html' } = opts||{};
+    let { url, title='PDF', id=url, page, usePdfJs, pdfJsBase='/pdfjs/web/viewer.html' } = opts||{};
     if(!url) return;
     const cleanId = sanitizeId(id);
     ensureWindow();
@@ -522,17 +522,72 @@ WindowManager.generateMangasContent = function() {
     const pane = document.createElement('div');
     pane.className='pdf-pane';
     pane.style.cssText='position:absolute;inset:0;display:none;';
+    // Spinner + styles (inject once)
+    (function ensureSpinnerCSS(){
+      if(document.getElementById('pdf-tab-spinner-styles')) return;
+      const st=document.createElement('style'); st.id='pdf-tab-spinner-styles'; st.textContent=`@keyframes pdfspin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}} .pdf-spinner{display:flex;flex-direction:column;align-items:center;justify-content:center;position:absolute;inset:0;font:12px sans-serif;color:#ddd;gap:8px;background:linear-gradient(135deg,#1f2327,#272c33);} .pdf-spinner .ring{width:42px;height:42px;border:4px solid #3a424a;border-top-color:#5aa2ff;border-radius:50%;animation:pdfspin 1s linear infinite;} .pdf-error{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;background:#1e2227;color:#ffb3b3;font:13px sans-serif;text-align:center;gap:12px;} .pdf-error button{background:#444;border:1px solid #666;color:#fff;padding:6px 14px;border-radius:4px;cursor:pointer;} .pdf-error button:hover{background:#5a5f66;}`; document.head.appendChild(st);
+    })();
+    const spinner=document.createElement('div');
+    spinner.className='pdf-spinner';
+    spinner.innerHTML='<div class="ring"></div><div>Chargement du PDF…</div>';
+    pane.appendChild(spinner);
+    // Choix du rendu: direct si même origine, sinon PDF.js par défaut
     let finalUrl = url;
-    if(usePdfJs){ finalUrl = pdfJsBase + '?file=' + encodeURIComponent(url); if(page) finalUrl += '#page='+page; }
-    else if(page){ finalUrl += '#page='+page; }
-    const iframe=document.createElement('iframe');
-    iframe.src=finalUrl;
-    iframe.style.cssText='width:100%;height:100%;border:0;background:#fff;';
-    pane.appendChild(iframe);
-    zone.appendChild(pane);
-    const tabBtn = makeTab(cleanId, title);
-    tabs.set(cleanId,{tabBtn,pane,iframe,url,title});
-    activate(cleanId);
+    try{
+      const abs = new URL(url, location.href);
+      const cross = abs.origin !== location.origin;
+      if(usePdfJs === undefined) usePdfJs = cross; // auto
+      if(usePdfJs){
+        // Utiliser viewer PDF.js (hébergé localement si dispo, sinon chemin par défaut)
+        finalUrl = pdfJsBase + '?file=' + encodeURIComponent(abs.href);
+        if(page) finalUrl += '#page='+page;
+      } else {
+        if(page) finalUrl = abs.href + '#page='+page;
+        else finalUrl = abs.href;
+      }
+    }catch(e){
+      // Si URL invalide, tenter direct
+      if(page) finalUrl = url + '#page='+page;
+    }
+    const performEmbed = ()=>{
+      const iframe=document.createElement('iframe');
+      iframe.src=finalUrl;
+      iframe.style.cssText='width:100%;height:100%;border:0;background:#fff;';
+      iframe.setAttribute('title', title);
+      iframe.setAttribute('loading','eager');
+      iframe.addEventListener('load', ()=>{ spinner.remove(); });
+      // Fallback timeout remove spinner after 12s
+      setTimeout(()=>{ if(spinner.isConnected) spinner.remove(); }, 12000);
+      pane.appendChild(iframe);
+      zone.appendChild(pane);
+      const tabBtn = makeTab(cleanId, title);
+      tabs.set(cleanId,{tabBtn,pane,iframe,url,title});
+      activate(cleanId);
+    };
+    // HEAD check for same-origin resources to detect 404 quickly
+    let canHeadCheck=false; try{ const abs=new URL(url,location.href); canHeadCheck = abs.origin===location.origin; }catch(_){ }
+    if(canHeadCheck){
+      fetch(url, { method:'HEAD' }).then(r=>{
+        if(!r.ok){
+          spinner.remove();
+          const err=document.createElement('div');
+          err.className='pdf-error';
+          err.innerHTML=`<strong>Erreur ${r.status}</strong><div>Impossible de charger le document PDF.<br><small>${url}</small></div><button type='button'>Réessayer</button>`;
+          err.querySelector('button').addEventListener('click', ()=>{ err.remove(); pane.appendChild(spinner); open(opts); });
+          pane.appendChild(err); zone.appendChild(pane); const tabBtn = makeTab(cleanId, title); tabs.set(cleanId,{tabBtn,pane,iframe:null,url,title,error:true}); activate(cleanId); return;
+        }
+        performEmbed();
+      }).catch(e=>{
+        spinner.remove();
+        const err=document.createElement('div');
+        err.className='pdf-error';
+        err.innerHTML=`<strong>Erreur réseau</strong><div>${e.message||'Connexion impossible'}</div><button type='button'>Réessayer</button>`;
+        err.querySelector('button').addEventListener('click', ()=>{ err.remove(); pane.appendChild(spinner); open(opts); });
+        pane.appendChild(err); zone.appendChild(pane); const tabBtn = makeTab(cleanId, title); tabs.set(cleanId,{tabBtn,pane,iframe:null,url,title,error:true}); activate(cleanId);
+      });
+    } else {
+      performEmbed();
+    }
   }
 
   window.PdfTabManager = { open, close, activate };
