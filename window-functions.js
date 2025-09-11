@@ -447,6 +447,22 @@ WindowManager.generateMangasContent = function() {
   let bar = null; // barre d'onglets
   let zone = null; // zone contenu
 
+  function focusHost(){
+    try{
+      if(!hostWin) return;
+      const id = hostWin.id;
+      if(!id) return;
+      if(typeof WindowManager.focusWindow === 'function'){
+        WindowManager.focusWindow(id);
+      } else if (typeof WindowManager.setActiveWindow === 'function'){
+        WindowManager.setActiveWindow(id);
+      } else {
+        const el = document.getElementById(id);
+        if(el){ el.style.zIndex = (window.getNextZIndex ? window.getNextZIndex() : (parseInt(el.style.zIndex||'9000')+1)); }
+      }
+    }catch(e){ console.warn('PDF focus fallback:', e); }
+  }
+
   function ensureWindow(){
     if(hostWin && document.body.contains(hostWin)) return;
     const inner = document.createElement('div');
@@ -460,6 +476,7 @@ WindowManager.generateMangasContent = function() {
     container = inner;
     bar = inner.querySelector('.pdf-tabs-bar');
     zone = inner.querySelector('.pdf-tabs-zone');
+  focusHost();
   }
 
   function sanitizeId(id){ return (id||'pdf').toString().replace(/[^a-zA-Z0-9_\-:.]/g,'_'); }
@@ -471,7 +488,7 @@ WindowManager.generateMangasContent = function() {
       o.pane.style.display = active? 'block':'none';
       if(active) o.tabBtn.style.background='#3d7ef0'; else o.tabBtn.style.background='#2f343b';
     });
-    if(hostWin) WindowManager.focusWindow(hostWin);
+  focusHost();
   }
 
   function close(id){
